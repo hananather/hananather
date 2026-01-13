@@ -4,17 +4,14 @@ toc: false
 ---
 
 I am a Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at **[Statistics Canada](https://www.statcan.gc.ca/en/start)**.
-My research at Statistics Canada has focused on uncertainty quantification for LLMs (calibration + conformal prediction) and AI security & safety for confidential-data settings (data privacy, threat modeling, and evaluation).
+Won **[International Association for Official Statistics Young Statisticians Prize 2025](https://iaos-isi.org/ysp/)** for a Bayesian framework integrating LLMs with calibrated uncertainty.
+My research has focused on uncertainty quantification for LLMs (calibration + conformal prediction) and AI security & safety for confidential-data settings (data privacy, threat modeling, and evaluation).
 I also contribute to responsible-AI governance through **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, **[UNECE](https://unece.org/statistics)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
 
-- 🎓 **[Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa**
-  - 🔬 **Research topic:** Deep Reinforcement Learning and Function Optimization
+- **[Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa**
+  - **Research topic:** Deep Reinforcement Learning and Function Optimization
 
-📋 [**My CV**](website_docs/Hanan_Ather_CV%20(1).pdf)
-
-## Awards
-
-- 🏆 **[IAOS Young Statisticians Prize (2025)](https://iaos-isi.org/ysp/)** — Winner for “LLM-Assisted Record Linkage: Framework for Record Linkage in Official Statistics.”
+[**My CV**](website_docs/Hanan_Ather_CV%20(1).pdf)
 
 ## Graduate Course Notes
 
