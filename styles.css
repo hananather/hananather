@@ -337,3 +337,40 @@ body.quarto-dark .site-card {
     grid-row: 3;
   }
 }
+
+/* Graduate Course Notes: clean list */
+.notes-list ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.75rem 0 0;
+}
+
+.notes-list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+}
+
+.notes-list li + li {
+  border-top: 1px solid var(--site-border);
+}
+
+.notes-list a {
+  font-weight: 600;
+}
+
+.notes-list .note-meta {
+  color: var(--site-muted);
+  font-size: 0.95em;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .notes-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+}

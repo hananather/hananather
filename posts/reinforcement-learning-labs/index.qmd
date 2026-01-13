@@ -1,0 +1,14 @@
+---
+title: "Reinforcement Learning Labs"
+date: "2026-01-13"
+categories: [reinforcement learning, education]
+description: "A 6-part notebook series covering bandits, dynamic programming, Monte Carlo, and temporal-difference learning."
+draft: false
+format:
+  html:
+    code-tools: false
+---
+
+I published a 6-part notebook series introducing reinforcement learning concepts and methods.
+
+Start here: [Reinforcement Learning Labs](../../rl-labs/).

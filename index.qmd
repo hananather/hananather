@@ -25,17 +25,14 @@ Links: [My CV](website_docs/hanan-ather-cv.pdf)
 
 ## Graduate Course Notes
 
- [**Probability Theory II**](website_docs/probability-theory-ii.pdf)
-
- [**Real Analysis**](website_docs/real-analysis.pdf)
-
- [**Statistical Machine Learning**](website_docs/statistical-machine-learning.pdf)
-
- [**Graduate Probability Theory**](website_docs/graduate-probability-theory.pdf)
-
- [**Mathematical Statistics II**](website_docs/mathematical-statistics-ii.pdf)
-
- [**Mathematical Statistics I**](website_docs/mathematical-statistics-i.pdf)
+::: {.notes-list}
+- [Probability Theory II](website_docs/probability-theory-ii.pdf) [PDF]{.note-meta}
+- [Real Analysis](website_docs/real-analysis.pdf) [PDF]{.note-meta}
+- [Statistical Machine Learning](website_docs/statistical-machine-learning.pdf) [PDF]{.note-meta}
+- [Graduate Probability Theory](website_docs/graduate-probability-theory.pdf) [PDF]{.note-meta}
+- [Mathematical Statistics II](website_docs/mathematical-statistics-ii.pdf) [PDF]{.note-meta}
+- [Mathematical Statistics I](website_docs/mathematical-statistics-i.pdf) [PDF]{.note-meta}
+:::
 
 ## Papers & Publications
 

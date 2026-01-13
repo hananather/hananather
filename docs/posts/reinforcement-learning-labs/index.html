@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="dcterms.date" content="2026-01-13">
+<meta name="description" content="A 6-part notebook series covering bandits, dynamic programming, Monte Carlo, and temporal-difference learning.">
 
-<title>Hanan Ather</title>
+<title>Reinforcement Learning Labs – Hanan Ather</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,24 +25,24 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-29e2c20b02301cfff04dc8050bf30c7e.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-43df0d6f53b733b42d37fa7808e17715.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-1322888c997fad56b0b4d776d35cf542.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-8a7c634d51bfda77d17cf98aa3e06e6e.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-29e2c20b02301cfff04dc8050bf30c7e.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-43df0d6f53b733b42d37fa7808e17715.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-1322888c997fad56b0b4d776d35cf542.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-8a7c634d51bfda77d17cf98aa3e06e6e.min.css" rel="prefetch" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,37 +70,33 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<link rel="icon" href="./favicon.ico?v=20260113" sizes="any">
-<link rel="icon" href="./favicon.svg?v=20260113" type="image/svg+xml">
-<link rel="apple-touch-icon" href="./apple-touch-icon.png?v=20260113">
+<link rel="icon" href="../../favicon.ico?v=20260113" sizes="any">
+<link rel="icon" href="../../favicon.svg?v=20260113" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png?v=20260113">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 
 
-<link rel="stylesheet" href="styles.css">
-<meta property="og:title" content="Hanan Ather">
-<meta property="og:description" content="Member of Technical Staff at Statistics Canada (CAIRE). Research on uncertainty quantification for LLMs and AI security &amp; safety for confidential-data settings.">
-<meta property="og:image" content="https://hananather.com/website_docs/og-card.png">
+<link rel="stylesheet" href="../../styles.css">
+<meta property="og:title" content="Reinforcement Learning Labs – Hanan Ather">
+<meta property="og:description" content="A 6-part notebook series covering bandits, dynamic programming, Monte Carlo, and temporal-difference learning.">
+<meta property="og:image" content="https://hananather.com/posts/reinforcement-learning-labs/website_docs/og-card.png">
 <meta property="og:site_name" content="Hanan Ather">
-<meta property="og:image:height" content="630">
-<meta property="og:image:width" content="1200">
-<meta name="twitter:title" content="Hanan Ather">
-<meta name="twitter:description" content="Member of Technical Staff at Statistics Canada (CAIRE). Research on uncertainty quantification for LLMs and AI security &amp; safety for confidential-data settings.">
-<meta name="twitter:image" content="https://hananather.com/website_docs/og-card.png">
-<meta name="twitter:image-height" content="630">
-<meta name="twitter:image-width" content="1200">
+<meta name="twitter:title" content="Reinforcement Learning Labs – Hanan Ather">
+<meta name="twitter:description" content="A 6-part notebook series covering bandits, dynamic programming, Monte Carlo, and temporal-difference learning.">
+<meta name="twitter:image" content="https://hananather.com/posts/reinforcement-learning-labs/website_docs/og-card.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 
-<body class="nav-fixed home fullcontent">
+<body class="nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Hanan Ather</span>
     </a>
   </div>
@@ -109,15 +107,15 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./posts/index.html"> 
+    <a class="nav-link" href="../../posts/index.html"> 
 <span class="menu-text">My Writing</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./principles.html"> 
+    <a class="nav-link" href="../../principles.html"> 
 <span class="menu-text">My Principles</span></a>
   </li>  
 </ul>
@@ -155,14 +153,29 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Hanan Ather</h1>
-</div>
+<h1 class="title">Reinforcement Learning Labs</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">reinforcement learning</div>
+    <div class="quarto-category">education</div>
+  </div>
+  </div>
 
+<div>
+  <div class="description">
+    A 6-part notebook series covering bandits, dynamic programming, Monte Carlo, and temporal-difference learning.
+  </div>
+</div>
 
 
 <div class="quarto-title-meta">
 
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 13, 2026</p>
+    </div>
+  </div>
   
     
   </div>
@@ -172,46 +185,10 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>I am a Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at <strong><a href="https://www.statcan.gc.ca/en/start">Statistics Canada</a></strong>. My research has focused on uncertainty quantification for LLMs (calibration + conformal prediction) and AI security &amp; safety for confidential-data settings (data privacy, threat modeling, and evaluation). I’m a member of the Office of Responsible AI, where I lead technical reviews of AI systems across government and contribute to AI frameworks and governance guidance for international bodies including <strong><a href="https://unece.org/statistics">UNECE</a></strong>, <strong><a href="https://impact.canada.ca/en/challenges/g7-govAI">G7 GovAI</a></strong>, and the <strong><a href="https://www.isi-web.org/">International Statistical Institute (ISI)</a></strong>.</p>
-<ul>
-<li>Selected as a <a href="https://www.matsprogram.org/cohort/mats-10-0" class="mats-link">MATS 10.0 Math Scholar</a> in <a href="https://www.matsprogram.org/mentor/neel">Neel Nanda</a>’s stream.</li>
-<li>Won <a href="https://iaos-isi.org/ysp/">International Association for Official Statistics Young Statisticians Prize 2025</a> for a Bayesian framework integrating LLMs with calibrated uncertainty.</li>
-</ul>
-<p>Links: <a href="website_docs/hanan-ather-cv.pdf">My CV</a></p>
-<ul>
-<li><a href="https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/">Master of Science in Mathematics and Statistics</a> at the University of Ottawa
-<ul>
-<li>Research topic: <a href="website_docs/master-thesis-deep-reinforcement-learning.pdf" class="accent-link">Deep Reinforcement Learning and Function Optimization</a></li>
-</ul></li>
-</ul>
-<section id="projects" class="level2">
-<h2 class="anchored" data-anchor-id="projects">Projects</h2>
-<ul>
-<li>I built <a href="https://www.probability-lab.com/">Probability Lab</a>, an interactive learning platform for probability, statistics, and linear regression.</li>
-<li>I published a 6-part series of reinforcement learning labs (Jupyter notebooks): <a href="rl-labs/">Reinforcement Learning Labs</a>.</li>
-</ul>
-</section>
-<section id="graduate-course-notes" class="level2">
-<h2 class="anchored" data-anchor-id="graduate-course-notes">Graduate Course Notes</h2>
-<div class="notes-list">
-<ul>
-<li><a href="website_docs/probability-theory-ii.pdf">Probability Theory II</a> <span class="note-meta">PDF</span></li>
-<li><a href="website_docs/real-analysis.pdf">Real Analysis</a> <span class="note-meta">PDF</span></li>
-<li><a href="website_docs/statistical-machine-learning.pdf">Statistical Machine Learning</a> <span class="note-meta">PDF</span></li>
-<li><a href="website_docs/graduate-probability-theory.pdf">Graduate Probability Theory</a> <span class="note-meta">PDF</span></li>
-<li><a href="website_docs/mathematical-statistics-ii.pdf">Mathematical Statistics II</a> <span class="note-meta">PDF</span></li>
-<li><a href="website_docs/mathematical-statistics-i.pdf">Mathematical Statistics I</a> <span class="note-meta">PDF</span></li>
-</ul>
-</div>
-</section>
-<section id="papers-publications" class="level2">
-<h2 class="anchored" data-anchor-id="papers-publications">Papers &amp; Publications</h2>
-<p><a href="website_docs/master-thesis-deep-reinforcement-learning.pdf"><strong>Master Thesis: Deep Reinforcement Learning</strong></a></p>
-<p><a href="website_docs/law-of-the-iterated-logarithm.pdf"><strong>Law of the Iterated Logarithm</strong></a></p>
-<p><a href="website_docs/mat4376x-research-project.pdf"><strong>MAT4376X Research Project</strong></a></p>
+<p>I published a 6-part notebook series introducing reinforcement learning concepts and methods.</p>
+<p>Start here: <a href="../../rl-labs/">Reinforcement Learning Labs</a>.</p>
 
 
-</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

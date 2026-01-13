@@ -2,6 +2,7 @@
   {
     "listing": "/posts/index.html",
     "items": [
+      "/posts/reinforcement-learning-labs/index.html",
       "/posts/lessons-learned-for-retrieval-augmented-generation/index.html",
       "/posts/introduction-to-llms/index.html"
     ]
