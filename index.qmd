@@ -10,28 +10,28 @@ Selected as a [MATS 10.0 Math Scholar](https://www.matsprogram.org/cohort/mats-1
 Won [International Association for Official Statistics Young Statisticians Prize 2025](https://iaos-isi.org/ysp/) for a Bayesian framework integrating LLMs with calibrated uncertainty.
 
 - [Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa
-  - Research topic: [Deep Reinforcement Learning and Function Optimization](website_docs/Master%20Thesis_%20Deep%20Reinforcement%20Learning.pdf){.accent-link}
+  - Research topic: [Deep Reinforcement Learning and Function Optimization](website_docs/master-thesis-deep-reinforcement-learning.pdf){.accent-link}
 
-[**My CV**](website_docs/Hanan_Ather_CV%20(1).pdf)
+[**My CV**](website_docs/hanan-ather-cv.pdf)
 
 ## Graduate Course Notes
 
- [**Probability Theory II**](website_docs/Probability%20Theory%20II.pdf)
+ [**Probability Theory II**](website_docs/probability-theory-ii.pdf)
 
- [**Real Analysis**](website_docs/Real%20Analysis.pdf)
+ [**Real Analysis**](website_docs/real-analysis.pdf)
 
- [**Statistical Machine Learning**](website_docs/Statistical_Machine_Learning.pdf)
+ [**Statistical Machine Learning**](website_docs/statistical-machine-learning.pdf)
 
- [**Graduate Probability Theory**](website_docs/Graduate%20Probability%20Theory.pdf)
+ [**Graduate Probability Theory**](website_docs/graduate-probability-theory.pdf)
 
- [**Mathematical Statistics II**](website_docs/Mathematical%20Statistics%20II.pdf)
+ [**Mathematical Statistics II**](website_docs/mathematical-statistics-ii.pdf)
 
- [**Mathematical Statistics I**](website_docs/Mathematical%20Statistics%20I.pdf)
+ [**Mathematical Statistics I**](website_docs/mathematical-statistics-i.pdf)
 
 ## Papers & Publications
 
- [**Master Thesis: Deep Reinforcement Learning**](website_docs/Master%20Thesis_%20Deep%20Reinforcement%20Learning.pdf)
+ [**Master Thesis: Deep Reinforcement Learning**](website_docs/master-thesis-deep-reinforcement-learning.pdf)
 
- [**Law of the Iterated Logarithm**](website_docs/Law%20of%20the%20Iterated%20Logarithm.pdf)
+ [**Law of the Iterated Logarithm**](website_docs/law-of-the-iterated-logarithm.pdf)
 
- [**MAT4376X Research Project**](website_docs/MAT4376X_Hanan.pdf)
+ [**MAT4376X Research Project**](website_docs/mat4376x-research-project.pdf)

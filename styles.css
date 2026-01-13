@@ -1,16 +1,36 @@
+:root {
+  --site-accent: #b01928;
+  --site-accent-hover: #801323;
+}
+
+body.quarto-dark {
+  --site-accent: #ea384c;
+  --site-accent-hover: #ff5a6d;
+}
+
+/* Accent links (used sparingly) */
 a.mats-link,
 a.accent-link {
-  color: #b01928;
+  color: var(--site-accent);
 }
 
 a.mats-link:hover,
-a.mats-link:focus {
-  color: #801323;
+a.mats-link:focus,
+a.accent-link:hover,
+a.accent-link:focus {
+  color: var(--site-accent-hover);
   text-decoration: underline;
 }
 
-a.accent-link:hover,
-a.accent-link:focus {
-  color: #801323;
-  text-decoration: underline;
+/* Make the accent feel consistent without recoloring all links */
+main a:hover,
+main a:focus {
+  color: var(--site-accent-hover);
+}
+
+/* Navbar: use accent for active + hover states */
+.navbar .nav-link:hover,
+.navbar .nav-link:focus,
+.navbar .nav-link.active {
+  color: var(--site-accent) !important;
 }

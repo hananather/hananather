@@ -6,6 +6,11 @@ project:
 
 website:
   title: "Hanan Ather"
+  site-url: "https://hananather.com"
+  description: "Member of Technical Staff at Statistics Canada (CAIRE). Research on uncertainty quantification for LLMs and AI security & safety for confidential-data settings."
+  image: website_docs/og-card.png
+  open-graph: true
+  twitter-card: true
   navbar:
     left:
       - href: index.qmd
@@ -14,6 +19,16 @@ website:
         text: My Writing
       - href: principles.qmd
         text: My Principles
+    right:
+      - icon: github
+        href: "https://github.com/hananather"
+        aria-label: GitHub
+      - icon: linkedin
+        href: "https://linkedin.com/in/hanan-ather"
+        aria-label: LinkedIn
+      - icon: envelope
+        href: "mailto:hathe098@gmail.com"
+        aria-label: Email
 
 format:
   html:
