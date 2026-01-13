@@ -1,0 +1,9 @@
+a.mats-link {
+  color: #b01928;
+}
+
+a.mats-link:hover,
+a.mats-link:focus {
+  color: #801323;
+  text-decoration: underline;
+}
