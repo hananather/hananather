@@ -20,40 +20,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -114,9 +80,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
 
     const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      valueNames: ['listing-date','listing-title','listing-description',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-title-sort'] }],
       
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description"],
+      searchColumns: ["listing-date","listing-title","listing-author"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
@@ -243,7 +209,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">My Writing</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<h1 class="title">My Writing</h1>
 </div>
 
 
@@ -263,65 +229,47 @@ window.Quarto = {
 
 
 
-<!-- -->
 
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="QUklMkNNYWNoaW5lJTIwTGVhcm5pbmclMkNMTE1z" data-listing-date-sort="1748491200000" data-listing-file-modified-sort="1756687989699" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="18" data-listing-word-count-sort="3473">
-<div class="thumbnail">
-<p><a href="../posts/introduction-to-llms/index.html" class="no-external"></a></p><a href="../posts/introduction-to-llms/index.html" class="no-external">
-<p class="card-img-top"><img src="introduction-to-llms/index_files/figure-html/e27848f5-cd83-4cda-9b3f-ba839a97eb2f-1-ab846644-8598-42be-86dc-06e9ac6ced93.png" alt="image.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="../posts/introduction-to-llms/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../posts/introduction-to-llms/index.html" class="no-external">Introduction to LLMs</a>
-</h3>
-<div class="listing-subtitle">
-<a href="../posts/introduction-to-llms/index.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="../posts/introduction-to-llms/index.html" class="no-external">An introduction to Large Language Models and their applications</a>
-</div>
-</div>
-<div class="metadata">
-<a href="../posts/introduction-to-llms/index.html" class="no-external">
-<div class="listing-date">
-May 29, 2025
-</div>
-<div class="listing-author">
-Hanan Ather
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="cmFnJTJDcmV0cmlldmFsJTJDc2VhcmNo" data-listing-date-sort="1756612800000" data-listing-file-modified-sort="1768331674314" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="779">
-<div class="thumbnail">
-<p><a href="../posts/lessons-learned-for-retrieval-augmented-generation/index.html" class="no-external"></a></p><a href="../posts/lessons-learned-for-retrieval-augmented-generation/index.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="../posts/lessons-learned-for-retrieval-augmented-generation/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="../posts/lessons-learned-for-retrieval-augmented-generation/index.html" class="no-external">Lessons Learned for Retrieval Augmented Generation</a>
-</h3>
-<div class="listing-subtitle">
-<a href="../posts/lessons-learned-for-retrieval-augmented-generation/index.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="../posts/lessons-learned-for-retrieval-augmented-generation/index.html" class="no-external">Eighteen practical guidelines for building robust RAG systems.</a>
-</div>
-</div>
-<div class="metadata">
-<a href="../posts/lessons-learned-for-retrieval-augmented-generation/index.html" class="no-external">
-<div class="listing-date">
-Aug 31, 2025
-</div>
-</a>
-</div>
-</div>
-</div>
+<div class="quarto-listing quarto-listing-container-table" id="listing-listing">
+<table class="quarto-listing-table table">
+<thead>
+<tr>
+<th>
+Date
+</th>
+<th>
+Title
+</th>
+<th>
+Description
+</th>
+</tr>
+</thead>
+<tbody class="list">
+<tr data-index="0" data-categories="cmFnJTJDcmV0cmlldmFsJTJDc2VhcmNo" data-listing-date-sort="1756612800000" data-listing-file-modified-sort="1768331674314" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="779" data-listing-title-sort="Lessons Learned for Retrieval Augmented Generation" data-listing-filename-sort="index.qmd">
+<td>
+<span class="listing-date">Aug 31, 2025</span>
+</td>
+<td>
+<a href="../posts/lessons-learned-for-retrieval-augmented-generation/index.html" class="title listing-title">Lessons Learned for Retrieval Augmented Generation</a>
+</td>
+<td>
+<span class="listing-description">Eighteen practical guidelines for building robust RAG systems.</span>
+</td>
+</tr>
+<tr data-index="1" data-categories="QUklMkNNYWNoaW5lJTIwTGVhcm5pbmclMkNMTE1z" data-listing-date-sort="1748491200000" data-listing-file-modified-sort="1756687989699" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="18" data-listing-word-count-sort="3473" data-listing-title-sort="Introduction to LLMs" data-listing-filename-sort="index.ipynb">
+<td>
+<span class="listing-date">May 29, 2025</span>
+</td>
+<td>
+<a href="../posts/introduction-to-llms/index.html" class="title listing-title">Introduction to LLMs</a>
+</td>
+<td>
+<span class="listing-description">An introduction to Large Language Models and their applications</span>
+</td>
+</tr>
+</tbody>
+</table>
 <div class="listing-no-matching d-none">
 No matching items
 </div>
@@ -557,57 +505,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
     clipboardModal.on('success', onCopySuccess);
-  }
-  const viewSource = window.document.getElementById('quarto-view-source') ||
-                     window.document.getElementById('quarto-code-tools-source');
-  if (viewSource) {
-    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
-    viewSource.addEventListener("click", function(e) {
-      if (sourceUrl) {
-        // rstudio viewer pane
-        if (/\bcapabilities=\b/.test(window.location)) {
-          window.open(sourceUrl);
-        } else {
-          window.location.href = sourceUrl;
-        }
-      } else {
-        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
-        modal.show();
-      }
-      return false;
-    });
-  }
-  function toggleCodeHandler(show) {
-    return function(e) {
-      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
-      for (let i=0; i<detailsSrc.length; i++) {
-        const details = detailsSrc[i].parentElement;
-        if (show) {
-          details.open = true;
-        } else {
-          details.removeAttribute("open");
-        }
-      }
-      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
-      const fromCls = show ? "hidden" : "unhidden";
-      const toCls = show ? "unhidden" : "hidden";
-      for (let i=0; i<cellCodeDivs.length; i++) {
-        const codeDiv = cellCodeDivs[i];
-        if (codeDiv.classList.contains(fromCls)) {
-          codeDiv.classList.remove(fromCls);
-          codeDiv.classList.add(toCls);
-        } 
-      }
-      return false;
-    }
-  }
-  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
-  if (hideAllCode) {
-    hideAllCode.addEventListener("click", toggleCodeHandler(false));
-  }
-  const showAllCode = window.document.getElementById("quarto-show-all-code");
-  if (showAllCode) {
-    showAllCode.addEventListener("click", toggleCodeHandler(true));
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
@@ -937,14 +834,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
 });
-</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "My Writing"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">listing:</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">  type: default</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">  sort: date</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
-</div></div></div></div></div>
+</script>
 </div> <!-- /content -->
 
 

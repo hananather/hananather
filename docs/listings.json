@@ -2,8 +2,8 @@
   {
     "listing": "/posts/index.html",
     "items": [
-      "/posts/introduction-to-llms/index.html",
-      "/posts/lessons-learned-for-retrieval-augmented-generation/index.html"
+      "/posts/lessons-learned-for-retrieval-augmented-generation/index.html",
+      "/posts/introduction-to-llms/index.html"
     ]
   }
 ]

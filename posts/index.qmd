@@ -1,6 +1,12 @@
 ---
 title: "My Writing"
+format:
+  html:
+    code-tools: false
 listing:
-  type: default
-  sort: date
+  type: table
+  sort: "date desc"
+  fields: [date, title, description]
+  filter-ui: false
+  sort-ui: false
 ---
