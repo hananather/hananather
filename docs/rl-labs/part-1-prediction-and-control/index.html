@@ -6,10 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-08-31">
-<meta name="description" content="Eighteen practical guidelines for building robust RAG systems.">
 
-<title>Lessons Learned for Retrieval Augmented Generation – Hanan Ather</title>
+<title>Part 1: Prediction and Control – Hanan Ather</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -111,19 +109,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="../../styles.css">
-<meta property="og:title" content="Lessons Learned for Retrieval Augmented Generation – Hanan Ather">
-<meta property="og:description" content="Eighteen practical guidelines for building robust RAG systems.">
-<meta property="og:image" content="https://hananather.com/posts/lessons-learned-for-retrieval-augmented-generation/website_docs/og-card.png">
+<meta property="og:title" content="Part 1: Prediction and Control – Hanan Ather">
+<meta property="og:description" content="Member of Technical Staff at Statistics Canada (CAIRE). Research on uncertainty quantification for LLMs and AI security &amp; safety for confidential-data settings.">
+<meta property="og:image" content="https://hananather.com/rl-labs/part-1-prediction-and-control/website_docs/og-card.png">
 <meta property="og:site_name" content="Hanan Ather">
-<meta name="twitter:title" content="Lessons Learned for Retrieval Augmented Generation – Hanan Ather">
-<meta name="twitter:description" content="Eighteen practical guidelines for building robust RAG systems.">
-<meta name="twitter:image" content="https://hananather.com/posts/lessons-learned-for-retrieval-augmented-generation/website_docs/og-card.png">
+<meta name="twitter:title" content="Part 1: Prediction and Control – Hanan Ather">
+<meta name="twitter:description" content="Member of Technical Staff at Statistics Canada (CAIRE). Research on uncertainty quantification for LLMs and AI security &amp; safety for confidential-data settings.">
+<meta name="twitter:image" content="https://hananather.com/rl-labs/part-1-prediction-and-control/website_docs/og-card.png">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -181,36 +208,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#problem-setup-a-gamblers-game" id="toc-problem-setup-a-gamblers-game" class="nav-link active" data-scroll-target="#problem-setup-a-gamblers-game">Problem Setup: A Gambler’s Game</a></li>
+  <li><a href="#prediction-state-value-function" id="toc-prediction-state-value-function" class="nav-link" data-scroll-target="#prediction-state-value-function">Prediction: State Value Function</a></li>
+  <li><a href="#control-comparing-different-policies" id="toc-control-comparing-different-policies" class="nav-link" data-scroll-target="#control-comparing-different-policies">Control: Comparing Different Policies</a></li>
+  <li><a href="#toward-optimal-policy" id="toc-toward-optimal-policy" class="nav-link" data-scroll-target="#toward-optimal-policy">Toward Optimal Policy</a></li>
+  </ul>
+</nav>
+    </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Lessons Learned for Retrieval Augmented Generation</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
-  <div class="quarto-categories">
-    <div class="quarto-category">rag</div>
-    <div class="quarto-category">retrieval</div>
-    <div class="quarto-category">search</div>
-  </div>
-  </div>
-
-<div>
-  <div class="description">
-    Eighteen practical guidelines for building robust RAG systems.
-  </div>
+<div class="quarto-title-block"><div><h1 class="title">Part 1: Prediction and Control</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li></ul></div></div>
 </div>
+
 
 
 <div class="quarto-title-meta">
 
     
-    <div>
-    <div class="quarto-title-meta-heading">Published</div>
-    <div class="quarto-title-meta-contents">
-      <p class="date">August 31, 2025</p>
-    </div>
-  </div>
   
     
   </div>
@@ -220,31 +242,180 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="lessons-learned-for-retrieval-augmented-generation" class="level1">
-<h1>Lessons Learned for Retrieval Augmented Generation</h1>
-<ol type="1">
-<li><p><strong>Start with a clear definition</strong> Retrieval augmented generation, or RAG, means your model writes answers with help from documents that you fetch at runtime. The model is a large language model, or LLM. Every choice you make about how you prepare, store, and fetch those documents will shape answer quality.</p></li>
-<li><p><strong>Make data faithful to the original</strong> Keep tables, headings, lists, and links as they appear in the source. If your loader flattens structure, the model will miss important details. Treat data cleaning and extraction as part of the model, not as an afterthought.</p></li>
-<li><p><strong>Use sources and loaders that keep structure and permissions</strong> Prefer formats that preserve structure, such as Hypertext Markup Language, often called HTML, or other structured exports. Capture who can see what, and store that as metadata so search can filter out restricted text before the model reads it.</p></li>
-<li><p><strong>Build a custom parser when generic tools fail</strong> If off the shelf tools break tables or lists, write a parser that walks the document tree and keeps rows, columns, and headers in place. This one time effort pays off with cleaner chunks and better search.</p></li>
-<li><p><strong>Enrich documents during ingestion</strong> Use an LLM to fix messy extracts. Rebuild tables as clean markdown tables, standardize headings, and add short summaries. Better input leads to better search later.</p></li>
-<li><p><strong>Chunk by meaning, not by character count</strong> Keep logical sections together, such as a table with its title or a section with its heading. Add a two line summary and a few keywords to each chunk so search can match precise questions.</p></li>
-<li><p><strong>Design metadata for search, not only for source tracking</strong> Store titles and links, and also store short summaries, keywords, and a small set of likely questions for each chunk. Make these fields searchable and also use them to guide later steps.</p></li>
-<li><p><strong>Keep enrichment artifacts in a simple store</strong> Save lists of documents, summaries, keywords, and any question sets in a store that you can reuse across jobs. This lets you improve search and prompts without reprocessing the whole collection.</p></li>
-<li><p><strong>Improve the question before you search</strong> Add a small step that clarifies vague questions and splits multi part questions into simple ones. Use your saved summaries and titles to pick a short list of likely documents before you run full search.</p></li>
-<li><p><strong>Use hybrid search by default</strong> Combine semantic search, which uses embeddings to find meaning, with keyword search, which matches exact words and names. Embeddings are numerical vectors that encode meaning. Merging both results helps you find more right passages and fewer wrong ones.</p></li>
-<li><p><strong>Clean and order the retrieved context</strong> Remove duplicates and sort the passages the way they appear in the source. The model will read a small and coherent slice of the document, which reduces mistakes.</p></li>
-<li><p><strong>Give the model a complete and clear prompt</strong> Include the original question, any refined sub questions, and the cleaned context. Add simple rules, such as cite the source for each claim and do not answer outside the given context.</p></li>
-<li><p><strong>Automate evaluation to speed up learning</strong> Keep a test set of real questions with strong reference answers. Use a model as a judge to score batches on a simple scale and to explain why. This turns slow expert review into fast feedback.</p></li>
-<li><p><strong>Track helpful answers and harmful advice</strong> Measure how often answers are acceptable and how often advice is wrong or unsafe. These outcome measures reflect what users care about more than exact text overlap.</p></li>
-<li><p><strong>Enforce permissions inside search and generation</strong> Apply access rules before retrieval and before generation. If the user cannot see a passage, the system should not fetch it and the model should not read it.</p></li>
-<li><p><strong>Plan for growth and reflection</strong> Support iterative retrieval where the model can ask for more context after the first pass. Add a self critique step that checks claims against the provided passages. Expose key actions, such as search and summarize, as tools that the model can call when needed. Extend to images later with proper extractors.</p></li>
-<li><p><strong>Invest first in data and search, then in larger models</strong> The biggest gains come from faithful extraction, smart chunking, rich metadata, careful question shaping, and hybrid search. Larger models help, but they cannot invent context that was never captured or retrieved.</p></li>
-<li><p><strong>Create a loop that rewards good documentation</strong> Show teams that clear and well structured documents lead to better answers. This encourages them to improve the source content, which then further improves the system.</p></li>
-</ol>
+<p>Now that we’ve covered basic probability, let’s dive into a simple reinforcement learning scenario: a gambling game. This example will introduce core RL ideas of prediction (evaluating how good a given strategy is) and control (finding a better strategy). We will define a simple gambling environment and simulate an agent’s decisions within it.</p>
+<section id="problem-setup-a-gamblers-game" class="level3">
+<h3 class="anchored" data-anchor-id="problem-setup-a-gamblers-game">Problem Setup: A Gambler’s Game</h3>
+<p>Imagine a gambler who starts with a certain amount of money and aims to reach a target amount. At each turn, the gambler can bet some of their money on a coin flip: - If the coin comes up Heads (win), the gambler wins the amount bet (it gets added to their capital). - If Tails (lose), the gambler loses the amount bet (subtracted from their capital). - The coin might be biased with probability p of Heads.</p>
+<p>The game ends either when the gambler reaches the target (goal) or loses all money (bust).</p>
+<p>This is known as the Gambler’s Problem from Sutton and Barto’s RL textbook. - States: The gambler’s capital (from <span class="math inline">\(0\)</span> to <span class="math inline">\(Goal\)</span>). - Actions: The bet amount (from <span class="math inline">\(1\)</span> up to the smaller of current capital or amount needed to reach goal). - Transition: Win or lose based on the coin flip. - Reward: We can define a reward of +1 for reaching the goal, and 0 otherwise (no reward each step except at the end). This way, maximizing total reward is equivalent to maximizing the probability of reaching the goal.</p>
+<p>For simplicity, let’s implement a smaller version: goal = $10, starting capital = $5, and a fair coin (p = 0.5). The gambler can bet $1 each turn (to keep it simple initially).</p>
+<section id="simulation-of-a-fixed-policy" class="level4">
+<h4 class="anchored" data-anchor-id="simulation-of-a-fixed-policy">Simulation of a Fixed Policy</h4>
+<p>Policy: Let’s start with a simple policy: always bet $1 until the game ends.</p>
+<p>We will simulate many episodes (games) with this policy to estimate: - Probability of reaching the goal (this is the value of the starting state under this policy). - The distribution of episode lengths (how many bets until finish).</p>
+<p>Let’s write a simulation for one episode and then loop it for many episodes.</p>
+<div id="94b3482c-76ed-4048-9d30-43f67b4b3f51" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_gamble(start_capital, goal, p_head<span class="op">=</span><span class="fl">0.5</span>):</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Simulate one episode of the gambling game.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns True if goal reached (win), False if gambler goes broke (lose).</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">    Policy: always bet 1.</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    capital <span class="op">=</span> start_capital</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="dv">0</span> <span class="op">&lt;</span> capital <span class="op">&lt;</span> goal:</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Always bet 1</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        bet <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> random.random() <span class="op">&lt;</span> p_head:  <span class="co"># win</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>            capital <span class="op">+=</span> bet</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:  <span class="co"># lose</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>            capital <span class="op">-=</span> bet</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># No intermediate rewards in this formulation</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Loop ends when capital == 0 or capital == goal</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> capital <span class="op">&gt;=</span> goal  <span class="co"># True if reached goal, False if busted</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Test one episode</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> simulate_gamble(<span class="dv">5</span>, <span class="dv">10</span>, p_head<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Episode result:"</span>, <span class="st">"Reached goal!"</span> <span class="cf">if</span> result <span class="cf">else</span> <span class="st">"Broke :("</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Episode result: Broke :(</code></pre>
+</div>
+</div>
+<p>Run the above cell a few times to see different outcomes (sometimes the gambler wins, sometimes loses).</p>
+<p>Now, let’s estimate the probability of winning from the starting capital of 5 with this policy by simulating many episodes:</p>
+<div id="85c228ea-f80d-46f7-a2b6-6c64a26e1395" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>trials <span class="op">=</span> <span class="dv">10000</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>wins <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(trials):</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> simulate_gamble(<span class="dv">5</span>, <span class="dv">10</span>, p_head<span class="op">=</span><span class="fl">0.5</span>):</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        wins <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>win_prob <span class="op">=</span> wins <span class="op">/</span> trials</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Estimated probability of reaching $10 starting from $5 (bet $1 policy) = </span><span class="sc">{</span>win_prob<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Estimated probability of reaching $10 starting from $5 (bet $1 policy) = 0.498</code></pre>
+</div>
+</div>
+<p>With a fair coin and symmetric game, you might expect ~50% chance to reach the goal when starting at half the goal (in fact, for an unbiased random walk, the probability of hitting +5 before -5 starting at 0 is 50%). Our simulation likely shows close to 0.5.</p>
+<p>This probability is essentially the value of the state “capital=5” under the current policy (always bet 1). In prediction terms, we’ve estimated <span class="math inline">\(v_{\pi}(5)\)</span> for our policy <span class="math inline">\(\pi\)</span> (always bet 1) as ~0.5.</p>
+<p>We can similarly estimate <span class="math inline">\(v_{\pi}(s)\)</span> for other starting states s by changing <code>start_capital</code>.</p>
+<p><strong>Exercise</strong>: Try simulating from start_capital=1 and start_capital=9 to see the win probabilities. (We expect <span class="math inline">\(v_{\pi}(1)\)</span> to be much lower than <span class="math inline">\(v_{\pi}(9)\)</span>, since with only <span class="math inline">\(\$1\)</span> the gambler is one loss from ruin, whereas with <span class="math inline">\(\$9\)</span> they’re one step from the goal.)</p>
+</section>
+</section>
+<section id="prediction-state-value-function" class="level3">
+<h3 class="anchored" data-anchor-id="prediction-state-value-function">Prediction: State Value Function</h3>
+<p>For this gambling game, the state value <span class="math inline">\(v_{\pi}(s)\)</span> is the probability of reaching the goal from state <span class="math inline">\(s\)</span> under policy $(because we set reward 1 for success, 0 otherwise, so the expected return equals the success probability).</p>
+<p>We can approximate the entire value function for our policy by simulation:</p>
+<div id="e5a7d3f0-2115-49f4-9d24-91c950a051c0" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> estimate_values(policy_func, goal, p_head<span class="op">=</span><span class="fl">0.5</span>, trials<span class="op">=</span><span class="dv">10000</span>):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Estimate value of each capital state 0..goal for a given policy by simulation.</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">    policy_func(state) -&gt; bet amount</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns a dict of state -&gt; estimated value.</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    values <span class="op">=</span> {s: <span class="fl">0.0</span> <span class="cf">for</span> s <span class="kw">in</span> <span class="bu">range</span>(goal<span class="op">+</span><span class="dv">1</span>)}</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> s <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, goal):  <span class="co"># exclude terminal states 0 and goal</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        wins <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(trials):</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            <span class="co"># simulate from state s</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>            capital <span class="op">=</span> s</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">while</span> <span class="dv">0</span> <span class="op">&lt;</span> capital <span class="op">&lt;</span> goal:</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>                bet <span class="op">=</span> policy_func(capital)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> random.random() <span class="op">&lt;</span> p_head:</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>                    capital <span class="op">+=</span> bet</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>                <span class="cf">else</span>:</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>                    capital <span class="op">-=</span> bet</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> capital <span class="op">&gt;=</span> goal:</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>                wins <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        values[s] <span class="op">=</span> wins <span class="op">/</span> trials</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    values[<span class="dv">0</span>] <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    values[goal] <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> values</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Define our always-bet-1 policy function</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>policy_bet1 <span class="op">=</span> <span class="kw">lambda</span> capital: <span class="dv">1</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>val_estimates <span class="op">=</span> estimate_values(policy_bet1, goal<span class="op">=</span><span class="dv">10</span>, p_head<span class="op">=</span><span class="fl">0.5</span>, trials<span class="op">=</span><span class="dv">2000</span>)</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Estimated value of each state (always bet 1 policy):"</span>)</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">11</span>):</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"v(</span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">) ≈ </span><span class="sc">{</span>val_estimates[s]<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Estimated value of each state (always bet 1 policy):
+v(0) ≈ 0.00
+v(1) ≈ 0.10
+v(2) ≈ 0.19
+v(3) ≈ 0.31
+v(4) ≈ 0.40
+v(5) ≈ 0.50
+v(6) ≈ 0.58
+v(7) ≈ 0.71
+v(8) ≈ 0.80
+v(9) ≈ 0.91
+v(10) ≈ 1.00</code></pre>
+</div>
+</div>
+<p>You should see the values increasing as the capital gets higher (closer to the goal). State 0 has value 0 (game lost) and state 10 has value 1 (goal achieved). For a fair coin, the value might roughly increase linearly with the capital (since each <span class="math inline">\(\$1\)</span> is like one step closer to victory on average). In fact, for the fair coin random walk, the true <span class="math inline">\(v_{\pi}(s)\)</span> should be <span class="math inline">\(s/10\)</span> in this scenario (starting with <span class="math inline">\(s\)</span> dollars out of 10)</p>
+</section>
+<section id="control-comparing-different-policies" class="level3">
+<h3 class="anchored" data-anchor-id="control-comparing-different-policies">Control: Comparing Different Policies</h3>
+<p>Now we have a way to evaluate a given policy (by simulation). The next step is control: finding a better policy. Let’s compare two policies: - <span class="math inline">\(\pi_1\)</span>: Always bet 1 (we evaluated this). - <span class="math inline">\(\pi_2\)</span>: Always bet all-in (bet all current capital each time).</p>
+<p>Intuition: - <span class="math inline">\(\pi_2\)</span> is riskier but reaches the goal faster if it wins. For a fair coin, any bet size yields the same success probability in theory (actually for p=0.5, any strategy gives <span class="math inline">\(s/Goal\)</span> chance). But for a biased coin, the optimal strategy changes. - Let’s test with a biased coin, p = 0.4 (40% chance to win each bet, so the odds are against the gambler). In that case, a high-variance strategy (betting big) might increase success chances</p>
+<div id="aa5c1d48-9c69-4eef-8c9f-ab28b58d44ec" class="cell" data-execution_count="5">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_policy(start_capital, goal, p_head, policy_func):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    capital <span class="op">=</span> start_capital</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="dv">0</span> <span class="op">&lt;</span> capital <span class="op">&lt;</span> goal:</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        bet <span class="op">=</span> policy_func(capital)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> random.random() <span class="op">&lt;</span> p_head:</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>            capital <span class="op">+=</span> bet</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            capital <span class="op">-=</span> bet</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> capital <span class="op">&gt;=</span> goal</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> estimate_win_prob(start_capital, goal, p_head, policy_func, trials<span class="op">=</span><span class="dv">5000</span>):</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    wins <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(trials):</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> simulate_policy(start_capital, goal, p_head, policy_func):</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>            wins <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> wins <span class="op">/</span> trials</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Define policy functions:</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>policy_all_in <span class="op">=</span> <span class="kw">lambda</span> capital: capital  <span class="co"># bet all current capital</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate win probabilities for start=5, goal=10, p=0.4</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>win_prob_bet1 <span class="op">=</span> estimate_win_prob(<span class="dv">5</span>, <span class="dv">10</span>, p_head<span class="op">=</span><span class="fl">0.4</span>, policy_func<span class="op">=</span>policy_bet1, trials<span class="op">=</span><span class="dv">10000</span>)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>win_prob_allin <span class="op">=</span> estimate_win_prob(<span class="dv">5</span>, <span class="dv">10</span>, p_head<span class="op">=</span><span class="fl">0.4</span>, policy_func<span class="op">=</span>policy_all_in, trials<span class="op">=</span><span class="dv">10000</span>)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Policy π1 (bet 1) win probability ≈ </span><span class="sc">{</span>win_prob_bet1<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Policy π2 (all-in) win probability ≈ </span><span class="sc">{</span>win_prob_allin<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Policy π1 (bet 1) win probability ≈ 0.116
+Policy π2 (all-in) win probability ≈ 0.392</code></pre>
+</div>
+</div>
+<p>It’s likely that the all-in policy has a higher win probability when p &lt; 0.5. For example, starting with <span class="math inline">\(\$5\)</span>, goal <span class="math inline">\(10, p=0.4\)</span>: - Bet-1 policy requires winning 5 times before losing 5 times (very low probability). - All-in policy needs one win of 5 (0.4 chance). So <span class="math inline">\(\pi_2\)</span> might show ~0.4 win prob, whereas <span class="math inline">\(\pi_1\)</span> could be much lower (the gambler will probably bust most of the time due to needing consecutive wins).</p>
+<p><strong>Result Discussion</strong>: The better policy is the one with higher win probability (or higher expected reward). In this case, all-in seems better for p=0.4. If p were 0.6 (favorable odds), the opposite would be true: betting small repeatedly would yield a higher overall chance to eventually accumulate wins (because the odds are in your favor, you want many small bets to reduce variance). This simple comparison illustrates policy improvement: if we find a policy that yields higher value for the starting state, it’s a better policy. In reinforcement learning, we often iteratively improve a policy by looking at such comparisons.</p>
+<p>This simple comparison illustrates policy improvement: if we find a policy that yields higher value for the starting state, it’s a better policy. In reinforcement learning, we often iteratively improve a policy by looking at such comparisons.</p>
+</section>
+<section id="toward-optimal-policy" class="level3">
+<h3 class="anchored" data-anchor-id="toward-optimal-policy">Toward Optimal Policy</h3>
+<p>What is the optimal policy for the gambler? We won’t derive it fully here (that’s an exercise for Dynamic Programming later), but intuitively: - If the coin is unfair (p &lt; 0.5), optimal strategy is to take risky bets (high variance) to maximize the chance of a lucky streak - If the coin is in your favor (p &gt; 0.5), optimal is to bet small increments (low variance) to steadily accumulate wins - If <span class="math inline">\(p = 0.5\)</span> exactly, many strategies yield the same 50% success probability, so the “optimal” is not unique.</p>
+<p>Next, we’ll explore a different classic RL problem: the multi-armed bandit, which focuses on the exploration-exploitation trade-off in a simpler setting (no multiple states, just choosing actions for immediate reward).</p>
+<hr>
+<p><a href="../part-0-basic-probability-simulations/">← Part 0</a> | <a href="../">All labs</a> | <a href="../part-2-multi-armed-bandits/">Part 2 →</a></p>
 
-
-<!-- -->
 
 </section>
 
@@ -860,71 +1031,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
   }
 });
-</script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Lessons Learned for Retrieval Augmented Generation"</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="an">date:</span><span class="co"> "2025-08-31"</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="an">categories:</span><span class="co"> [rag, retrieval, search]</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="an">description:</span><span class="co"> "Eighteen practical guidelines for building robust RAG systems."</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="an">draft:</span><span class="co"> false</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu"># Lessons Learned for Retrieval Augmented Generation</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Start with a clear definition**</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>   Retrieval augmented generation, or RAG, means your model writes answers with help from documents that you fetch at runtime. The model is a large language model, or LLM. Every choice you make about how you prepare, store, and fetch those documents will shape answer quality.</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Make data faithful to the original**</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>   Keep tables, headings, lists, and links as they appear in the source. If your loader flattens structure, the model will miss important details. Treat data cleaning and extraction as part of the model, not as an afterthought.</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Use sources and loaders that keep structure and permissions**</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>   Prefer formats that preserve structure, such as Hypertext Markup Language, often called HTML, or other structured exports. Capture who can see what, and store that as metadata so search can filter out restricted text before the model reads it.</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>**Build a custom parser when generic tools fail**</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>   If off the shelf tools break tables or lists, write a parser that walks the document tree and keeps rows, columns, and headers in place. This one time effort pays off with cleaner chunks and better search.</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>**Enrich documents during ingestion**</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>   Use an LLM to fix messy extracts. Rebuild tables as clean markdown tables, standardize headings, and add short summaries. Better input leads to better search later.</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ss">6. </span>**Chunk by meaning, not by character count**</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>   Keep logical sections together, such as a table with its title or a section with its heading. Add a two line summary and a few keywords to each chunk so search can match precise questions.</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="ss">7. </span>**Design metadata for search, not only for source tracking**</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>   Store titles and links, and also store short summaries, keywords, and a small set of likely questions for each chunk. Make these fields searchable and also use them to guide later steps.</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="ss">8. </span>**Keep enrichment artifacts in a simple store**</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>   Save lists of documents, summaries, keywords, and any question sets in a store that you can reuse across jobs. This lets you improve search and prompts without reprocessing the whole collection.</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="ss">9. </span>**Improve the question before you search**</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>   Add a small step that clarifies vague questions and splits multi part questions into simple ones. Use your saved summaries and titles to pick a short list of likely documents before you run full search.</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="ss">10. </span>**Use hybrid search by default**</span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    Combine semantic search, which uses embeddings to find meaning, with keyword search, which matches exact words and names. Embeddings are numerical vectors that encode meaning. Merging both results helps you find more right passages and fewer wrong ones.</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="ss">11. </span>**Clean and order the retrieved context**</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    Remove duplicates and sort the passages the way they appear in the source. The model will read a small and coherent slice of the document, which reduces mistakes.</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="ss">12. </span>**Give the model a complete and clear prompt**</span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    Include the original question, any refined sub questions, and the cleaned context. Add simple rules, such as cite the source for each claim and do not answer outside the given context.</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="ss">13. </span>**Automate evaluation to speed up learning**</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    Keep a test set of real questions with strong reference answers. Use a model as a judge to score batches on a simple scale and to explain why. This turns slow expert review into fast feedback.</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="ss">14. </span>**Track helpful answers and harmful advice**</span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    Measure how often answers are acceptable and how often advice is wrong or unsafe. These outcome measures reflect what users care about more than exact text overlap.</span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="ss">15. </span>**Enforce permissions inside search and generation**</span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    Apply access rules before retrieval and before generation. If the user cannot see a passage, the system should not fetch it and the model should not read it.</span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="ss">16. </span>**Plan for growth and reflection**</span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    Support iterative retrieval where the model can ask for more context after the first pass. Add a self critique step that checks claims against the provided passages. Expose key actions, such as search and summarize, as tools that the model can call when needed. Extend to images later with proper extractors.</span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="ss">17. </span>**Invest first in data and search, then in larger models**</span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    The biggest gains come from faithful extraction, smart chunking, rich metadata, careful question shaping, and hybrid search. Larger models help, but they cannot invent context that was never captured or retrieved.</span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="ss">18. </span>**Create a loop that rewards good documentation**</span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>    Show teams that clear and well structured documents lead to better answers. This encourages them to improve the source content, which then further improves the system.</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
-</div></div></div></div></div>
+</script>
 </div> <!-- /content -->
 
 

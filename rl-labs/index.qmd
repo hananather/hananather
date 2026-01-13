@@ -1,0 +1,17 @@
+---
+title: "Reinforcement Learning Labs"
+toc: false
+---
+
+A 6-part notebook series introducing reinforcement learning concepts and methods.
+
+- Start here: Part 0 and read in order.
+- Each chapter is a rendered Jupyter notebook (static).
+
+## Chapters
+- [Part 0: Basic Probability Simulations](part-0-basic-probability-simulations/)
+- [Part 1: Prediction and Control](part-1-prediction-and-control/)
+- [Part 2: Multi-Armed Bandits](part-2-multi-armed-bandits/)
+- [Part 3: Dynamic Programming](part-3-dynamic-programming/)
+- [Part 4: Monte Carlo Methods](part-4-monte-carlo-methods/)
+- [Part 5: Temporal Difference Learning](part-5-temporal-difference-learning/)

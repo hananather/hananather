@@ -20,7 +20,7 @@ format:
 ## Projects
 
 - I built [Probability Lab](https://www.probability-lab.com/), an interactive learning platform for probability, statistics, and linear regression.
-- I published [Reinforcement Learning Paper](https://github.com/hananather/Reinforcement-Learning-Paper), code and notes from my work on deep reinforcement learning and function optimization.
+- I published a 6-part series of reinforcement learning labs (Jupyter notebooks): [Reinforcement Learning Labs](rl-labs/).
 
 ## Graduate Course Notes
 
