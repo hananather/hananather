@@ -1,6 +1,8 @@
 project:
   type: website
   output-dir: docs
+  resources:
+    - CNAME
 
 website:
   title: "Hanan Ather"
@@ -11,7 +13,7 @@ website:
       - href: posts/index.qmd
         text: My Writing
       - href: principles.qmd
-        text: About
+        text: My Principles
 
 format:
   html:

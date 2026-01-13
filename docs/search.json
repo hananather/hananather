@@ -180,12 +180,5 @@
     "title": "Repository Guidelines",
     "section": "",
     "text": "Never commit secrets; this is a static site. Review _quarto.yml for nav/theme changes.\nGitHub Pages serves from docs/ on the default branch; ensure builds target that directory."
-  },
-  {
-    "objectID": "index.html#awards",
-    "href": "index.html#awards",
-    "title": "Hanan Ather",
-    "section": "Awards",
-    "text": "Awards\n\n🏆 IAOS Young Statisticians Prize (2025) — Winner for “LLM-Assisted Record Linkage: Framework for Record Linkage in Official Statistics.”"
   }
 ]
