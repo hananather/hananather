@@ -6,28 +6,21 @@ format:
     body-classes: home
 ---
 
-I am a Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at **[Statistics Canada](https://www.statcan.gc.ca/en/start)**.
-My research has focused on uncertainty quantification for LLMs (calibration + conformal prediction) and AI security & safety for confidential-data settings (data privacy, threat modeling, and evaluation).
-
-::: {.home-cards}
-::: {.site-card}
-#### Highlights
-
-- I’m a member of the Office of Responsible AI, where I lead technical reviews of AI systems across government and contribute to AI frameworks and governance guidance for international bodies including **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
+- Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at **[Statistics Canada](https://www.statcan.gc.ca/en/start)**.
+- Research focus: uncertainty quantification for LLMs (calibration + conformal prediction) and AI security & safety for confidential-data settings (data privacy, threat modeling, and evaluation).
+- Member of the Office of Responsible AI; lead technical reviews of AI systems across government.
+- Contribute to AI frameworks and governance guidance for international bodies including **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
 - Selected as a [MATS 10.0 Math Scholar](https://www.matsprogram.org/cohort/mats-10-0){.mats-link} in [Neel Nanda](https://www.matsprogram.org/mentor/neel)’s stream.
 - Won [International Association for Official Statistics Young Statisticians Prize 2025](https://iaos-isi.org/ysp/) for a Bayesian framework integrating LLMs with calibrated uncertainty.
-:::
-
-::: {.site-card}
-#### Quick links
-
-- [My CV](website_docs/hanan-ather-cv.pdf)
-- Master thesis: [Deep Reinforcement Learning and Function Optimization](website_docs/master-thesis-deep-reinforcement-learning.pdf){.accent-link}
-:::
-:::
+- Links: [My CV](website_docs/hanan-ather-cv.pdf), master thesis: [Deep Reinforcement Learning and Function Optimization](website_docs/master-thesis-deep-reinforcement-learning.pdf){.accent-link}
 
 - [Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa
   - Research topic: [Deep Reinforcement Learning and Function Optimization](website_docs/master-thesis-deep-reinforcement-learning.pdf){.accent-link}
+
+## Projects
+
+- I built [Probability Lab](https://www.probability-lab.com/), an interactive learning platform for probability, statistics, and linear regression.
+- I published [Reinforcement Learning Paper](https://github.com/hananather/Reinforcement-Learning-Paper), code and notes from my work on deep reinforcement learning and function optimization.
 
 ## Graduate Course Notes
 

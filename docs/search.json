@@ -116,7 +116,14 @@
     "href": "index.html",
     "title": "Hanan Ather",
     "section": "",
-    "text": "I am a Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at Statistics Canada. My research has focused on uncertainty quantification for LLMs (calibration + conformal prediction) and AI security & safety for confidential-data settings (data privacy, threat modeling, and evaluation)."
+    "text": "Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at Statistics Canada.\nResearch focus: uncertainty quantification for LLMs (calibration + conformal prediction) and AI security & safety for confidential-data settings (data privacy, threat modeling, and evaluation).\nMember of the Office of Responsible AI; lead technical reviews of AI systems across government.\nContribute to AI frameworks and governance guidance for international bodies including UNECE, G7 GovAI, and the International Statistical Institute (ISI).\nSelected as a MATS 10.0 Math Scholar in Neel Nanda’s stream.\nWon International Association for Official Statistics Young Statisticians Prize 2025 for a Bayesian framework integrating LLMs with calibrated uncertainty.\nLinks: My CV, master thesis: Deep Reinforcement Learning and Function Optimization\nMaster of Science in Mathematics and Statistics at the University of Ottawa\n\nResearch topic: Deep Reinforcement Learning and Function Optimization"
+  },
+  {
+    "objectID": "index.html#projects",
+    "href": "index.html#projects",
+    "title": "Hanan Ather",
+    "section": "Projects",
+    "text": "Projects\n\nI built Probability Lab, an interactive learning platform for probability, statistics, and linear regression.\nI published Reinforcement Learning Paper, code and notes from my work on deep reinforcement learning and function optimization."
   },
   {
     "objectID": "index.html#graduate-course-notes",
