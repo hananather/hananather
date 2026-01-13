@@ -9,8 +9,8 @@ I’m a member of the Office of Responsible AI, where I lead technical reviews o
 Selected as a [MATS 10.0 Math Scholar](https://www.matsprogram.org/cohort/mats-10-0){.mats-link} in [Neel Nanda](https://www.matsprogram.org/mentor/neel)’s stream.
 Won [International Association for Official Statistics Young Statisticians Prize 2025](https://iaos-isi.org/ysp/) for a Bayesian framework integrating LLMs with calibrated uncertainty.
 
-- **[Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa**
-  - **Research topic:** Deep Reinforcement Learning and Function Optimization
+- [Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa
+  - Research topic: [Deep Reinforcement Learning and Function Optimization](website_docs/Master%20Thesis_%20Deep%20Reinforcement%20Learning.pdf){.accent-link}
 
 [**My CV**](website_docs/Hanan_Ather_CV%20(1).pdf)
 
