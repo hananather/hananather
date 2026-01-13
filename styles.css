@@ -136,6 +136,22 @@ body {
   margin-bottom: 0.9rem;
 }
 
+.content li > p {
+  margin-bottom: 0.25rem;
+}
+
+.content li:last-child > p {
+  margin-bottom: 0;
+}
+
+.content ul ul,
+.content ul ol,
+.content ol ul,
+.content ol ol {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
 /* 4) Subtle nav: translucent + blur + faint border */
 #quarto-header .navbar {
   background-color: var(--site-nav-bg-solid);
