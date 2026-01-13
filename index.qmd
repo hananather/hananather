@@ -4,9 +4,9 @@ toc: false
 ---
 
 I am a Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at **[Statistics Canada](https://www.statcan.gc.ca/en/start)**.
-Won **[International Association for Official Statistics Young Statisticians Prize 2025](https://iaos-isi.org/ysp/)** for a Bayesian framework integrating LLMs with calibrated uncertainty.
 My research has focused on uncertainty quantification for LLMs (calibration + conformal prediction) and AI security & safety for confidential-data settings (data privacy, threat modeling, and evaluation).
 I’m a member of the Office of Responsible AI, where I lead technical reviews of AI systems across government and contribute to AI frameworks and governance guidance for international bodies including **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
+Won [International Association for Official Statistics Young Statisticians Prize 2025](https://iaos-isi.org/ysp/) for a Bayesian framework integrating LLMs with calibrated uncertainty.
 
 - **[Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa**
   - **Research topic:** Deep Reinforcement Learning and Function Optimization
