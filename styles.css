@@ -346,11 +346,32 @@ body.quarto-dark .site-card {
 }
 
 .notes-list li {
-  padding: 0.65rem 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 0.7rem 0;
 }
 
 .notes-list li + li {
   border-top: 1px solid var(--site-border);
+}
+
+.notes-list li::after {
+  content: "PDF";
+  flex: 0 0 auto;
+  color: var(--site-muted);
+  font-size: 0.95em;
+  opacity: 0;
+  transform: translateY(-1px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  white-space: nowrap;
+}
+
+.notes-list li:hover::after,
+.notes-list li:focus-within::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .notes-list a {
