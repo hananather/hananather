@@ -5,9 +5,7 @@ I build full-stack AI systems and the evals that make them safe to deploy in con
 
 My current focus is AI security, applied mechanistic interpretability, and uncertainty quantification for AI systems.
 
-Website: [hananather.com](https://hananather.com)
-
-- 1st place, [IAOS Young Statisticians Prize (2025)](https://iaos-isi.org/ysp/) for *LLM-Assisted Record Linkage: Framework for Record Linkage in Official Statistics*.
+- Won [International Association for Official Statistics Young Statisticians Prize 2025](https://iaos-isi.org/ysp/) for a Bayesian framework integrating LLMs with uncertainty quantification.
 - MATS 10.0 Scholar in [Neel Nanda](https://www.matsprogram.org/mentor/neel)’s stream ([MATS Program](https://www.matsprogram.org/)).
 - I contribute to guidance and governance work with [UNECE](https://statswiki.unece.org/), [G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI), and the [International Statistical Institute](https://www.isi-web.org/).
 
