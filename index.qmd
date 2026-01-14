@@ -20,7 +20,7 @@ I am also a member of the Office of Responsible AI, where I lead technical revie
 
 ## Projects
 
-- I built [Probability Lab](https://www.probability-lab.com/)—an interactive probability and statistics platform currently in use at the University of Ottawa's second-year engineering program.
+- I built [Probability Lab](https://www.probability-lab.com/), an interactive probability and statistics platform currently in use at the University of Ottawa's second-year engineering program.
 - I published a 6-part series of reinforcement learning labs (Jupyter notebooks): [Reinforcement Learning Labs](rl-labs/).
 
 ## Graduate Course Notes
@@ -39,5 +39,5 @@ I am also a member of the Office of Responsible AI, where I lead technical revie
 ::: {.notes-list}
 - [Master Thesis: Deep Reinforcement Learning](website_docs/master-thesis-deep-reinforcement-learning.pdf)
 - [Law of the Iterated Logarithm](website_docs/law-of-the-iterated-logarithm.pdf)
-- [MAT4376X Research Project](website_docs/mat4376x-research-project.pdf)
+- [MapReduce for Parallel Machine Learning](website_docs/mat4376x-research-project.pdf)
 :::
