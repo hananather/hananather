@@ -40,6 +40,8 @@ format:
       dark: cyborg
     css: styles.css
     toc: false
+    code-fold: false
+    code-tools: false
     include-in-header:
       - text: |
           <link rel="icon" href="/favicon.ico?v=20260113" sizes="any">

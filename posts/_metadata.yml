@@ -5,5 +5,5 @@ execute:
   warning: false  # Hide warnings
 format:
   html:
-    code-fold: true  # Allow code folding
-    code-tools: true  # Show code tools
+    code-fold: false  # Always show code (no folding UI)
+    code-tools: false  # Disable global code toggle menu
