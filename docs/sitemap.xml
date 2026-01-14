@@ -18,15 +18,19 @@
   </url>
   <url>
     <loc>https://hananather.com/AGENTS.html</loc>
-    <lastmod>2025-09-01T15:10:22.971Z</lastmod>
+    <lastmod>2026-01-13T23:29:37.497Z</lastmod>
   </url>
   <url>
     <loc>https://hananather.com/index.html</loc>
-    <lastmod>2026-01-14T13:37:33.465Z</lastmod>
+    <lastmod>2026-01-14T14:17:10.129Z</lastmod>
   </url>
   <url>
     <loc>https://hananather.com/posts/index.html</loc>
     <lastmod>2026-01-13T22:28:52.113Z</lastmod>
+  </url>
+  <url>
+    <loc>https://hananather.com/posts/reinforcement-learning-labs/index.html</loc>
+    <lastmod>2026-01-13T23:04:11.927Z</lastmod>
   </url>
   <url>
     <loc>https://hananather.com/principles.html</loc>
@@ -59,9 +63,5 @@
   <url>
     <loc>https://hananather.com/rl-labs/part-3-dynamic-programming/index.html</loc>
     <lastmod>2026-01-13T21:47:02.781Z</lastmod>
-  </url>
-  <url>
-    <loc>https://hananather.com/posts/reinforcement-learning-labs/index.html</loc>
-    <lastmod>2026-01-13T23:04:11.927Z</lastmod>
   </url>
 </urlset>
