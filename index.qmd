@@ -10,7 +10,7 @@ I am a Member of Technical Staff at the Centre for AI Research and Excellence (C
 My research has focused on uncertainty quantification for LLMs (calibration + conformal prediction) and AI security & safety for confidential-data settings (data privacy, threat modeling, and evaluation).
 I’m a member of the Office of Responsible AI, where I lead technical reviews of AI systems across government and contribute to AI frameworks and governance guidance for international bodies including **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
 
-- Selected as a [MATS 10.0 Math Scholar](https://www.matsprogram.org/cohort/mats-10-0){.mats-link} in [Neel Nanda](https://www.matsprogram.org/mentor/neel)’s stream.
+- Selected as a [MATS 10.0 Scholar](https://www.matsprogram.org/cohort/mats-10-0){.mats-link} in [Neel Nanda](https://www.matsprogram.org/mentor/neel)’s stream.
 - Won [International Association for Official Statistics Young Statisticians Prize 2025](https://iaos-isi.org/ysp/) for a Bayesian framework integrating LLMs with calibrated uncertainty.
 
 Links: [My CV](website_docs/hanan-ather-cv.pdf)
