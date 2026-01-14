@@ -195,7 +195,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Part 0: Basic Probability Simulations</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li></ul></div></div>
+<h1 class="title">Part 0: Basic Probability Simulations</h1>
 </div>
 
 
@@ -217,8 +217,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="simulating-a-fair-coin-flip" class="level3">
 <h3 class="anchored" data-anchor-id="simulating-a-fair-coin-flip">Simulating a Fair Coin Flip</h3>
 <div id="e34ed268-e5fc-4924-b5aa-47ddb19008dc" class="cell" data-execution_count="1">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate 10 coin flips and count Heads</span></span>
@@ -230,14 +228,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        heads_count <span class="op">+=</span> <span class="dv">1</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Out of </span><span class="sc">{</span>num_flips<span class="sc">}</span><span class="ss"> flips, got Heads = </span><span class="sc">{</span>heads_count<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Out of 10 flips, got Heads = 6</code></pre>
 </div>
 </div>
 <div id="2c72d611-7d13-4ded-a5f4-7a1b547879cb" class="cell" data-execution_count="4">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>trials <span class="op">=</span> <span class="dv">1000</span></span>
@@ -251,7 +246,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>avg_heads <span class="op">=</span> total_heads <span class="op">/</span> trials</span>
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Average Heads in </span><span class="sc">{</span>num_flips<span class="sc">}</span><span class="ss"> flips (over </span><span class="sc">{</span>trials<span class="sc">}</span><span class="ss"> trials) = </span><span class="sc">{</span>avg_heads<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Average Heads in 10 flips (over 1000 trials) = 4.95</code></pre>
 </div>
@@ -260,24 +254,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="simulating-a-six-sided-die-roll" class="level3">
 <h3 class="anchored" data-anchor-id="simulating-a-six-sided-die-roll">Simulating a Six-Sided Die Roll</h3>
 <div id="fbd47472-3c90-49cb-8839-bcd1807333b8" class="cell" data-execution_count="5">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>outcomes <span class="op">=</span> [random.randint(<span class="dv">1</span>, <span class="dv">6</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">20</span>)]</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"20 die rolls:"</span>, outcomes)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Average roll value:"</span>, <span class="bu">sum</span>(outcomes)<span class="op">/</span><span class="bu">len</span>(outcomes))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>20 die rolls: [4, 2, 2, 3, 6, 3, 2, 6, 5, 5, 1, 5, 3, 5, 4, 3, 4, 1, 3, 5]
 Average roll value: 3.6</code></pre>
 </div>
 </div>
 <div id="094425f4-2120-4506-a7a2-ec5e675ba1cd" class="cell" data-execution_count="6">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>outcomes <span class="op">=</span> random.choices([<span class="st">"H"</span>, <span class="st">"T"</span>], weights<span class="op">=</span>[<span class="fl">0.7</span>, <span class="fl">0.3</span>], k<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"10 flips of a biased 70/30 coin:"</span>, outcomes)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Number of Heads:"</span>, outcomes.count(<span class="st">"H"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>10 flips of a biased 70/30 coin: ['T', 'T', 'H', 'H', 'T', 'H', 'H', 'T', 'H', 'T']
 Number of Heads: 5</code></pre>
@@ -289,12 +277,9 @@ Number of Heads: 5</code></pre>
 <p>Beyond discrete outcomes, many processes produce continuous-valued outcomes. For example, an agent’s sensor reading might be normally distributed noise, or time between events might be exponentially distributed.</p>
 <p>Let’s draw samples from a normal distribution with mean 0 and standard deviation 1 (standard normal). We’ll generate 5 samples:</p>
 <div id="df356324-9ea8-4a61-832d-c3d6911a1e5e" class="cell" data-execution_count="7">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    sample <span class="op">=</span> random.gauss(<span class="dv">0</span>, <span class="dv">1</span>)  <span class="co"># or random.normalvariate(0,1)</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Normal sample: </span><span class="sc">{</span>sample<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Normal sample: -1.252
 Normal sample: -0.559
@@ -546,57 +531,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
     clipboardModal.on('success', onCopySuccess);
-  }
-  const viewSource = window.document.getElementById('quarto-view-source') ||
-                     window.document.getElementById('quarto-code-tools-source');
-  if (viewSource) {
-    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
-    viewSource.addEventListener("click", function(e) {
-      if (sourceUrl) {
-        // rstudio viewer pane
-        if (/\bcapabilities=\b/.test(window.location)) {
-          window.open(sourceUrl);
-        } else {
-          window.location.href = sourceUrl;
-        }
-      } else {
-        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
-        modal.show();
-      }
-      return false;
-    });
-  }
-  function toggleCodeHandler(show) {
-    return function(e) {
-      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
-      for (let i=0; i<detailsSrc.length; i++) {
-        const details = detailsSrc[i].parentElement;
-        if (show) {
-          details.open = true;
-        } else {
-          details.removeAttribute("open");
-        }
-      }
-      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
-      const fromCls = show ? "hidden" : "unhidden";
-      const toCls = show ? "unhidden" : "hidden";
-      for (let i=0; i<cellCodeDivs.length; i++) {
-        const codeDiv = cellCodeDivs[i];
-        if (codeDiv.classList.contains(fromCls)) {
-          codeDiv.classList.remove(fromCls);
-          codeDiv.classList.add(toCls);
-        } 
-      }
-      return false;
-    }
-  }
-  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
-  if (hideAllCode) {
-    hideAllCode.addEventListener("click", toggleCodeHandler(false));
-  }
-  const showAllCode = window.document.getElementById("quarto-show-all-code");
-  if (showAllCode) {
-    showAllCode.addEventListener("click", toggleCodeHandler(true));
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);

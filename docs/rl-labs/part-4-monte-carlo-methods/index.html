@@ -224,7 +224,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Part 4: Monte Carlo Methods</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li></ul></div></div>
+<h1 class="title">Part 4: Monte Carlo Methods</h1>
 </div>
 
 
@@ -251,8 +251,6 @@ window.Quarto = {
 <p>Let’s return to the gambler environment (small version: goal=10, p=0.5) and evaluate the policy “always bet 1” via Monte Carlo simulation, instead of using the known probabilities. We will implement first-visit MC prediction: 1. Simulate many episodes using the policy. 2. For each episode, record the return <span class="math inline">\(G_t\)</span> from each state visited. 3. Update the value estimate for the first visit of each state by averaging the returns.</p>
 <p>Because the reward is 0 until the end and 1 at goal, the return is essentially 1 if the episode ends in success, 0 if failure. So the value of a state is the probability of eventually succeeding from that state (as earlier).</p>
 <div id="cell-2" class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Gambler environment from state with always-bet-1 policy</span></span>
@@ -276,27 +274,21 @@ window.Quarto = {
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    final_reward <span class="op">=</span> <span class="dv">1</span> <span class="cf">if</span> capital <span class="op">==</span> goal <span class="cf">else</span> <span class="dv">0</span></span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    episode.append((capital, <span class="va">None</span>, final_reward))  <span class="co"># terminal state</span></span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> episode</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 <p>The final state is handled specially with <code>(capital, None, final_reward)</code> where: - <code>None</code> for action because it’s a terminal state - <code>final_reward</code> is 1 if we reached the goal, 0 if we went bust Here’s a simple example to illustrate:</p>
 <div id="cell-4" class="cell" data-execution_count="2">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example episode with start_capital=2, goal=4, p_head=0.5 might look like:</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>[(<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">0</span>),    <span class="co"># Start with $2, bet $1, no reward yet</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a> (<span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">0</span>),    <span class="co"># Won first bet (now $3), bet $1, no reward yet</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a> (<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">0</span>),    <span class="co"># Lost second bet (back to $2), bet $1, no reward yet</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a> (<span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">0</span>),    <span class="co"># Won third bet (now $3), bet $1, no reward yet</span></span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a> (<span class="dv">4</span>, <span class="va">None</span>, <span class="dv">1</span>)] <span class="co"># Won fourth bet, reached goal, get reward of 1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>[(2, 1, 0), (3, 1, 0), (2, 1, 0), (3, 1, 0), (4, None, 1)]</code></pre>
 </div>
 </div>
 <p>This function is crucial for Monte Carlo methods because it generates the experience samples we’ll learn from. The complete episodes allow us to calculate actual returns (G) rather than estimated values.The structure (s,a,r) matches the standard format for reinforcement learning algorithms.</p>
 <div id="cell-6" class="cell" data-execution_count="1">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First-visit MC policy evaluation</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mc_first_visit_value(start_states, goal, p_head, policy_func, episodes<span class="op">=</span><span class="dv">10000</span>):</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    values <span class="op">=</span> {s: <span class="fl">0.0</span> <span class="cf">for</span> s <span class="kw">in</span> <span class="bu">range</span>(goal)}</span>
@@ -336,7 +328,6 @@ window.Quarto = {
 <span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"MC estimated values for gambler states 1..9 (bet-1 policy):"</span>)</span>
 <span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">10</span>):</span>
 <span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"V(</span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">) ≈ </span><span class="sc">{</span>mc_values[s]<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>MC estimated values for gambler states 1..9 (bet-1 policy):
 V(1) ≈ 0.10
@@ -360,8 +351,6 @@ V(9) ≈ 0.91</code></pre>
 <p>For gambler’s problem: - State = capital (1 to 9 for goal=10). - Actions = bet amount (1 to min(s, goal-s)). You can’t bet more money than you have (s) and Yyou don’t want to bet more than needed to reach the goal (goal-s). We want to maximize the probability of reaching goal.</p>
 <p>Let’s implement MC Control with exploring starts for the gambler:</p>
 <div id="cell-9" class="cell" data-execution_count="8">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Monte Carlo Control with Exploring Starts for gambler</span></span>
@@ -422,7 +411,6 @@ V(9) ≈ 0.91</code></pre>
 <span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Learned optimal policy (bet amounts) for states 1..9:"</span>)</span>
 <span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">10</span>):</span>
 <span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"State </span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">: bet </span><span class="sc">{</span>opt_policy[s]<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Learned optimal policy (bet amounts) for states 1..9:
 State 1: bet 1
@@ -715,57 +703,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
     clipboardModal.on('success', onCopySuccess);
-  }
-  const viewSource = window.document.getElementById('quarto-view-source') ||
-                     window.document.getElementById('quarto-code-tools-source');
-  if (viewSource) {
-    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
-    viewSource.addEventListener("click", function(e) {
-      if (sourceUrl) {
-        // rstudio viewer pane
-        if (/\bcapabilities=\b/.test(window.location)) {
-          window.open(sourceUrl);
-        } else {
-          window.location.href = sourceUrl;
-        }
-      } else {
-        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
-        modal.show();
-      }
-      return false;
-    });
-  }
-  function toggleCodeHandler(show) {
-    return function(e) {
-      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
-      for (let i=0; i<detailsSrc.length; i++) {
-        const details = detailsSrc[i].parentElement;
-        if (show) {
-          details.open = true;
-        } else {
-          details.removeAttribute("open");
-        }
-      }
-      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
-      const fromCls = show ? "hidden" : "unhidden";
-      const toCls = show ? "unhidden" : "hidden";
-      for (let i=0; i<cellCodeDivs.length; i++) {
-        const codeDiv = cellCodeDivs[i];
-        if (codeDiv.classList.contains(fromCls)) {
-          codeDiv.classList.remove(fromCls);
-          codeDiv.classList.add(toCls);
-        } 
-      }
-      return false;
-    }
-  }
-  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
-  if (hideAllCode) {
-    hideAllCode.addEventListener("click", toggleCodeHandler(false));
-  }
-  const showAllCode = window.document.getElementById("quarto-show-all-code");
-  if (showAllCode) {
-    showAllCode.addEventListener("click", toggleCodeHandler(true));
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);

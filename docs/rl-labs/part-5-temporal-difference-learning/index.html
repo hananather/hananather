@@ -227,7 +227,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Part 5: Temporal Difference Learning</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li></ul></div></div>
+<h1 class="title">Part 5: Temporal Difference Learning</h1>
 </div>
 
 
@@ -256,8 +256,6 @@ window.Quarto = {
 <p>We’ll use the gambler’s problem (or we could use grid world) and see how TD updates converge to true values.</p>
 <p>Let’s do TD(0) for gambler policy “bet 1”, as we did with MC, and see if it approximates the value function.</p>
 <div id="cell-2" class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> td0_prediction(policy_func, alpha<span class="op">=</span><span class="fl">0.1</span>, episodes<span class="op">=</span><span class="dv">1000</span>, start_capital<span class="op">=</span><span class="dv">5</span>, goal<span class="op">=</span><span class="dv">10</span>, p_head<span class="op">=</span><span class="fl">0.5</span>):</span>
@@ -287,7 +285,6 @@ window.Quarto = {
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>td_values <span class="op">=</span> td0_prediction(policy_func<span class="op">=</span><span class="kw">lambda</span> s: <span class="dv">1</span>, alpha<span class="op">=</span><span class="fl">0.1</span>, episodes<span class="op">=</span><span class="dv">10000</span>, start_capital<span class="op">=</span><span class="dv">5</span>, goal<span class="op">=</span><span class="dv">10</span>, p_head<span class="op">=</span><span class="fl">0.5</span>)</span>
 <span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"TD(0) estimated value of state 5 (starting state):"</span>, <span class="bu">round</span>(td_values[<span class="dv">5</span>], <span class="dv">3</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>TD(0) estimated value of state 5 (starting state): 0.515</code></pre>
 </div>
@@ -313,18 +310,13 @@ window.Quarto = {
 <p><strong>SARSA and Q-learning:</strong> - SARSA will update using the action it actually takes next (which, if it’s following <span class="math inline">\(\epsilon\)</span>-greedy, might be suboptimal, so it ends up learning the value of its exploratory policy). - Q-learning will update as if it always takes the optimal next action (even if it didn’t), thus it tends to learn optimistic values and converge to the true optimal policy value.</p>
 <p>Let’s still do a simple grid with some penalty state:</p>
 <div id="cell-4" class="cell" data-execution_count="6">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>grid_rows, grid_cols <span class="op">=</span> <span class="dv">3</span>, <span class="dv">4</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>start_state <span class="op">=</span> (<span class="dv">0</span>,<span class="dv">0</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>goal_state <span class="op">=</span> (<span class="dv">0</span>,<span class="dv">3</span>)</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>cliff_state <span class="op">=</span> (<span class="dv">1</span>,<span class="dv">2</span>)  <span class="co"># stepping here gives -10 reward (for example)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 <p>We will implement a step function for this:</p>
 <div id="cell-6" class="cell" data-execution_count="7">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> grid_step(state, action):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> state <span class="op">==</span> goal_state:</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> state, <span class="dv">0</span>  <span class="co"># absorbing</span></span>
@@ -343,13 +335,10 @@ window.Quarto = {
 <span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        reward <span class="op">=</span> <span class="op">-</span><span class="dv">1</span>  <span class="co"># each step cost</span></span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> new_state, reward</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 <p>Now define actions and run SARSA and Q-learning episodes.</p>
 <p>We’ll keep it short and not do too many episodes for demonstration.</p>
 <div id="cell-8" class="cell" data-execution_count="8">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>actions <span class="op">=</span> [(<span class="dv">0</span>,<span class="dv">1</span>),(<span class="dv">0</span>,<span class="op">-</span><span class="dv">1</span>),(<span class="dv">1</span>,<span class="dv">0</span>),(<span class="op">-</span><span class="dv">1</span>,<span class="dv">0</span>)]  <span class="co"># right, left, down, up moves</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> epsilon_greedy_action(Q, state, epsilon<span class="op">=</span><span class="fl">0.1</span>):</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> random.random() <span class="op">&lt;</span> epsilon:</span>
@@ -443,7 +432,6 @@ window.Quarto = {
 <span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>            arrow <span class="op">=</span> { (<span class="dv">0</span>,<span class="dv">1</span>): <span class="st">"&gt;"</span>, (<span class="dv">0</span>,<span class="op">-</span><span class="dv">1</span>): <span class="st">"&lt;"</span>, (<span class="dv">1</span>,<span class="dv">0</span>): <span class="st">"v"</span>, (<span class="op">-</span><span class="dv">1</span>,<span class="dv">0</span>): <span class="st">"^"</span> }</span>
 <span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>            row.append(arrow[policy_qlearn[s]])</span>
 <span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">" "</span>.join(row))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Greedy policy from SARSA:
 &lt; &gt; &gt; G
@@ -719,57 +707,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
     clipboardModal.on('success', onCopySuccess);
-  }
-  const viewSource = window.document.getElementById('quarto-view-source') ||
-                     window.document.getElementById('quarto-code-tools-source');
-  if (viewSource) {
-    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
-    viewSource.addEventListener("click", function(e) {
-      if (sourceUrl) {
-        // rstudio viewer pane
-        if (/\bcapabilities=\b/.test(window.location)) {
-          window.open(sourceUrl);
-        } else {
-          window.location.href = sourceUrl;
-        }
-      } else {
-        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
-        modal.show();
-      }
-      return false;
-    });
-  }
-  function toggleCodeHandler(show) {
-    return function(e) {
-      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
-      for (let i=0; i<detailsSrc.length; i++) {
-        const details = detailsSrc[i].parentElement;
-        if (show) {
-          details.open = true;
-        } else {
-          details.removeAttribute("open");
-        }
-      }
-      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
-      const fromCls = show ? "hidden" : "unhidden";
-      const toCls = show ? "unhidden" : "hidden";
-      for (let i=0; i<cellCodeDivs.length; i++) {
-        const codeDiv = cellCodeDivs[i];
-        if (codeDiv.classList.contains(fromCls)) {
-          codeDiv.classList.remove(fromCls);
-          codeDiv.classList.add(toCls);
-        } 
-      }
-      return false;
-    }
-  }
-  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
-  if (hideAllCode) {
-    hideAllCode.addEventListener("click", toggleCodeHandler(false));
-  }
-  const showAllCode = window.document.getElementById("quarto-show-all-code");
-  if (showAllCode) {
-    showAllCode.addEventListener("click", toggleCodeHandler(true));
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);

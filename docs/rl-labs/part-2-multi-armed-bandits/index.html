@@ -227,7 +227,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Part 2: Multi-Armed Bandits</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li></ul></div></div>
+<h1 class="title">Part 2: Multi-Armed Bandits</h1>
 </div>
 
 
@@ -256,14 +256,11 @@ window.Quarto = {
 <p>Let’s set up a bandit problem to test these. We will create a bandit with, say, 3 arms: - Arm 0: win probability 0.3 - Arm 1: win probability 0.5 - Arm 2: win probability 0.7</p>
 <p>The best arm is #2 (70% chance of reward), but the agents don’t know that initially.</p>
 <div id="af49552f-f959-4c9b-8110-112241caa124" class="cell" data-execution_count="6">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># True probabilities for each arm (unknown to agent)</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>true_probs <span class="op">=</span> [<span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.7</span>]</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>K <span class="op">=</span> <span class="bu">len</span>(true_probs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 <p>We’ll simulate a sequence of 1000 pulls. At each step, the agent chooses an arm according to the strategy, and gets a reward 1 (with the arm’s true probability) or 0. We will track: - The cumulative reward over time. - The number of pulls of each arm (to see exploration).</p>
 <section id="ε-greedy-strategy" class="level3">
@@ -271,8 +268,6 @@ window.Quarto = {
 <p>The ε-greedy strategy is simple and widely used: - We maintain an estimate of each arm’s value (e.g., average reward observed). - On each step, with probability ε choose a random arm (explore), otherwise choose the arm with highest estimated value (exploit). - After getting the reward, update the arm’s value estimate (incremental average).</p>
 <p>Let’s implement ε-greedy:</p>
 <div id="7535a560-2640-4677-a4b8-724a47e24f9c" class="cell" data-execution_count="7">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_epsilon_greedy(true_probs, epsilon<span class="op">=</span><span class="fl">0.1</span>, trials<span class="op">=</span><span class="dv">1000</span>):</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Initialize estimates and counts</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    counts <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> K <span class="co"># number of times each arm is sampled</span></span>
@@ -306,7 +301,6 @@ window.Quarto = {
 <span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Arm counts:"</span>, counts_eps)</span>
 <span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Estimated values:"</span>, [<span class="ss">f"</span><span class="sc">{</span>v<span class="sc">:.2f}</span><span class="ss">"</span> <span class="cf">for</span> v <span class="kw">in</span> values_eps])</span>
 <span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Total reward:"</span>, history_eps[<span class="op">-</span><span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Epsilon-Greedy results:
 Arm counts: [3024, 3220, 83756]
@@ -323,8 +317,6 @@ Total reward: 61325</code></pre>
 \]</span> where: - <span class="math inline">\(\hat{Q}_a\)</span> is the current estimated value (mean reward) of arm a. - <span class="math inline">\(N_a\)</span> is how many times arm a has been pulled. - <span class="math inline">\(N_a\)</span> is how many times arm a has been pulled.</p>
 <p>We will implement UCB1. Note: We need to pull each arm at least once initially to get an estimate (and avoid division by zero).</p>
 <div id="bed98226-4afd-4fbd-9da7-47eb2a56077f" class="cell" data-execution_count="8">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_ucb(trials<span class="op">=</span><span class="dv">1000</span>):</span>
@@ -365,7 +357,6 @@ Total reward: 61325</code></pre>
 <span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Arm counts:"</span>, counts_ucb)</span>
 <span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Estimated values:"</span>, [<span class="ss">f"</span><span class="sc">{</span>v<span class="sc">:.2f}</span><span class="ss">"</span> <span class="cf">for</span> v <span class="kw">in</span> values_ucb])</span>
 <span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Total reward:"</span>, history_ucb[<span class="op">-</span><span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 UCB results:
@@ -382,8 +373,6 @@ Total reward: 634</code></pre>
 <p>Thompson Sampling is a Bayesian approach: - Assume a prior distribution for each arm’s success probability. For a Bernoulli reward, a common prior is Beta(1,1) (uniform). - After each pull, update the posterior for that arm (Beta prior updated with observed successes/failures). - To choose an arm: sample a success probability from each arm’s current posterior, then pick the arm with the highest sample. This way, arms with more uncertainty or higher potential can win the selection sometimes, naturally balancing exploration and exploitation.</p>
 <p>We’ll implement Thompson Sampling using Beta distributions for each arm. Python’s <code>random.betavariate(alpha, beta)</code> can sample from a Beta distribution.</p>
 <div id="6839a014-d8b4-493b-a1c4-9369cbbfa181" class="cell" data-execution_count="9">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_thompson(trials<span class="op">=</span><span class="dv">10000</span>):</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Start with prior Beta(1,1) for each arm</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    alpha <span class="op">=</span> [<span class="dv">1</span>] <span class="op">*</span> K</span>
@@ -414,7 +403,6 @@ Total reward: 634</code></pre>
 <span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Arm counts:"</span>, counts_th)</span>
 <span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Estimated values:"</span>, [<span class="ss">f"</span><span class="sc">{</span>v<span class="sc">:.2f}</span><span class="ss">"</span> <span class="cf">for</span> v <span class="kw">in</span> values_th])</span>
 <span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Total reward:"</span>, history_th[<span class="op">-</span><span class="dv">1</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Thompson Sampling results:
@@ -424,8 +412,6 @@ Total reward: 704</code></pre>
 </div>
 </div>
 <div id="c664cadd-4ebb-4326-86d1-ceb8d96296f9" class="cell" data-execution_count="10">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>avg_reward_eps <span class="op">=</span> history_eps[<span class="op">-</span><span class="dv">1</span>] <span class="op">/</span> <span class="bu">len</span>(history_eps)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>avg_reward_ucb <span class="op">=</span> history_ucb[<span class="op">-</span><span class="dv">1</span>] <span class="op">/</span> <span class="bu">len</span>(history_ucb)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>avg_reward_th <span class="op">=</span> history_th[<span class="op">-</span><span class="dv">1</span>] <span class="op">/</span> <span class="bu">len</span>(history_th)</span>
@@ -433,7 +419,6 @@ Total reward: 704</code></pre>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Epsilon-Greedy: </span><span class="sc">{</span>avg_reward_eps<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"UCB: </span><span class="sc">{</span>avg_reward_ucb<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Thompson Sampling: </span><span class="sc">{</span>avg_reward_th<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Average reward per pull:
@@ -686,57 +671,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
     clipboardModal.on('success', onCopySuccess);
-  }
-  const viewSource = window.document.getElementById('quarto-view-source') ||
-                     window.document.getElementById('quarto-code-tools-source');
-  if (viewSource) {
-    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
-    viewSource.addEventListener("click", function(e) {
-      if (sourceUrl) {
-        // rstudio viewer pane
-        if (/\bcapabilities=\b/.test(window.location)) {
-          window.open(sourceUrl);
-        } else {
-          window.location.href = sourceUrl;
-        }
-      } else {
-        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
-        modal.show();
-      }
-      return false;
-    });
-  }
-  function toggleCodeHandler(show) {
-    return function(e) {
-      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
-      for (let i=0; i<detailsSrc.length; i++) {
-        const details = detailsSrc[i].parentElement;
-        if (show) {
-          details.open = true;
-        } else {
-          details.removeAttribute("open");
-        }
-      }
-      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
-      const fromCls = show ? "hidden" : "unhidden";
-      const toCls = show ? "unhidden" : "hidden";
-      for (let i=0; i<cellCodeDivs.length; i++) {
-        const codeDiv = cellCodeDivs[i];
-        if (codeDiv.classList.contains(fromCls)) {
-          codeDiv.classList.remove(fromCls);
-          codeDiv.classList.add(toCls);
-        } 
-      }
-      return false;
-    }
-  }
-  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
-  if (hideAllCode) {
-    hideAllCode.addEventListener("click", toggleCodeHandler(false));
-  }
-  const showAllCode = window.document.getElementById("quarto-show-all-code");
-  if (showAllCode) {
-    showAllCode.addEventListener("click", toggleCodeHandler(true));
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);

@@ -227,7 +227,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Introduction to LLMs</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li></ul></div></div>
+<h1 class="title">Introduction to LLMs</h1>
   <div class="quarto-categories">
     <div class="quarto-category">AI</div>
     <div class="quarto-category">Machine Learning</div>
@@ -302,8 +302,6 @@ between income, location, and reported affordability stress levels..."
 <h1>Text and prompting</h1>
 <p>The first concept we will go over is learning how to prompt a model to generate text (prompt = instruction). We can use a large langugage model to generate text from a prompt, the same way as we you might use ChatGPT. Models can generate almost any kind of text response: 1. code 2. mathematical equations 3. structured JSON data 4. Human-like prose</p>
 <div id="df9f91bc-95c8-41e8-a1a5-8b514169e4f8" class="cell" data-execution_count="9">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="im">from</span> openai <span class="im">import</span> OpenAI</span>
 <span id="cb2-2"><a href="#cb2-2"></a>client <span class="op">=</span> OpenAI()</span>
 <span id="cb2-3"><a href="#cb2-3"></a></span>
@@ -318,16 +316,12 @@ between income, location, and reported affordability stress levels..."
 <span id="cb2-12"><a href="#cb2-12"></a>)</span>
 <span id="cb2-13"><a href="#cb2-13"></a></span>
 <span id="cb2-14"><a href="#cb2-14"></a><span class="bu">print</span>(completion.choices[<span class="dv">0</span>].message.content)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Statistics Canada is the national statistical agency of Canada, responsible for producing and disseminating official statistics about the country’s population, economy, resources, and society. Established in 1971, it operates under the *Statistics Act* to provide reliable and impartial data to support decision-making by governments, businesses, and the public. Its key activities include conducting nationwide surveys and censuses, such as the Census of Population and Census of Agriculture. Statistics Canada emphasizes confidentiality and data quality, playing a crucial role in informing policy, research, and public understanding of Canada’s trends and developments.</code></pre>
 </div>
 </div>
 <div id="893f2275-c962-447f-ba72-86003322ecd9" class="cell" data-scrolled="true" data-execution_count="10">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>completion.choices</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-display" data-execution_count="10">
 <pre><code>[Choice(finish_reason='stop', index=0, logprobs=None, message=ChatCompletionMessage(content='Statistics Canada is the national statistical agency of Canada, responsible for producing and disseminating official statistics about the country’s population, economy, resources, and society. Established in 1971, it operates under the *Statistics Act* to provide reliable and impartial data to support decision-making by governments, businesses, and the public. Its key activities include conducting nationwide surveys and censuses, such as the Census of Population and Census of Agriculture. Statistics Canada emphasizes confidentiality and data quality, playing a crucial role in informing policy, research, and public understanding of Canada’s trends and developments.', refusal=None, role='assistant', annotations=[], audio=None, function_call=None, tool_calls=None))]</code></pre>
 </div>
@@ -387,8 +381,6 @@ between income, location, and reported affordability stress levels..."
 </figure>
 </div>
 <div id="202ceea8-1ed9-4438-a7ec-0b6acee69761" class="cell" data-execution_count="12">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1"></a><span class="im">from</span> openai <span class="im">import</span> OpenAI</span>
 <span id="cb7-2"><a href="#cb7-2"></a>client <span class="op">=</span> OpenAI()</span>
 <span id="cb7-3"><a href="#cb7-3"></a></span>
@@ -407,7 +399,6 @@ between income, location, and reported affordability stress levels..."
 <span id="cb7-16"><a href="#cb7-16"></a>)</span>
 <span id="cb7-17"><a href="#cb7-17"></a></span>
 <span id="cb7-18"><a href="#cb7-18"></a><span class="bu">print</span>(completion.choices[<span class="dv">0</span>].message.content)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Arrr matey! Statistics Canada, or StatCan fer short, be the landlubbers’ agency in charge o’ gatherin’ and sharin’ all sorts o’ numbers ‘bout the Great White North. They keeps track o’ the population, the booty (money), jobs, and the way folks live from coast to coast to coast, eh! StatCan’s surveys and censuses help chart the course for government decisions, an’ many a policy sails smoother thanks to their data charts. Whether ye be lookin’ fer facts ‘bout trade or tryin’ to map out Canada’s changing tides, StatCan’s got the treasure chest o’ knowledge, ya savvy?</code></pre>
 </div>
@@ -423,8 +414,6 @@ between income, location, and reported affordability stress levels..."
 <h3 class="anchored" data-anchor-id="manually-manage-the-conversation-state">Manually manage the conversation state</h3>
 <p>Generally for most APIs each text generation request is independent and stateless (unless we are specific APIs like the Assistants API), but we can still implement multi-turn conversations by providing additional messages as parameters to our text generation request.</p>
 <div id="400d9bc9-4097-4fea-bd89-ff25c7b135b6" class="cell" data-execution_count="19">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1"></a><span class="im">from</span> openai <span class="im">import</span> OpenAI</span>
 <span id="cb9-2"><a href="#cb9-2"></a></span>
 <span id="cb9-3"><a href="#cb9-3"></a>client <span class="op">=</span> OpenAI()</span>
@@ -439,7 +428,6 @@ between income, location, and reported affordability stress levels..."
 <span id="cb9-12"><a href="#cb9-12"></a>)</span>
 <span id="cb9-13"><a href="#cb9-13"></a></span>
 <span id="cb9-14"><a href="#cb9-14"></a><span class="bu">print</span>(response.choices[<span class="dv">0</span>].message.content)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Statistics Canada conducts various types of surveys, which can be broadly categorized into the following main types:
 
@@ -461,8 +449,6 @@ These surveys help inform public policy, support economic planning, and contribu
 <p>By using alternating <code>user</code> and <code>assistant</code> messages, we can capture the previous state of conversation in one request to the model. To manually share context across generated responses, you include the model’s previous response output as input and append that input to your next request.</p>
 <p>In the following example, we ask the model about Canadian demographics, followed by a request for provincial data. Appending previous responses to new requests in this way helps ensure conversations feel natural and retain the context of previous interactions.</p>
 <div id="b30909a5-31ec-4279-86c8-e8c84bf8ce8a" class="cell" data-execution_count="21">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1"></a><span class="im">from</span> openai <span class="im">import</span> OpenAI</span>
 <span id="cb11-2"><a href="#cb11-2"></a></span>
 <span id="cb11-3"><a href="#cb11-3"></a>client <span class="op">=</span> OpenAI()</span>
@@ -491,7 +477,6 @@ These surveys help inform public policy, support economic planning, and contribu
 <span id="cb11-26"><a href="#cb11-26"></a></span>
 <span id="cb11-27"><a href="#cb11-27"></a><span class="bu">print</span>(second_response.choices[<span class="dv">0</span>].message.content)</span>
 <span id="cb11-28"><a href="#cb11-28"></a><span class="bu">print</span>(second_response.choices[<span class="dv">0</span>].message.content)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>The Canadian Census is a national program conducted by Statistics Canada to collect comprehensive data on the country's population and housing. This data is crucial for government planning, policy-making, and the allocation of resources and services. The census gathers information on a variety of demographic, social, economic, and cultural aspects, such as age, sex, marital status, household relationships, language, employment, income, and housing conditions.
 
@@ -614,8 +599,6 @@ class Status(Enum):
 <p>What matters is that we’ve exposed the function and described its signature in a way that the model understands—now, the model can decide when to call it and how to call it, but it won’t hallucinate the output.</p>
 <p><strong>Step 1 – Implement and document the function</strong></p>
 <div id="e6778cb0-eaf6-46a6-90aa-eac5e5861939" class="cell" data-execution_count="7">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">def</span> get_population_estimate(geography: <span class="bu">str</span>, year: <span class="bu">int</span>) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
 <span id="cb14-2"><a href="#cb14-2"></a>    data <span class="op">=</span> {</span>
 <span id="cb14-3"><a href="#cb14-3"></a>        (<span class="st">"Ontario"</span>, <span class="dv">2021</span>): <span class="dv">14_734_014</span>,</span>
@@ -626,13 +609,10 @@ class Status(Enum):
 <span id="cb14-8"><a href="#cb14-8"></a>    <span class="cf">if</span> pop <span class="kw">is</span> <span class="va">None</span>:</span>
 <span id="cb14-9"><a href="#cb14-9"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"No data for </span><span class="sc">{</span>geography<span class="sc">}</span><span class="ss"> in </span><span class="sc">{</span>year<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb14-10"><a href="#cb14-10"></a>    <span class="cf">return</span> {<span class="st">"geography"</span>: geography, <span class="st">"year"</span>: year, <span class="st">"population"</span>: pop}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 <p><strong>Step 2 – Publish the function schema to the model</strong></p>
 <p>When you create a chat completion you supply a tools list. Each entry is a JSON description of a function:</p>
 <div id="a9baf1c9-fb6b-4d53-a073-03db4ca31f92" class="cell" data-execution_count="8">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1"></a>tools <span class="op">=</span> [{</span>
 <span id="cb15-2"><a href="#cb15-2"></a>    <span class="st">"type"</span>: <span class="st">"function"</span>,</span>
 <span id="cb15-3"><a href="#cb15-3"></a>    <span class="st">"function"</span>: {</span>
@@ -658,12 +638,9 @@ class Status(Enum):
 <span id="cb15-23"><a href="#cb15-23"></a>}]</span>
 <span id="cb15-24"><a href="#cb15-24"></a></span>
 <span id="cb15-25"><a href="#cb15-25"></a></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 <p><strong>Step 3 – Start the conversation</strong>: Kick off a chat session with the tools attached.</p>
 <div id="85f19366-9365-432c-85f3-2515397b0109" class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1"></a>messages <span class="op">=</span> [</span>
 <span id="cb16-2"><a href="#cb16-2"></a>    {<span class="st">"role"</span>: <span class="st">"system"</span>, <span class="st">"content"</span>: <span class="st">"You are a helpful assistant."</span>},</span>
 <span id="cb16-3"><a href="#cb16-3"></a>    {<span class="st">"role"</span>: <span class="st">"user"</span>,   <span class="st">"content"</span>: <span class="st">"What was the population of Ontario in 2021?"</span>}</span>
@@ -674,14 +651,10 @@ class Status(Enum):
 <span id="cb16-8"><a href="#cb16-8"></a>    messages<span class="op">=</span>messages,</span>
 <span id="cb16-9"><a href="#cb16-9"></a>    tools<span class="op">=</span>tools,</span>
 <span id="cb16-10"><a href="#cb16-10"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 <p><strong>Step 4 – Model emits a function call</strong> If LLM decides the function is relevant, the first response in choices[0].message will include a tool_calls array:</p>
 <div id="122ba988-b5bd-4c89-a75c-35525e141eaa" class="cell" data-execution_count="2">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1"></a>completion.choices[<span class="dv">0</span>].message.tool_calls</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-display" data-execution_count="2">
 <pre><code>[ChatCompletionMessageToolCall(id='call_aFCdjVWwL4K9rN0bZzFfgTpx', function=Function(arguments='{"geography":"Ontario","year":2021}', name='get_population_estimate'), type='function')]</code></pre>
 </div>
@@ -693,14 +666,11 @@ class Status(Enum):
 <p><strong>Step 5 – Execute the function</strong>:</p>
 <p>Your code parses the arguments, runs the function, and obtains a result:</p>
 <div id="09499109-3ee9-495a-b939-67bff6572c2d" class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1"></a><span class="im">import</span> json</span>
 <span id="cb20-2"><a href="#cb20-2"></a>tool_call <span class="op">=</span> completion.choices[<span class="dv">0</span>].message.tool_calls[<span class="dv">0</span>]</span>
 <span id="cb20-3"><a href="#cb20-3"></a>args <span class="op">=</span> json.loads(tool_call.function.arguments)</span>
 <span id="cb20-4"><a href="#cb20-4"></a>result <span class="op">=</span> get_population_estimate(args[<span class="st">"geography"</span>], args[<span class="st">"year"</span>])</span>
 <span id="cb20-5"><a href="#cb20-5"></a>result</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <pre><code>{'geography': 'Ontario', 'year': 2021, 'population': 14734014}</code></pre>
 </div>
@@ -712,20 +682,15 @@ class Status(Enum):
 <li>A tool-role message whose content is the JSON result and whose tool_call_id matches the earlier id.</li>
 </ol>
 <div id="e3225010-35c9-491b-ac6b-18c33a62d117" class="cell" data-execution_count="11">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1"></a>messages.append(completion.choices[<span class="dv">0</span>].message)   <span class="co"># the model’s function-call</span></span>
 <span id="cb22-2"><a href="#cb22-2"></a>messages.append({                               <span class="co"># the tool’s response</span></span>
 <span id="cb22-3"><a href="#cb22-3"></a>    <span class="st">"role"</span>:         <span class="st">"tool"</span>,</span>
 <span id="cb22-4"><a href="#cb22-4"></a>    <span class="st">"tool_call_id"</span>: tool_call.<span class="bu">id</span>,</span>
 <span id="cb22-5"><a href="#cb22-5"></a>    <span class="st">"content"</span>:      json.dumps(result)</span>
 <span id="cb22-6"><a href="#cb22-6"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 <p>Step 7 – Ask the model to finish the answer</p>
 <div id="3696b21d-ba87-4ff0-b902-938e55d1e577" class="cell" data-execution_count="12">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1"></a>completion_2 <span class="op">=</span> client.chat.completions.create(</span>
 <span id="cb23-2"><a href="#cb23-2"></a>    model<span class="op">=</span><span class="st">"gpt-4.1"</span>,</span>
 <span id="cb23-3"><a href="#cb23-3"></a>    messages<span class="op">=</span>messages,</span>
@@ -733,7 +698,6 @@ class Status(Enum):
 <span id="cb23-5"><a href="#cb23-5"></a>)</span>
 <span id="cb23-6"><a href="#cb23-6"></a></span>
 <span id="cb23-7"><a href="#cb23-7"></a><span class="bu">print</span>(completion_2.choices[<span class="dv">0</span>].message.content)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>The population of Ontario in 2021 was 14,734,014.</code></pre>
 </div>
@@ -974,57 +938,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
     clipboardModal.on('success', onCopySuccess);
-  }
-  const viewSource = window.document.getElementById('quarto-view-source') ||
-                     window.document.getElementById('quarto-code-tools-source');
-  if (viewSource) {
-    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
-    viewSource.addEventListener("click", function(e) {
-      if (sourceUrl) {
-        // rstudio viewer pane
-        if (/\bcapabilities=\b/.test(window.location)) {
-          window.open(sourceUrl);
-        } else {
-          window.location.href = sourceUrl;
-        }
-      } else {
-        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
-        modal.show();
-      }
-      return false;
-    });
-  }
-  function toggleCodeHandler(show) {
-    return function(e) {
-      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
-      for (let i=0; i<detailsSrc.length; i++) {
-        const details = detailsSrc[i].parentElement;
-        if (show) {
-          details.open = true;
-        } else {
-          details.removeAttribute("open");
-        }
-      }
-      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
-      const fromCls = show ? "hidden" : "unhidden";
-      const toCls = show ? "unhidden" : "hidden";
-      for (let i=0; i<cellCodeDivs.length; i++) {
-        const codeDiv = cellCodeDivs[i];
-        if (codeDiv.classList.contains(fromCls)) {
-          codeDiv.classList.remove(fromCls);
-          codeDiv.classList.add(toCls);
-        } 
-      }
-      return false;
-    }
-  }
-  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
-  if (hideAllCode) {
-    hideAllCode.addEventListener("click", toggleCodeHandler(false));
-  }
-  const showAllCode = window.document.getElementById("quarto-show-all-code");
-  if (showAllCode) {
-    showAllCode.addEventListener("click", toggleCodeHandler(true));
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);

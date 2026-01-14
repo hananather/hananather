@@ -225,7 +225,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Part 1: Prediction and Control</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li></ul></div></div>
+<h1 class="title">Part 1: Prediction and Control</h1>
 </div>
 
 
@@ -255,8 +255,6 @@ window.Quarto = {
 <p>We will simulate many episodes (games) with this policy to estimate: - Probability of reaching the goal (this is the value of the starting state under this policy). - The distribution of episode lengths (how many bets until finish).</p>
 <p>Let’s write a simulation for one episode and then loop it for many episodes.</p>
 <div id="94b3482c-76ed-4048-9d30-43f67b4b3f51" class="cell" data-execution_count="2">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_gamble(start_capital, goal, p_head<span class="op">=</span><span class="fl">0.5</span>):</span>
@@ -280,7 +278,6 @@ window.Quarto = {
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Test one episode</span></span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> simulate_gamble(<span class="dv">5</span>, <span class="dv">10</span>, p_head<span class="op">=</span><span class="fl">0.5</span>)</span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Episode result:"</span>, <span class="st">"Reached goal!"</span> <span class="cf">if</span> result <span class="cf">else</span> <span class="st">"Broke :("</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Episode result: Broke :(</code></pre>
 </div>
@@ -288,8 +285,6 @@ window.Quarto = {
 <p>Run the above cell a few times to see different outcomes (sometimes the gambler wins, sometimes loses).</p>
 <p>Now, let’s estimate the probability of winning from the starting capital of 5 with this policy by simulating many episodes:</p>
 <div id="85c228ea-f80d-46f7-a2b6-6c64a26e1395" class="cell" data-execution_count="3">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>trials <span class="op">=</span> <span class="dv">10000</span></span>
@@ -299,7 +294,6 @@ window.Quarto = {
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        wins <span class="op">+=</span> <span class="dv">1</span></span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>win_prob <span class="op">=</span> wins <span class="op">/</span> trials</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Estimated probability of reaching $10 starting from $5 (bet $1 policy) = </span><span class="sc">{</span>win_prob<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Estimated probability of reaching $10 starting from $5 (bet $1 policy) = 0.498</code></pre>
 </div>
@@ -315,8 +309,6 @@ window.Quarto = {
 <p>For this gambling game, the state value <span class="math inline">\(v_{\pi}(s)\)</span> is the probability of reaching the goal from state <span class="math inline">\(s\)</span> under policy $(because we set reward 1 for success, 0 otherwise, so the expected return equals the success probability).</p>
 <p>We can approximate the entire value function for our policy by simulation:</p>
 <div id="e5a7d3f0-2115-49f4-9d24-91c950a051c0" class="cell" data-execution_count="4">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> estimate_values(policy_func, goal, p_head<span class="op">=</span><span class="fl">0.5</span>, trials<span class="op">=</span><span class="dv">10000</span>):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Estimate value of each capital state 0..goal for a given policy by simulation.</span></span>
@@ -349,7 +341,6 @@ window.Quarto = {
 <span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Estimated value of each state (always bet 1 policy):"</span>)</span>
 <span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">11</span>):</span>
 <span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"v(</span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">) ≈ </span><span class="sc">{</span>val_estimates[s]<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Estimated value of each state (always bet 1 policy):
 v(0) ≈ 0.00
@@ -372,8 +363,6 @@ v(10) ≈ 1.00</code></pre>
 <p>Now we have a way to evaluate a given policy (by simulation). The next step is control: finding a better policy. Let’s compare two policies: - <span class="math inline">\(\pi_1\)</span>: Always bet 1 (we evaluated this). - <span class="math inline">\(\pi_2\)</span>: Always bet all-in (bet all current capital each time).</p>
 <p>Intuition: - <span class="math inline">\(\pi_2\)</span> is riskier but reaches the goal faster if it wins. For a fair coin, any bet size yields the same success probability in theory (actually for p=0.5, any strategy gives <span class="math inline">\(s/Goal\)</span> chance). But for a biased coin, the optimal strategy changes. - Let’s test with a biased coin, p = 0.4 (40% chance to win each bet, so the odds are against the gambler). In that case, a high-variance strategy (betting big) might increase success chances</p>
 <div id="aa5c1d48-9c69-4eef-8c9f-ab28b58d44ec" class="cell" data-execution_count="5">
-<details class="code-fold">
-<summary>Show code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> simulate_policy(start_capital, goal, p_head, policy_func):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    capital <span class="op">=</span> start_capital</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="dv">0</span> <span class="op">&lt;</span> capital <span class="op">&lt;</span> goal:</span>
@@ -399,7 +388,6 @@ v(10) ≈ 1.00</code></pre>
 <span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>win_prob_allin <span class="op">=</span> estimate_win_prob(<span class="dv">5</span>, <span class="dv">10</span>, p_head<span class="op">=</span><span class="fl">0.4</span>, policy_func<span class="op">=</span>policy_all_in, trials<span class="op">=</span><span class="dv">10000</span>)</span>
 <span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Policy π1 (bet 1) win probability ≈ </span><span class="sc">{</span>win_prob_bet1<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
 <span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Policy π2 (all-in) win probability ≈ </span><span class="sc">{</span>win_prob_allin<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Policy π1 (bet 1) win probability ≈ 0.116
 Policy π2 (all-in) win probability ≈ 0.392</code></pre>
@@ -651,57 +639,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       container: window.document.getElementById('quarto-embedded-source-code-modal')
     });
     clipboardModal.on('success', onCopySuccess);
-  }
-  const viewSource = window.document.getElementById('quarto-view-source') ||
-                     window.document.getElementById('quarto-code-tools-source');
-  if (viewSource) {
-    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
-    viewSource.addEventListener("click", function(e) {
-      if (sourceUrl) {
-        // rstudio viewer pane
-        if (/\bcapabilities=\b/.test(window.location)) {
-          window.open(sourceUrl);
-        } else {
-          window.location.href = sourceUrl;
-        }
-      } else {
-        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
-        modal.show();
-      }
-      return false;
-    });
-  }
-  function toggleCodeHandler(show) {
-    return function(e) {
-      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
-      for (let i=0; i<detailsSrc.length; i++) {
-        const details = detailsSrc[i].parentElement;
-        if (show) {
-          details.open = true;
-        } else {
-          details.removeAttribute("open");
-        }
-      }
-      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
-      const fromCls = show ? "hidden" : "unhidden";
-      const toCls = show ? "unhidden" : "hidden";
-      for (let i=0; i<cellCodeDivs.length; i++) {
-        const codeDiv = cellCodeDivs[i];
-        if (codeDiv.classList.contains(fromCls)) {
-          codeDiv.classList.remove(fromCls);
-          codeDiv.classList.add(toCls);
-        } 
-      }
-      return false;
-    }
-  }
-  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
-  if (hideAllCode) {
-    hideAllCode.addEventListener("click", toggleCodeHandler(false));
-  }
-  const showAllCode = window.document.getElementById("quarto-show-all-code");
-  if (showAllCode) {
-    showAllCode.addEventListener("click", toggleCodeHandler(true));
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
