@@ -11,6 +11,6 @@ My current focus is AI security, applied mechanistic interpretability, and uncer
 
 ## Projects
 
-- [Fine-tune Auditor (SAE affordances)](https://github.com/hananather/codex_mcp_finetune_auditor): adds SAE-based model diffing to fine-tuning auditing agents, exposed via an MCP tool server for end-to-end agentic audits ([paper](https://arxiv.org/abs/2510.16255), [MCP](https://github.com/hananather/codex_mcp_finetune_auditor#mcp-server), [base code](https://github.com/safety-research/finetuning-auditor)).
+- [Fine-tune Auditor (SAE affordances)](https://github.com/hananather/codex_mcp_finetune_auditor): adds SAE-based model diffing to fine-tuning auditing agents, exposed via an MCP tool server for end-to-end agentic audits.
 - [Probability Lab](https://www.probability-lab.com): interactive probability and statistics learning platform ([code](https://github.com/hananather/probability), [course context](https://catalogue.uottawa.ca/en/search/?P=MAT%202377)).
 - [Reinforcement Learning Labs](https://hananather.com/rl-labs/): a 6-part notebook series ([notebooks](https://github.com/hananather/hananather/tree/main/rl-labs), [master thesis](https://hananather.com/website_docs/master-thesis-deep-reinforcement-learning.pdf)).
