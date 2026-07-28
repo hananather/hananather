@@ -10,7 +10,7 @@ I am a Member of Technical Staff at the Centre for AI Research and Excellence (C
 I build full-stack AI systems and the evals that make them safe to deploy in confidential-data settings, with a focus on LLM evals, AI safety, and AI security.
 My role involves solving high-impact problems and delivering business value through designing and shipping scalable AI/ML products for internal and external federal stakeholders.
 My past work involved building tools and infrastructure for uncertainty quantification (conformal prediction, prediction-powered inference) and quality assurance of AI systems at scale.
-Prior experience in SWE (full-stack), data engineering, and ML systems (details in [my resume](website_docs/Hanan_Ather_Resume.pdf)).
+Prior experience in SWE (full-stack), data engineering, and ML systems.
 I am also a member of the Office of Responsible AI, where I lead technical reviews of AI systems across government and contribute to AI frameworks and governance guidance for **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
 
 - Selected as a [MATS 10.0 Scholar](https://www.matsprogram.org/cohort/mats-10-0){.mats-link} in [Neel Nanda](https://www.matsprogram.org/mentor/neel)’s stream.

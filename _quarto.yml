@@ -6,8 +6,6 @@ project:
     - favicon.ico
     - favicon.svg
     - apple-touch-icon.png
-    - website_docs/Hanan_Ather_Resume.pdf
-    - website_docs/hanan-ather-cv.pdf
 
 website:
   title: "Hanan Ather"
