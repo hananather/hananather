@@ -18,6 +18,7 @@ Prior experience in SWE (full-stack), data engineering, and ML systems.
 I am also a member of the Office of Responsible AI, where I lead technical reviews of AI systems across government and contribute to AI frameworks and governance guidance for **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
 
 - Won the [2025 International Association for Official Statistics Young Statisticians Prize](https://iaos-isi.org/ysp/) for a Bayesian framework integrating LLMs with uncertainty quantification.
+- Contributed to the development of a **[United Nations](https://unece.org/statistics)** handbook, [*Uncertainty Quantification in ML-Enhanced Statistical Inference*](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf#page=3).
 
 - [Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa
   - Research topic: [Deep Reinforcement Learning and Function Optimization](website_docs/master-thesis-deep-reinforcement-learning.pdf){.accent-link}
@@ -39,8 +40,6 @@ I am also a member of the Office of Responsible AI, where I lead technical revie
 :::
 
 ## Papers & Publications
-
-- Contributed to the development of a **[United Nations](https://unece.org/statistics)** handbook, [*Uncertainty Quantification in ML-Enhanced Statistical Inference*](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf#page=3).
 
 ::: {.notes-list}
 - [Master Thesis: Deep Reinforcement Learning](website_docs/master-thesis-deep-reinforcement-learning.pdf)
