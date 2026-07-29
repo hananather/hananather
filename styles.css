@@ -195,7 +195,6 @@ body.home #title-block-header {
 /* Homepage: quiet editorial entry point to the Principles page */
 .home .principles-note {
   margin: 0 0 1.25rem;
-  color: var(--site-muted);
 }
 
 .home .principles-note p {

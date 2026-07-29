@@ -7,7 +7,7 @@ format:
 ---
 
 ::: {.principles-note}
-[My Principles](principles.qmd) guide how I try to live and work.
+[My Principles](principles.qmd)
 :::
 
 I am a Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at **[Statistics Canada](https://www.statcan.gc.ca/en/start)**.
