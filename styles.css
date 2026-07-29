@@ -187,38 +187,23 @@ body {
   color: var(--site-link);
 }
 
-#quarto-header .navbar .nav-link[href$="principles.html"] {
-  font-weight: 600;
-}
-
 /* 5) Reduce title redundancy on the homepage */
 body.home #title-block-header {
   display: none;
 }
 
-/* Homepage: make Principles the first, clearest path without a promotional card */
-.home .principles-feature {
-  margin: 0.25rem 0 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--site-border);
+/* Homepage: quiet editorial entry point to the Principles page */
+.home .principles-note {
+  margin: 0 0 1.25rem;
+  color: var(--site-muted);
 }
 
-.home .principles-feature p {
+.home .principles-note p {
   margin: 0;
 }
 
-.home .principles-feature p + p {
-  margin-top: 0.45rem;
-  color: var(--site-muted);
-  font-size: 0.98rem;
-}
-
-.home .principles-feature-link {
-  display: inline-block;
-  font-size: clamp(1.55rem, 4vw, 1.9rem);
+.home .principles-note a {
   font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
 }
 
 /* 6) Section spacing instead of divider lines */
