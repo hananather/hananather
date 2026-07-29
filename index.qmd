@@ -40,8 +40,9 @@ I am also a member of the Office of Responsible AI, where I lead technical revie
 
 ## Papers & Publications
 
-::: {.notes-list}
 - Contributed to the development of a **[United Nations](https://unece.org/statistics)** handbook, [*Uncertainty Quantification in ML-Enhanced Statistical Inference*](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf#page=3).
+
+::: {.notes-list}
 - [Master Thesis: Deep Reinforcement Learning](website_docs/master-thesis-deep-reinforcement-learning.pdf)
 - [Law of the Iterated Logarithm](website_docs/law-of-the-iterated-logarithm.pdf)
 - [MapReduce for Parallel Machine Learning](website_docs/mat4376x-research-project.pdf)
