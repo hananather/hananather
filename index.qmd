@@ -14,7 +14,7 @@ Prior experience in SWE (full-stack), data engineering, and ML systems.
 I am also a member of the Office of Responsible AI, where I lead technical reviews of AI systems across government and contribute to AI frameworks and governance guidance for **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
 
 - Selected as a [MATS 10.0 Scholar](https://www.matsprogram.org/cohort/mats-10-0){.mats-link} in [Neel Nanda](https://www.matsprogram.org/mentor/neel)’s stream.
-- Contributed to the development of a [United Nations Economic Commission for Europe (UNECE)](https://www.un.org/sg/en/global-leadership/entity/secretariat-and-regional-commissions/united-nations-economic-commission-for-europe) handbook, [*Uncertainty Quantification in ML-Enhanced Statistical Inference*](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf#page=3).
+- Contributed to the development of a **[United Nations](https://unece.org/statistics)** handbook, [*Uncertainty Quantification in ML-Enhanced Statistical Inference*](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf#page=3).
 - Won [International Association for Official Statistics Young Statisticians Prize 2025](https://iaos-isi.org/ysp/) for a Bayesian framework integrating LLMs with uncertainty quantification.
 
 - [Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa
