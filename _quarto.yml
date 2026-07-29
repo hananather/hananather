@@ -18,10 +18,10 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: posts/index.qmd
-        text: My Writing
       - href: principles.qmd
         text: My Principles
+      - href: posts/index.qmd
+        text: My Writing
     right:
       - icon: github
         href: "https://github.com/hananather"
