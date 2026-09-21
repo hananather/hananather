@@ -1,0 +1,16 @@
+---
+title: "Reading List"
+css: reading-list.css
+---
+
+Books I'm reading, and the ideas I want to keep. Notes grow as I read.
+
+::: {.reading-list}
+- [The Autobiography of Benjamin Franklin]{.book} [by Benjamin Franklin]{.by}
+- [Deep Work]{.book} [by Cal Newport]{.by}
+- [Four Thousand Weeks]{.book} [by Oliver Burkeman]{.by}
+- [The Lessons of History]{.book} [by Will and Ariel Durant]{.by}
+- [Principles]{.book} [by Ray Dalio]{.by}
+- [The War of Art]{.book} [by Steven Pressfield]{.by}
+- [Protocols]{.book} [by Andrew Huberman]{.by}
+:::

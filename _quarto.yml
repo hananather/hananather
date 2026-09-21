@@ -22,6 +22,8 @@ website:
         text: My Principles
       - href: posts/index.qmd
         text: My Writing
+      - href: reading-list/index.qmd
+        text: Reading List
     right:
       - icon: github
         href: "https://github.com/hananather"

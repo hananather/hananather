@@ -1,0 +1,22 @@
+/* Reading List: title + author, one per line. Notes = blue underlined title. */
+.reading-list ul { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+.reading-list li { padding: .45rem 0; margin: 0; }
+.reading-list li p { margin: 0; }
+.reading-list .book { font-weight: 500; color: var(--site-text); }
+.reading-list .by { color: var(--site-muted); }
+.reading-list a.book { color: var(--site-link); text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--site-link) 40%, transparent); }
+.reading-list a.book:hover { text-decoration-color: var(--site-link); }
+.rl-key { color: var(--site-muted); font-size: .92rem; }
+
+/* Note page */
+.note-meta { color: var(--site-muted); margin: -.4rem 0 2rem; }
+.note-meta a { color: var(--site-muted); }
+.note-meta a:hover { color: var(--site-link); }
+.content .ideas ol { padding-left: 1.6rem; }
+.content .ideas ol > li { padding-left: .25rem; margin-bottom: 1.1rem; }
+.content .ideas ol > li::marker { color: var(--site-muted); font-variant-numeric: tabular-nums; }
+.content blockquote { border-left: 2px solid var(--site-border); padding: .1rem 0 .1rem 1rem;
+  margin: .6rem 0 .9rem; color: var(--site-muted); font-size: 1rem; }
+.content blockquote p { margin: 0; }
+.content blockquote cite { display: block; margin-top: .3rem; font-style: normal; font-size: .85rem; }
