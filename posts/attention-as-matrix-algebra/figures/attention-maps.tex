@@ -1,0 +1,72 @@
+% The same queries and keys through two kernels: the softmax kernel and the feature kernel of
+% linear attention with phi = elu + 1 (Katharopoulos et al., 2020). Top: the attention
+% matrices, one row per query, each row summing to 1, the colour clipped at 0.5. Bottom: their
+% singular values on a log scale. attention_numbers.py draws Q and K and writes every number
+% into attention-maps-numbers.tex. Words and math 7 pt.
+\documentclass[tikz,border=2pt]{standalone}
+\input{attention-style}
+\input{attention-maps-numbers}
+
+\begin{document}
+\begin{tikzpicture}
+\def\h{0.26}                             % one cell of the maps, in cm
+\def\maptop{-1.15}
+\def\base{-7.55}                         % y of 10^-4 in the singular-value charts
+\def\dec{0.36}                           % cm per decade
+
+% \panel{x}{title}{subtitle}{weights}{log singular values}{zeros}{rank}{max weight}
+\newcommand{\panel}[8]{%
+  \begin{scope}[shift={(#1,0)}]
+    \node[title, anchor=north] at (2.08,0) {#2};
+    \node[subtitle, anchor=north] at (2.08,-0.42) {#3};
+    % The attention matrix.
+    \foreach \i/\j/\w in #4 {
+      \pgfmathtruncatemacro\pct{min(100, 200*\w)}
+      \fill[pairsline!\pct!white] ({\j*\h},{\maptop - \i*\h}) rectangle ++(\h,-\h);
+    }
+    \draw[neutralline, line width=0.6pt] (0,\maptop) rectangle ({16*\h},{\maptop - 16*\h});
+    \node[word, anchor=north] at (2.08,{\maptop - 16*\h - 0.05}) {key $j$};
+    \node[word, anchor=south, rotate=90] at (-0.05,{\maptop - 8*\h}) {query $i$};
+    % Its singular values.
+    \foreach \e in {0,-2,-4} {
+      \draw[neutralline!45, line width=0.4pt, dash pattern=on 1pt off 1.5pt]
+        (0,{\base + (\e + 4)*\dec}) -- ({16*\h},{\base + (\e + 4)*\dec});
+      \node[sym, anchor=east] at (-0.05,{\base + (\e + 4)*\dec}) {$10^{\e}$};
+    }
+    \foreach \k/\l in #5
+      \fill[pairsline] ({(\k + 0.15)*\h},\base) rectangle ({(\k + 0.85)*\h},{\base + (\l + 4)*\dec});
+    \draw[ink, line width=0.6pt] (0,\base) -- ({16*\h},\base);
+    \node[word, anchor=north] at (2.08,{\base - 0.05}) {singular values, largest first};
+    \node[anchor=north, align=center] at (2.08,{\base - 0.5}) {%
+      {\bfseries rank #7}\\[1pt]
+      {\color{muted}mean of the largest weight in a row: #8}};
+  \end{scope}}
+
+\panel{1.0}{Softmax kernel: \ $e^{q_i^\top k_j / \sqrt{d}}$}{sharp rows, full rank}%
+  {\SoftmaxWeights}{\SoftmaxLogSingular}{\SoftmaxZeros}{\SoftmaxRank}{\SoftmaxMaxWeight}
+\panel{7.2}{Feature kernel: \ $\phi(q_i)^\top \phi(k_j)$}{flat rows, rank at most $r$}%
+  {\LinearWeights}{\LinearLogSingular}{\LinearZeros}{\LinearRank}{\LinearMaxWeight}
+
+% The linear panel: where the rank stops, and the singular values that are zero.
+\begin{scope}[shift={(7.2,0)}]
+  \draw[ink, line width=0.7pt, dash pattern=on 2pt off 1.5pt]
+    ({\MapD*\h},{\base - 0.08}) -- ({\MapD*\h},{\base + 4.1*\dec});
+  \node[sym, anchor=south] at ({\MapD*\h},{\base + 4.1*\dec + 0.02}) {$r = \MapD$};
+  \node[word, anchor=south, align=center] at ({(\MapD + 16)*\h/2},{\base + 0.08}) {the other \LinearZeros{} are $0$,\\up to rounding};
+\end{scope}
+
+% Colour scale, shared by both maps.
+\begin{scope}[shift={(12.45,\maptop)}]
+  \shade[bottom color=white, top color=pairsline] (0,-4.16) rectangle (0.22,0);
+  \draw[neutralline, line width=0.5pt] (0,-4.16) rectangle (0.22,0);
+  \node[sym, anchor=west] at (0.28,0) {$0.5$ or more};
+  \node[sym, anchor=west] at (0.28,-2.08) {$0.25$};
+  \node[sym, anchor=west] at (0.28,-4.16) {$0$};
+  \node[word, anchor=south] at (0.11,0.08) {weight};
+\end{scope}
+
+\node[word, anchor=north, align=center] at (7.0,-9.25) {%
+  The same queries and keys in both panels: $n = \MapN$ tokens, $d = \MapD$, entries of $Q$ and $K$ independent $N(0, \MapScale^2)$, no mask.\\
+  Linear attention uses $\phi(x) = \operatorname{elu}(x) + 1$, so $r = d = \MapD$. A uniform row would put $1/\MapN = \MapUniform$ on each key.};
+\end{tikzpicture}
+\end{document}

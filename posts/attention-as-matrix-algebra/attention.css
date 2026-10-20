@@ -1,0 +1,24 @@
+/* Keep wide equations and comparison tables within the reading column. */
+#title-block-header .description {
+  display: none;
+}
+
+#quarto-document-content {
+  width: 100%;
+  min-width: 0;
+}
+
+#quarto-document-content .cell {
+  min-width: 0;
+}
+
+#quarto-document-content mjx-container[display="true"],
+#quarto-document-content .table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+#quarto-document-content mjx-container[display="true"] {
+  padding-block: 0.25rem;
+}

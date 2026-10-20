@@ -1,0 +1,53 @@
+% What one delta-rule write does to one column s of the state, in the key space R^r (drawn
+% with r = 2). The transition I - beta k k^T moves s along the line through s parallel to the
+% unit key k: it scales the coordinate k^T s by 1 - beta and keeps the part orthogonal to k.
+% The write then adds beta v_c k, where v_c is the matching coordinate of the new value. With
+% beta = 1 the coordinate k^T s becomes v_c: one step of the Kaczmarz method. The key, the
+% column and v_c are illustrative values set below. Words and math 7 pt.
+\documentclass[tikz,border=2pt]{standalone}
+\input{attention-style}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.35]
+% The key k at 30 degrees, the column s, and the target coordinate v_c.
+\def\ang{30} \def\sx{1.0} \def\sy{2.2} \def\vc{1.0}
+\pgfmathsetmacro\kx{cos(\ang)} \pgfmathsetmacro\ky{sin(\ang)}
+\pgfmathsetmacro\ks{\kx*\sx + \ky*\sy}                          % k^T s
+\coordinate (O) at (0,0);
+\coordinate (k) at (\kx,\ky);
+\coordinate (s) at (\sx,\sy);
+\coordinate (p) at ({\sx - \ks*\kx},{\sy - \ks*\ky});            % beta = 1: s - (k^T s) k
+\coordinate (f) at ({\sx - 2*\ks*\kx},{\sy - 2*\ks*\ky});        % beta = 2: reflection
+\coordinate (w) at ({\sx - (\ks - \vc)*\kx},{\sy - (\ks - \vc)*\ky}); % after the write
+
+% The orthogonal complement of k, the line through s parallel to k, and the key itself.
+\draw[neutralline, line width=0.6pt, dash pattern=on 3pt off 2pt] ($(O)!1.25!(p)$) -- ($(O)!-0.55!(p)$);
+\node[sym, anchor=south east] at ($(O)!1.22!(p)$) {$k^\perp$};
+\draw[neutralline, line width=0.5pt, dash pattern=on 1pt off 1.5pt] ($(f)!-0.12!(s)$) -- ($(s)!-0.12!(f)$);
+\draw[-{Stealth[length=2.4mm, width=2mm]}, line width=1.4pt, draw=keyline] (O) -- (k);
+\node[sym, anchor=north west] at (k) {$k$, \ $\lVert k \rVert = 1$};
+\fill[ink] (O) circle (0.9pt);
+
+% The column, its images under I - beta k k^T, and the written column.
+\draw[-{Stealth[length=2.2mm, width=1.8mm]}, line width=1.1pt, draw=stateline] (O) -- (s);
+\foreach \pt in {s,p,f} \fill[stateline] (\pt) circle (1.6pt);
+\node[sym, anchor=west] at ([xshift=3pt]s) {$s$: a column of $S_{t-1}$, \ $k^\top s = 1.97$};
+\node[sym, anchor=east] at ([xshift=-4pt]p) {$\beta = 1$: \ $s - (k^\top s)\, k$};
+\node[sym, anchor=north] at ([yshift=-3pt]f) {$\beta = 2$: reflection across $k^\perp$};
+\draw[-{Stealth[length=2.2mm, width=1.8mm]}, line width=1.1pt, draw=pseudoline] (p) -- (w);
+\fill[pseudoline] (w) circle (1.8pt);
+\node[sym, anchor=south east, align=right] at ([xshift=-2pt,yshift=3pt]w) {write with $\beta = 1$: $+\,v_c k$,\\now $k^\top s = v_c = 1$};
+
+% What the transition is, in symbols.
+\node[anchor=north west, align=flush left] at (4.6,2.55) {%
+  {\bfseries The transition $A_t = I - \beta_t k_t k_t^\top$}\\[3pt]
+  $A_t k_t = (1 - \beta_t)\, k_t$, \quad $A_t x = x$ for $x \perp k_t$\\[2pt]
+  {\color{muted}eigenvalues $1 - \beta_t$ (once) and $1$,}\\{\color{muted}so $\lVert A_t \rVert_2 = 1$ for $\beta_t \in [0, 2]$ and $r \ge 2$}\\[2pt]
+  {\color{muted}$\beta_t = 1$: the orthogonal projection onto $k_t^\perp$}\\
+  {\color{muted}$\beta_t = 2$: the Householder reflection}\\[5pt]
+  {\bfseries The write, column by column}\\[3pt]
+  $s \leftarrow A_t s + \beta_t v_{t,c}\, k_t$ \ moves $s$ along $k_t$ only\\[2pt]
+  {\color{muted}with $\beta_t = 1$, it sets $k_t^\top s = v_{t,c}$: one step of the}\\
+  {\color{muted}Kaczmarz method for the system $K s = V_{\cdot c}$}};
+\end{tikzpicture}
+\end{document}

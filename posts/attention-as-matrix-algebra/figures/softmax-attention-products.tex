@@ -1,0 +1,73 @@
+% Softmax attention as two matrix products around a row-wise softmax, with the scores named G (Vaswani et al., 2017, eq. 1), for one head.
+% Each product AB = C is drawn with A to the left of C and B above it, so row i of A and
+% column j of B meet at entry C_ij. n = 8 tokens and d = 3 are drawn; row i = 3 and column
+% j = 6 are marked. Colours: queries sky blue, keys amber, values green, the n x n matrices
+% pink, outputs slate. Operation counts are multiply-adds counted as two operations.
+% Words and math 7 pt.
+\documentclass[tikz,border=2pt]{standalone}
+\input{attention-style}
+
+\begin{document}
+\begin{tikzpicture}
+\def\nn{8} \def\dd{3} \def\ii{3} \def\jj{6}
+\def\toprow{-3.0}                         % top edge of Q, S, P and O
+\pgfmathsetmacro\rowy{\toprow - (\ii - 0.5)*\cell}
+
+% How to read the products.
+\node[keybox, anchor=north west, align=flush left, text width=8.3cm] (read) at (0,0) {%
+  {\bfseries How to read a product $AB = C$.} $A$ sits to the left of $C$ and $B$ sits above it.
+  Row $i$ of $A$ and column $j$ of $B$ meet at the entry $C_{ij}$, their inner product.};
+
+% 1. Scores: G = Q K^T / sqrt(d).
+\grid{Q}{0.9}{\toprow}{\nn}{\dd}{query}{\row{queryline!55}{\ii}{\dd}}
+\grid{KT}{2.4}{\toprow + 0.25 + \dd*\cell}{\dd}{\nn}{key}{\col{keyline!60}{\jj}{\dd}}
+\grid{G}{2.4}{\toprow}{\nn}{\nn}{pairs}{%
+  \row{pairsline!28}{\ii}{\nn}\col{pairsline!28}{\jj}{\nn}\entry{pairsline!85}{\ii}{\jj}}
+% 2. Weights: P = softmax of each row of G.
+\grid{P}{6.9}{\toprow}{\nn}{\nn}{pairs}{\row{pairsline!60}{\ii}{\nn}}
+% 3. Output: O = P V.
+\grid{V}{10.5}{\toprow + 0.25 + \nn*\cell}{\nn}{\dd}{value}{}
+\grid{O}{10.5}{\toprow}{\nn}{\dd}{output}{\row{outputline!45}{\ii}{\dd}}
+
+% Names, beside or under each matrix.
+\node[matname, anchor=north] at (Q.south) {$Q$\\[-1pt]{\color{muted}queries}\\[-1pt]{\color{muted}$n \times d$}};
+\node[matname, anchor=east, align=right] at ([xshift=-4pt]KT.west) {$K^\top$\\[-1pt]{\color{muted}keys, $d \times n$}};
+\node[matname, anchor=east, align=right] at ([xshift=-4pt]V.west) {$V$\\[-1pt]{\color{muted}values}\\[-1pt]{\color{muted}$n \times d$}};
+\node[sym, anchor=east] at ([xshift=-3pt]Q.west |- 0,\rowy) {$q_i^\top$};
+\node[sym, anchor=south] at ($(KT.north west)+({(\jj-0.5)*\cell},0.03)$) {$k_j$};
+\node[sym, anchor=west] at ([xshift=3pt]O.east |- 0,\rowy) {$o_i^\top$};
+
+% The softmax acts on one row at a time.
+\draw[flow] ([xshift=4pt]G.east |- 0,\rowy) -- ([xshift=-4pt]P.west |- 0,\rowy)
+  node[midway, above=2pt, align=center, title] {softmax}
+  node[midway, below=2pt, note] {row by row};
+
+% The three stages, under the matrices.
+\def\stagetop{-5.98}
+\node[anchor=north, align=center] (s1) at (G.south |- 0,\stagetop) {%
+  {\bfseries 1. Scores $G$}\\[1pt]
+  $G = QK^\top / \sqrt{d}$\\[1pt]
+  $G_{ij} = q_i^\top k_j / \sqrt{d}$\\[1pt]
+  {\color{muted}$2n^2 d$ operations}};
+\node[anchor=north, align=center] (s2) at (P.south |- 0,\stagetop) {%
+  {\bfseries 2. Weights $P$}\\[1pt]
+  $P_{ij} = e^{G_{ij}} \big/ \textstyle\sum_{l=1}^{n} e^{G_{il}}$\\[1pt]
+  {\color{muted}each row sums to 1}\\[1pt]
+  {\color{muted}causal: $G_{ij} = -\infty$ for $j > i$}};
+\node[anchor=north, align=center] (s3) at ([xshift=0.25cm]O.south |- 0,\stagetop) {%
+  {\bfseries 3. Output $O$}\\[1pt]
+  $O = PV$\\[1pt]
+  $o_i = \textstyle\sum_{j=1}^{n} P_{ij}\, v_j$\\[1pt]
+  {\color{muted}$2n^2 d$ operations}};
+
+% The n x n matrices carry the quadratic cost.
+\draw[decorate, decoration={brace, mirror, amplitude=4pt}, line width=0.6pt, draw=ink]
+  (G.west |- 0,-7.45) -- (P.east |- 0,-7.45)
+  node[midway, below=5pt, note] {$G$ and $P$ are $n \times n$: one entry for each pair of tokens, $n^2$ entries each};
+
+% The whole mechanism in one line.
+\node[anchor=north, align=center] at (6.1,-8.3) {%
+  $\operatorname{Attn}(Q, K, V) = \operatorname{softmax}\!\big(QK^\top / \sqrt{d}\big)\, V$\\[2pt]
+  {\color{muted}about $4n^2 d$ operations for one head (Vaswani et al., 2017, eq. 1)}};
+\end{tikzpicture}
+\end{document}

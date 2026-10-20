@@ -1,0 +1,78 @@
+% Linear attention: the same product taken in two orders (Katharopoulos et al., 2020).
+% Left: the n x n matrix A = phi(Q) phi(K)^T first, the only order open to
+% softmax attention. Right: the r x d matrix M = phi(K)^T V first. Each product AB = C is
+% drawn as in the matrix-product diagram: A to the left of C, B above it. n = 8, r = 3 and
+% d = 3 are drawn; row i = 3 and column j = 6 are marked. The normalizer is left out of the
+% drawing and stated in the bottom line. Operation counts are multiply-adds counted as two.
+% Words and math 7 pt.
+\documentclass[tikz,border=2pt]{standalone}
+\input{attention-style}
+
+\begin{document}
+\begin{tikzpicture}
+\def\nn{8} \def\rr{3} \def\dd{3} \def\ii{3} \def\jj{6}
+\def\toprow{-5.6}                        % top edge of the two outputs O
+\pgfmathsetmacro\rowy{\toprow - (\ii - 0.5)*\cell}
+
+% ---- Left: pairs first. ----
+\node[title, anchor=north] at (3.6,0) {Pairs first:\ \ $\big(\phi(Q)\,\phi(K)^\top\big)\, V$};
+\node[subtitle, anchor=north, align=center] at (3.6,-0.42) {the only order open to softmax attention,\\whose $e^{x}$ acts on each entry of $QK^\top$};
+
+\grid{LQ}{0.9}{\toprow}{\nn}{\rr}{query}{\row{queryline!55}{\ii}{\rr}}
+\grid{LK}{2.4}{\toprow + 0.25 + \rr*\cell}{\rr}{\nn}{key}{\col{keyline!60}{\jj}{\rr}}
+\grid{A}{2.4}{\toprow}{\nn}{\nn}{pairs}{%
+  \row{pairsline!28}{\ii}{\nn}\col{pairsline!28}{\jj}{\nn}\entry{pairsline!85}{\ii}{\jj}}
+\grid{LV}{5.6}{\toprow + 0.25 + \nn*\cell}{\nn}{\dd}{value}{}
+\grid{LO}{5.6}{\toprow}{\nn}{\dd}{output}{\row{outputline!45}{\ii}{\dd}}
+
+\node[matname, anchor=north] at (LQ.south) {$\phi(Q)$\\[-1pt]{\color{muted}$n \times r$}};
+\node[matname, anchor=east, align=right] at ([xshift=-4pt]LK.west) {$\phi(K)^\top$\\[-1pt]{\color{muted}$r \times n$}};
+\node[matname, anchor=west, align=left] at ([xshift=4pt]LV.east) {$V$\\[-1pt]{\color{muted}$n \times d$}};
+\node[matname, anchor=west, align=left] at ([xshift=4pt]LO.east) {$O$\\[-1pt]{\color{muted}$n \times d$}};
+
+\node[anchor=north, align=center] at ($(A.south)+(0,-0.28)$) {%
+  $A = \phi(Q)\,\phi(K)^\top$\\[1pt]
+  $A_{ij} = \phi(q_i)^\top \phi(k_j)$\\[1pt]
+  {\color{muted}$n \times n$, $2n^2 r$ operations}};
+\node[anchor=north, align=center] at ($(LO.south)+(0.15,-0.28)$) {%
+  $O = AV$\\[1pt]
+  {\color{muted}$2n^2 d$ operations}};
+
+% ---- Right: summary first. ----
+\draw[rule] (9.35,-0.05) -- (9.35,-10.45);
+
+\node[title, anchor=north] at (14.6,0) {Summary first:\ \ $\phi(Q)\,\big(\phi(K)^\top V\big)$};
+\node[subtitle, anchor=north, align=center] at (14.6,-0.42) {open once the kernel is an inner product\\of features, $\phi(q)^\top \phi(k)$};
+
+\def\xo{15.6}                            % the column that holds V, M and O
+\grid{RK}{\xo - 0.48 - \nn*\cell}{\toprow + 0.25 + \rr*\cell}{\rr}{\nn}{key}{}
+\grid{RV}{\xo}{\toprow + 0.5 + \rr*\cell + \nn*\cell}{\nn}{\dd}{value}{}
+\grid{M}{\xo}{\toprow + 0.25 + \rr*\cell}{\rr}{\dd}{state}{}
+\grid{RQ}{\xo - 0.48 - \rr*\cell}{\toprow}{\nn}{\rr}{query}{\row{queryline!55}{\ii}{\rr}}
+\grid{RO}{\xo}{\toprow}{\nn}{\dd}{output}{\row{outputline!45}{\ii}{\dd}}
+
+\node[matname, anchor=east, align=right] at ([xshift=-4pt]RK.west) {$\phi(K)^\top$\\[-1pt]{\color{muted}$r \times n$}};
+\node[matname, anchor=east, align=right] at ([xshift=-4pt]RQ.west) {$\phi(Q)$\\[-1pt]{\color{muted}$n \times r$}};
+\node[matname, anchor=west, align=left] at ([xshift=4pt]RV.east) {$V$\\[-1pt]{\color{muted}$n \times d$}};
+\node[matname, anchor=west, align=left] at ([xshift=4pt]M.east) {$M$\\[-1pt]{\color{muted}$r \times d$}};
+\node[matname, anchor=west, align=left] at ([xshift=4pt]RO.east) {$O$\\[-1pt]{\color{muted}$n \times d$}};
+
+\node[anchor=south east, align=center] at ($(RK.north east)+(-0.1,0.3)$) {%
+  $M = \phi(K)^\top V = \textstyle\sum_{j=1}^{n} \phi(k_j)\, v_j^\top$\\[1pt]
+  {\color{muted}$r \times d$, $2nrd$ operations}};
+\node[anchor=north, align=center] at ($(RO.south)+(-0.55,-0.28)$) {%
+  $O = \phi(Q)\, M$, \ $o_i = M^\top \phi(q_i)$\\[1pt]
+  {\color{muted}$2nrd$ operations}};
+
+% ---- The totals, and what is the same. ----
+\def\totalrow{-10.1}
+\node[title, anchor=base east] (lt) at (4.9,\totalrow) {$2n^2(r + d)$ operations; holds};
+\node[chip, draw=pairsline, fill=pairs, font=\seven\bfseries, anchor=base west] at ([xshift=3pt]lt.base east) {$n^2$ numbers};
+\node[title, anchor=base east] (rt) at (14.85,\totalrow) {$4nrd$ operations; holds};
+\node[chip, draw=stateline, fill=state, font=\seven\bfseries, anchor=base west] at ([xshift=3pt]rt.base east) {$rd$ numbers};
+
+\node[anchor=north, align=center] at (9.35,-10.75) {%
+  Both orders give the same $O$, because matrix multiplication is associative. With $r = d$, the right order needs $n/d$ times fewer operations.\\[2pt]
+  {\color{muted}Each row $o_i$ is then divided by $\phi(q_i)^\top z$, where $z = \phi(K)^\top \mathbf{1}_n = \sum_{j} \phi(k_j)$ is formed once, in the same way.}};
+\end{tikzpicture}
+\end{document}
