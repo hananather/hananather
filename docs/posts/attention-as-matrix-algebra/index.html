@@ -302,8 +302,7 @@ window.Quarto = {
 
 
 <p>You can find this notebook on <a href="https://github.com/hananather/hananather/tree/main/posts/attention-as-matrix-algebra">my GitHub</a>.</p>
-<p>Every transformer layer builds a matrix with one entry for each pair of tokens. Double the context, and the matrix grows four times. <strong>Linear attention</strong> removes the square with two moves: it changes one function, and it moves one pair of parentheses. In return it keeps a memory of fixed size, the same at the millionth token as at the first. This post explains both mechanisms as matrix algebra. Then it shows what the fixed memory forgets, and how the <strong>delta rule</strong> uses the same memory better.</p>
-<p>The post is for readers with a degree in mathematics. It assumes you have met queries, keys and values, and it defines them again anyway. The code cells check the main identities numerically, with NumPy and SciPy.</p>
+<p>Every transformer layer builds a matrix with one entry for each pair of tokens. Double the context, and the matrix grows four times. <strong>Linear attention</strong> removes the square with two moves: it changes one function, and it moves one pair of parentheses. In return it keeps a memory of fixed size, the same at the millionth token as at the first.</p>
 <p><strong>In short</strong></p>
 <ul>
 <li>Softmax attention is two matrix products around a row-wise softmax. Both pass through an <span class="math inline">\(n \times n\)</span> matrix, so one head costs <span class="math inline">\(4n^2 d\)</span> operations for <span class="math inline">\(n\)</span> tokens.</li>
@@ -401,7 +400,7 @@ causal softmax: no weight above the diagonal               largest error 0.0e+00
 <p><span class="math display">\[
 o_i = \frac{\sum_{j=1}^{n} \kappa(q_i, k_j)\thinspace v_j}{\sum_{j=1}^{n} \kappa(q_i, k_j)}, \qquad \kappa(q, k) = e^{q^\top k / \sqrt{d}} .
 \]</span></p>
-<p>A statistician knows this formula. It is the <strong>Nadaraya-Watson estimator</strong>: a kernel regression estimate at the point <span class="math inline">\(q_i\)</span>, from the data pairs <span class="math inline">\((k_j, v_j)\)</span>, with the kernel <span class="math inline">\(\kappa\)</span> (<a href="#references">Nadaraya, 1964</a>; <a href="#references">Tsai et al., 2019</a>). Any nonnegative kernel gives a weighted average of the values. The choice of <span class="math inline">\(\kappa\)</span> is the only thing that linear attention changes.</p>
+<p>This is the <strong>Nadaraya-Watson estimator</strong>: a kernel regression estimate at the point <span class="math inline">\(q_i\)</span>, from the data pairs <span class="math inline">\((k_j, v_j)\)</span>, with the kernel <span class="math inline">\(\kappa\)</span> (<a href="#references">Nadaraya, 1964</a>; <a href="#references">Tsai et al., 2019</a>). Any nonnegative kernel gives a weighted average of the values. The choice of <span class="math inline">\(\kappa\)</span> is the only thing that linear attention changes.</p>
 <p>The exponential kernel is an inner product of features, but of infinitely many of them. For <span class="math inline">\(q, k \in \mathbb{R}^d\)</span>, the Taylor series gives</p>
 <p><span class="math display">\[
 e^{q^\top k} = \sum_{m=0}^{\infty} \frac{(q^\top k)^m}{m!} = \sum_{m=0}^{\infty} \left\langle \frac{q^{\otimes m}}{\sqrt{m!}}, \frac{k^{\otimes m}}{\sqrt{m!}} \right\rangle ,
@@ -430,7 +429,7 @@ o_i = \frac{M^\top \phi(q_i)}{z^\top \phi(q_i)}, \qquad M = \sum_{j=1}^{n} \phi(
 <figcaption>The two orders of the linear attention product</figcaption>
 </figure>
 </div>
-<p>The features are nonnegative, so the weights are nonnegative. For a strictly positive map, such as the two below, the denominator is positive too, and each output is a weighted average of the values. The two maps show the range of choices.</p>
+<p>The features are nonnegative, so the weights are nonnegative. For a strictly positive map, such as the two below, the denominator is positive too, and each output is a weighted average of the values.</p>
 <p><strong>elu + 1.</strong> <a href="#references">Katharopoulos et al.&nbsp;(2020)</a> apply <span class="math inline">\(\phi(x) = \operatorname{elu}(x) + 1\)</span> to each coordinate, where elu is the exponential linear unit. The map gives <span class="math inline">\(x + 1\)</span> for <span class="math inline">\(x \gt 0\)</span> and <span class="math inline">\(e^x\)</span> for <span class="math inline">\(x \le 0\)</span>, so <span class="math inline">\(r = d\)</span>. It is positive and cheap. It defines a new kernel and does not approximate the softmax kernel.</p>
 <div id="64a77f96" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-20T03:14:16.223974Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-20T03:14:16.223913Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-20T03:14:16.226272Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-20T03:14:16.225903Z&quot;}" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> elu_plus_one(X):</span>
@@ -524,7 +523,7 @@ S_t = S_{t-1} + \phi(k_t)\thinspace v_t^\top, \qquad z_t = z_{t-1} + \phi(k_t) .
 <figcaption>The KV cache against the state of linear attention</figcaption>
 </figure>
 </div>
-<p>At a realistic size the difference is large. Take one head with <span class="math inline">\(d = r = 128\)</span>, after <span class="math inline">\(t = 131{,}072\)</span> tokens. The KV cache holds 33,554,432 numbers, and the state of linear attention holds 16,512, 2,032 times fewer. The state is the size of the cache after about 64 tokens. <a href="#references">Katharopoulos et al.&nbsp;(2020)</a> report that their linear transformers were up to 4,000 times faster at autoregressive prediction of very long sequences.</p>
+<p>Take one head with <span class="math inline">\(d = r = 128\)</span>, after <span class="math inline">\(t = 131{,}072\)</span> tokens. The KV cache holds 33,554,432 numbers, and the state of linear attention holds 16,512, 2,032 times fewer. The state is the size of the cache after about 64 tokens. <a href="#references">Katharopoulos et al.&nbsp;(2020)</a> report that their linear transformers were up to 4,000 times faster at autoregressive prediction of very long sequences.</p>
 <div id="c1eab598" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-20T03:14:16.274571Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-20T03:14:16.274507Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-20T03:14:16.277034Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-20T03:14:16.276707Z&quot;}" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> causal_linear_attention(Q, K, V, phi<span class="op">=</span>elu_plus_one):</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># The recurrent form: S_t = S_{t-1} + phi(k_t) v_t^T and z_t = z_{t-1} + phi(k_t).</span></span>
@@ -1058,7 +1057,7 @@ WY form: the product of 6 transitions is I - K^T T K       largest error 2.2e-16
 <li><strong>Decay and gating.</strong> A forget rate <span class="math inline">\(\alpha_t\)</span> shrinks old pairs. Mamba-2 uses one rate for the whole state of a head (<a href="#references">Dao and Gu, 2024</a>). Gated DeltaNet joins this rate to the delta rule (<a href="#references">Yang, Kautz and Hatamizadeh, 2025</a>). Kimi Delta Attention gives each feature channel its own rate (<a href="#references">Kimi Team, 2025</a>).</li>
 <li><strong>Hybrids.</strong> Kimi Linear interleaves three layers of Kimi Delta Attention with one layer of full attention. The full-attention layers see every past token, and the KV cache is up to 75 percent smaller (<a href="#references">Kimi Team, 2025</a>).</li>
 </ul>
-<p>The thread through all of them is the one this post followed. A fixed memory cannot keep everything, so each method chooses what to keep: the delta rule edits one pair at a time, decay forgets in bulk, and hybrids keep a few layers that forget nothing.</p>
+<p>A fixed memory cannot keep everything, so each method chooses what to keep: the delta rule edits one pair at a time, decay forgets in bulk, and hybrids keep a few layers that forget nothing.</p>
 </section>
 <section id="references" class="level2">
 <h2 class="anchored" data-anchor-id="references">References</h2>
