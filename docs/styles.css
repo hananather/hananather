@@ -157,10 +157,11 @@ body {
   background-color: var(--site-nav-bg-solid);
   border-bottom: 1px solid var(--site-border);
   padding-block: 0.6rem;
+  padding-inline: 0;
 }
 
 #quarto-header .navbar-container {
-  max-width: var(--site-content-max);
+  max-width: 64rem;
   margin-inline: auto;
   padding-inline: clamp(1rem, 4vw, 1.5rem);
 }
@@ -185,6 +186,73 @@ body {
 
 #quarto-header .navbar .nav-link.active {
   color: var(--site-link);
+}
+
+#quarto-header .navbar-brand,
+#quarto-header .navbar .nav-link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+#quarto-header .navbar-toggler,
+#quarto-header .quarto-color-scheme-toggle,
+#quarto-search .aa-DetachedSearchButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+
+#quarto-header .navbar-toggler:focus-visible,
+#quarto-header a:focus-visible,
+#quarto-search .aa-DetachedSearchButton:focus-visible {
+  outline: 2px solid var(--site-focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+#quarto-header .navbar-toggler:focus {
+  box-shadow: none;
+}
+
+@media (min-width: 992px) {
+  #quarto-header .navbar-toggler {
+    display: none;
+  }
+
+  #navbarCollapse > .navbar-nav.ms-auto .nav-link {
+    justify-content: center;
+    min-width: 44px;
+  }
+
+  #navbarCollapse > .navbar-nav.ms-auto .menu-text {
+    display: none;
+  }
+}
+
+@media (max-width: 991.98px) {
+  #navbarCollapse > .navbar-nav.ms-auto {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0 0.75rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--site-border);
+  }
+
+  #navbarCollapse > .navbar-nav.ms-auto .nav-link {
+    gap: 0.45rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  main#quarto-document-content {
+    padding-inline: 0;
+  }
 }
 
 /* 5) Reduce title redundancy on the homepage */
@@ -356,35 +424,41 @@ body.quarto-dark .site-card {
 }
 
 .notes-list li {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1.25rem;
-  padding: 0.7rem 0;
+  margin: 0;
 }
 
 .notes-list li + li {
   border-top: 1px solid var(--site-border);
 }
 
-.notes-list li::after {
+.notes-list a[href$=".pdf"]::after {
   content: "PDF";
   flex: 0 0 auto;
   color: var(--site-muted);
-  font-size: 0.95em;
-  opacity: 0;
-  transform: translateY(-1px);
-  transition: opacity 0.12s ease, transform 0.12s ease;
+  font-size: 0.8rem;
+  font-weight: 400;
   white-space: nowrap;
 }
 
-.notes-list li:hover::after,
-.notes-list li:focus-within::after {
-  opacity: 1;
-  transform: translateY(0);
+.notes-list a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+  min-height: 44px;
+  padding-block: 0.7rem;
+  overflow-wrap: anywhere;
+  font-weight: 600;
 }
 
-.notes-list a {
-  display: inline-block;
-  font-weight: 600;
+.publication-list a:has(+ .publication-meta) {
+  padding-bottom: 0.35rem;
+}
+
+.publication-meta {
+  display: block;
+  padding-bottom: 0.8rem;
+  color: var(--site-muted);
+  font-weight: 400;
 }

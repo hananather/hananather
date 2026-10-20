@@ -1,6 +1,10 @@
 project:
   type: website
   output-dir: docs
+  render:
+    - "**/*.qmd"
+    - "**/*.ipynb"
+    - "website_docs/My Guiding Principles 1de85548209844fbaf58dcc549713ccc.md"
   resources:
     - CNAME
     - favicon.ico
@@ -27,12 +31,15 @@ website:
     right:
       - icon: github
         href: "https://github.com/hananather"
+        text: '<span aria-hidden="true">GitHub</span>'
         aria-label: GitHub
       - icon: linkedin
         href: "https://linkedin.com/in/hanan-ather"
+        text: '<span aria-hidden="true">LinkedIn</span>'
         aria-label: LinkedIn
       - icon: envelope
         href: "mailto:hathe098@gmail.com"
+        text: '<span aria-hidden="true">Email</span>'
         aria-label: Email
 
 format:

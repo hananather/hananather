@@ -1,36 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://hananather.com/CLAUDE.html</loc>
-    <lastmod>2026-07-28T17:49:23.069Z</lastmod>
+    <loc>https://hananather.com/website_docs/My Guiding Principles 1de85548209844fbaf58dcc549713ccc.html</loc>
+    <lastmod>2025-06-03T05:34:20.000Z</lastmod>
   </url>
   <url>
-    <loc>https://hananather.com/rl-labs/part-5-temporal-difference-learning/index.html</loc>
-    <lastmod>2026-01-14T14:58:17.904Z</lastmod>
-  </url>
-  <url>
-    <loc>https://hananather.com/rl-labs/part-1-prediction-and-control/index.html</loc>
-    <lastmod>2026-01-14T14:57:49.512Z</lastmod>
+    <loc>https://hananather.com/rl-labs/part-4-monte-carlo-methods/index.html</loc>
+    <lastmod>2026-01-14T14:58:11.205Z</lastmod>
   </url>
   <url>
     <loc>https://hananather.com/rl-labs/part-2-multi-armed-bandits/index.html</loc>
     <lastmod>2026-01-14T14:57:59.575Z</lastmod>
   </url>
   <url>
-    <loc>https://hananather.com/AGENTS.html</loc>
-    <lastmod>2026-01-13T23:29:37.497Z</lastmod>
+    <loc>https://hananather.com/rl-labs/part-0-basic-probability-simulations/index.html</loc>
+    <lastmod>2026-01-14T14:57:44.162Z</lastmod>
   </url>
   <url>
-    <loc>https://hananather.com/index.html</loc>
-    <lastmod>2026-07-29T21:50:36.636Z</lastmod>
-  </url>
-  <url>
-    <loc>https://hananather.com/posts/introduction-to-llms/index.html</loc>
-    <lastmod>2026-01-14T14:58:31.732Z</lastmod>
-  </url>
-  <url>
-    <loc>https://hananather.com/posts/lessons-learned-for-retrieval-augmented-generation/index.html</loc>
-    <lastmod>2026-01-13T19:14:34.314Z</lastmod>
+    <loc>https://hananather.com/rl-labs/index.html</loc>
+    <lastmod>2026-01-13T21:47:49.590Z</lastmod>
   </url>
   <url>
     <loc>https://hananather.com/principles.html</loc>
@@ -41,31 +29,35 @@
     <lastmod>2026-01-13T23:04:11.927Z</lastmod>
   </url>
   <url>
+    <loc>https://hananather.com/posts/lessons-learned-for-retrieval-augmented-generation/index.html</loc>
+    <lastmod>2026-01-13T19:14:34.314Z</lastmod>
+  </url>
+  <url>
+    <loc>https://hananather.com/index.html</loc>
+    <lastmod>2026-10-20T01:31:56.219Z</lastmod>
+  </url>
+  <url>
     <loc>https://hananather.com/posts/index.html</loc>
     <lastmod>2026-01-13T22:28:52.113Z</lastmod>
   </url>
   <url>
     <loc>https://hananather.com/reading-list/index.html</loc>
-    <lastmod>2026-09-21T15:58:01.804Z</lastmod>
+    <lastmod>2026-10-20T01:39:05.972Z</lastmod>
   </url>
   <url>
-    <loc>https://hananather.com/website_docs/My Guiding Principles 1de85548209844fbaf58dcc549713ccc.html</loc>
-    <lastmod>2025-06-03T05:34:20.000Z</lastmod>
+    <loc>https://hananather.com/posts/introduction-to-llms/index.html</loc>
+    <lastmod>2026-01-14T14:58:31.732Z</lastmod>
   </url>
   <url>
-    <loc>https://hananather.com/rl-labs/part-4-monte-carlo-methods/index.html</loc>
-    <lastmod>2026-01-14T14:58:11.205Z</lastmod>
-  </url>
-  <url>
-    <loc>https://hananather.com/rl-labs/index.html</loc>
-    <lastmod>2026-01-13T21:47:49.590Z</lastmod>
-  </url>
-  <url>
-    <loc>https://hananather.com/rl-labs/part-0-basic-probability-simulations/index.html</loc>
-    <lastmod>2026-01-14T14:57:44.162Z</lastmod>
+    <loc>https://hananather.com/rl-labs/part-1-prediction-and-control/index.html</loc>
+    <lastmod>2026-01-14T14:57:49.512Z</lastmod>
   </url>
   <url>
     <loc>https://hananather.com/rl-labs/part-3-dynamic-programming/index.html</loc>
     <lastmod>2026-01-14T14:58:06.080Z</lastmod>
+  </url>
+  <url>
+    <loc>https://hananather.com/rl-labs/part-5-temporal-difference-learning/index.html</loc>
+    <lastmod>2026-01-14T14:58:17.904Z</lastmod>
   </url>
 </urlset>

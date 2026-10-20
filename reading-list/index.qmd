@@ -5,6 +5,8 @@ css: reading-list.css
 
 I read quite a bit. This is an arbitrary subset of some of the best works I've come across.
 
+## Nonfiction
+
 ::: {.reading-list}
 - [The Autobiography of Benjamin Franklin]{.book} [by Benjamin Franklin]{.by}
 - [Deep Work]{.book} [by Cal Newport]{.by}
@@ -12,5 +14,16 @@ I read quite a bit. This is an arbitrary subset of some of the best works I've c
 - [The Lessons of History]{.book} [by Will and Ariel Durant]{.by}
 - [Principles]{.book} [by Ray Dalio]{.by}
 - [The War of Art]{.book} [by Steven Pressfield]{.by}
-- [Protocols]{.book} [by Andrew Huberman]{.by}
+:::
+
+## Fiction
+
+::: {.reading-list}
+- [The Iliad]{.book} [by Homer]{.by}
+- [Don Quixote]{.book} [by Miguel de Cervantes]{.by}
+- [Anna Karenina]{.book} [by Leo Tolstoy]{.by}
+- [The Death of Ivan Ilyich]{.book} [by Leo Tolstoy]{.by}
+- [Brave New World]{.book} [by Aldous Huxley]{.by}
+- [Middlemarch]{.book} [by George Eliot]{.by}
+- [East of Eden]{.book} [by John Steinbeck]{.by}
 :::
