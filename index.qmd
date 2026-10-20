@@ -7,9 +7,9 @@ format:
 ---
 
 I am a Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at **[Statistics Canada](https://www.statcan.gc.ca/en/start)**.
-I build AI systems for federal stakeholders, with a focus on evaluation, safety, and security across large language models and agentic systems.
+I build and deploy AI systems for federal stakeholders, with a focus on evaluation, safety, and security across large language models and agentic systems.
 
-I also develop technical guidance for governing and securely deploying these systems in settings that handle confidential data, including on-premises environments.
+I also develop technical guidance for governing and securely deploying these systems in settings that handle confidential data.
 
 As a member of the Office of Responsible AI, I lead technical reviews of AI systems across government and contribute to frameworks and governance guidance for **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
 
