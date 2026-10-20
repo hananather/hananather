@@ -13,6 +13,10 @@
   --site-accent: #b01928;
   --site-accent-hover: #801323;
 
+  --site-query: #0077a8;
+  --site-key: #946400;
+  --site-value: #00805a;
+
   --site-content-max: 72ch;
   --site-radius: 8px;
   --site-radius-lg: 12px;
@@ -39,8 +43,30 @@ body.quarto-dark {
   --site-accent: #ea384c;
   --site-accent-hover: #ff5a6d;
 
+  --site-query: #38bdf8;
+  --site-key: #fbbf24;
+  --site-value: #34d399;
+
   --site-nav-bg: rgba(11, 15, 20, 0.72);
   --site-nav-bg-solid: #0b0f14;
+}
+
+/* Opt in with body-classes: attention-notation when Q/q, K/k, V/v
+   denote queries, keys, and values. MathJax 3 CHTML identifier glyphs
+   preserve the notebook's TeX and leave operators and indices neutral. */
+body.attention-notation .notation-query,
+body.attention-notation mjx-mi > mjx-c:is(.mjx-c1D444, .mjx-c1D45E) {
+  color: var(--site-query);
+}
+
+body.attention-notation .notation-key,
+body.attention-notation mjx-mi > mjx-c:is(.mjx-c1D43E, .mjx-c1D458) {
+  color: var(--site-key);
+}
+
+body.attention-notation .notation-value,
+body.attention-notation mjx-mi > mjx-c:is(.mjx-c1D449, .mjx-c1D463) {
+  color: var(--site-value);
 }
 
 /* Map tokens to Bootstrap + Quarto variables */

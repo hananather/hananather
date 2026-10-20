@@ -163,7 +163,7 @@ window.Quarto = {
 <meta name="twitter:card" content="summary_large_image">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-fixed attention-notation">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
@@ -341,9 +341,9 @@ Q = X W_Q, \qquad K = X W_K, \qquad V = X W_V .
 \]</span></p>
 <p>Row <span class="math inline">\(i\)</span> of <span class="math inline">\(Q\)</span>, <span class="math inline">\(K\)</span> and <span class="math inline">\(V\)</span> gives three vectors of <span class="math inline">\(\mathbb{R}^d\)</span> for token <span class="math inline">\(i\)</span>. In formulas they are column vectors.</p>
 <ul>
-<li>The <strong>query</strong> <span class="math inline">\(q_i\)</span> describes what token <span class="math inline">\(i\)</span> looks for.</li>
-<li>The <strong>key</strong> <span class="math inline">\(k_j\)</span> describes what token <span class="math inline">\(j\)</span> offers to a query.</li>
-<li>The <strong>value</strong> <span class="math inline">\(v_j\)</span> is what token <span class="math inline">\(j\)</span> passes on when a query selects it.</li>
+<li>The <strong><span class="notation-query">query</span></strong> <span class="math inline">\(q_i\)</span> describes what token <span class="math inline">\(i\)</span> looks for.</li>
+<li>The <strong><span class="notation-key">key</span></strong> <span class="math inline">\(k_j\)</span> describes what token <span class="math inline">\(j\)</span> offers to a query.</li>
+<li>The <strong><span class="notation-value">value</span></strong> <span class="math inline">\(v_j\)</span> is what token <span class="math inline">\(j\)</span> passes on when a query selects it.</li>
 </ul>
 <p>A layer runs <span class="math inline">\(h\)</span> heads in parallel, each with <span class="math inline">\(d = d_{\text{model}} / h\)</span>. It joins their outputs side by side and multiplies them by one more learned matrix. Everything below describes one head. The values have the same length <span class="math inline">\(d\)</span> as the keys, to keep the counts simple.</p>
 <p>An <strong>operation</strong> is one floating-point addition or multiplication. A product of an <span class="math inline">\(a \times b\)</span> matrix and a <span class="math inline">\(b \times c\)</span> matrix costs <span class="math inline">\(2abc\)</span> operations.</p>
