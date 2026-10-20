@@ -253,7 +253,6 @@ window.Quarto = {
   <li><a href="#training-the-delta-rule-in-chunks" id="toc-training-the-delta-rule-in-chunks" class="nav-link" data-scroll-target="#training-the-delta-rule-in-chunks">8. Training the delta rule in chunks</a></li>
   <li><a href="#when-each-trade-pays" id="toc-when-each-trade-pays" class="nav-link" data-scroll-target="#when-each-trade-pays">9. When each trade pays</a></li>
   <li><a href="#where-this-goes-next" id="toc-where-this-goes-next" class="nav-link" data-scroll-target="#where-this-goes-next">10. Where this goes next</a></li>
-  <li><a href="#appendix-rebuilding-the-figures" id="toc-appendix-rebuilding-the-figures" class="nav-link" data-scroll-target="#appendix-rebuilding-the-figures">Appendix: rebuilding the figures</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
 </nav>
@@ -302,7 +301,7 @@ window.Quarto = {
 </header>
 
 
-<p>This post is incomplete and will be revised. <a href="attention-as-matrix-algebra.zip">Download the notebook and figures</a>.</p>
+<p>You can find this notebook on <a href="https://github.com/hananather/hananather/tree/main/posts/attention-as-matrix-algebra">my GitHub</a>.</p>
 <p>Every transformer layer builds a matrix with one entry for each pair of tokens. Double the context, and the matrix grows four times. <strong>Linear attention</strong> removes the square with two moves: it changes one function, and it moves one pair of parentheses. In return it keeps a memory of fixed size, the same at the millionth token as at the first. This post explains both mechanisms as matrix algebra. Then it shows what the fixed memory forgets, and how the <strong>delta rule</strong> uses the same memory better.</p>
 <p>The post is for readers with a degree in mathematics. It assumes you have met queries, keys and values, and it defines them again anyway. The code cells check the main identities numerically, with NumPy and SciPy.</p>
 <p><strong>In short</strong></p>
@@ -1060,117 +1059,6 @@ WY form: the product of 6 transitions is I - K^T T K       largest error 2.2e-16
 <li><strong>Hybrids.</strong> Kimi Linear interleaves three layers of Kimi Delta Attention with one layer of full attention. The full-attention layers see every past token, and the KV cache is up to 75 percent smaller (<a href="#references">Kimi Team, 2025</a>).</li>
 </ul>
 <p>The thread through all of them is the one this post followed. A fixed memory cannot keep everything, so each method chooses what to keep: the delta rule edits one pair at a time, decay forgets in bulk, and hybrids keep a few layers that forget nothing.</p>
-</section>
-<section id="appendix-rebuilding-the-figures" class="level2">
-<h2 class="anchored" data-anchor-id="appendix-rebuilding-the-figures">Appendix: rebuilding the figures</h2>
-<p>Each figure is a TikZ source in <code>figures/</code>, drawn with <code>figures/attention-style.tex</code>. The cell below writes the numbers that two of the figures read, then compiles every source to PDF and PNG. It needs pdflatex with TikZ and pdftocairo, and it skips the compile when they are missing. Set the <code>PDFLATEX</code> environment variable to choose a pdflatex.</p>
-<div id="7bf48e96" class="cell" data-execution="{&quot;iopub.execute_input&quot;:&quot;2026-10-20T03:14:16.716162Z&quot;,&quot;iopub.status.busy&quot;:&quot;2026-10-20T03:14:16.716081Z&quot;,&quot;iopub.status.idle&quot;:&quot;2026-10-20T03:14:21.437901Z&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-20T03:14:21.437472Z&quot;}" data-execution_count="15">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> subprocess</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tempfile</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>FIGURES <span class="op">=</span> Path(<span class="st">"figures"</span>)</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> write_numbers():</span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># The numbers of the attention-maps figure and of the memory comparison, as TeX macros.</span></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    lines <span class="op">=</span> [</span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"% Written by attention-as-matrix-algebra.ipynb; do not edit."</span>,</span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>        <span class="vs">r"\def\MapN</span><span class="sc">{16}</span><span class="vs">"</span>,</span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>        <span class="vs">r"\def\MapD</span><span class="sc">{4}</span><span class="vs">"</span>,</span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>        <span class="vs">r"\def\MapScale</span><span class="sc">{1.5}</span><span class="vs">"</span>,</span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>        <span class="vs">rf"\def\MapUniform</span><span class="ch">{{</span><span class="sc">{</span><span class="dv">1</span> <span class="op">/</span> <span class="dv">16</span><span class="sc">:.4f}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    ]</span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, M <span class="kw">in</span> ((<span class="st">"Softmax"</span>, P4), (<span class="st">"Linear"</span>, A4)):</span>
-<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>        sv <span class="op">=</span> np.linalg.svd(M, compute_uv<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>        nonzero <span class="op">=</span> sv[sv <span class="op">&gt;</span> <span class="fl">1e-12</span>]  <span class="co"># the rest are zero up to rounding, below 1e-15</span></span>
-<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>        weights <span class="op">=</span> <span class="st">", "</span>.join(<span class="ss">f"</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>j<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>M[i, j]<span class="sc">:.4f}</span><span class="ss">"</span> <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">16</span>) <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">16</span>))</span>
-<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>        logs <span class="op">=</span> <span class="st">", "</span>.join(<span class="ss">f"</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>np<span class="sc">.</span>log10(s)<span class="sc">:.3f}</span><span class="ss">"</span> <span class="cf">for</span> i, s <span class="kw">in</span> <span class="bu">enumerate</span>(nonzero))</span>
-<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>        lines <span class="op">+=</span> [</span>
-<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>            <span class="vs">rf"\def\</span><span class="sc">{</span>name<span class="sc">}</span><span class="vs">Weights</span><span class="ch">{{</span><span class="sc">{</span>weights<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>            <span class="vs">rf"\def\</span><span class="sc">{</span>name<span class="sc">}</span><span class="vs">LogSingular</span><span class="ch">{{</span><span class="sc">{</span>logs<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>            <span class="vs">rf"\def\</span><span class="sc">{</span>name<span class="sc">}</span><span class="vs">Zeros</span><span class="ch">{{</span><span class="sc">{</span><span class="bu">len</span>(sv) <span class="op">-</span> <span class="bu">len</span>(nonzero)<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>            <span class="vs">rf"\def\</span><span class="sc">{</span>name<span class="sc">}</span><span class="vs">Rank</span><span class="ch">{{</span><span class="sc">{</span>np<span class="sc">.</span>linalg<span class="sc">.</span>matrix_rank(M)<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>            <span class="vs">rf"\def\</span><span class="sc">{</span>name<span class="sc">}</span><span class="vs">MaxWeight</span><span class="ch">{{</span><span class="sc">{</span>M<span class="sc">.</span><span class="bu">max</span>(axis<span class="op">=</span><span class="dv">1</span>)<span class="sc">.</span>mean()<span class="sc">:.2f}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>        ]</span>
-<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a>    (FIGURES <span class="op">/</span> <span class="st">"attention-maps-numbers.tex"</span>).write_text(<span class="st">"</span><span class="ch">\n</span><span class="st">"</span>.join(lines) <span class="op">+</span> <span class="st">"</span><span class="ch">\n</span><span class="st">"</span>)</span>
-<span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a>    d, t <span class="op">=</span> <span class="dv">128</span>, <span class="dv">131_072</span>  <span class="co"># one head with d = r = 128, after t tokens</span></span>
-<span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>    cache, state <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> t <span class="op">*</span> d, d <span class="op">*</span> d <span class="op">+</span> d</span>
-<span id="cb27-34"><a href="#cb27-34" aria-hidden="true" tabindex="-1"></a>    (FIGURES <span class="op">/</span> <span class="st">"memory-numbers.tex"</span>).write_text(</span>
-<span id="cb27-35"><a href="#cb27-35" aria-hidden="true" tabindex="-1"></a>        <span class="st">"</span><span class="ch">\n</span><span class="st">"</span>.join(</span>
-<span id="cb27-36"><a href="#cb27-36" aria-hidden="true" tabindex="-1"></a>            [</span>
-<span id="cb27-37"><a href="#cb27-37" aria-hidden="true" tabindex="-1"></a>                <span class="st">"% Written by attention-as-matrix-algebra.ipynb; do not edit."</span>,</span>
-<span id="cb27-38"><a href="#cb27-38" aria-hidden="true" tabindex="-1"></a>                <span class="vs">rf"\def\HeadDim</span><span class="ch">{{</span><span class="sc">{</span>d<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-39"><a href="#cb27-39" aria-hidden="true" tabindex="-1"></a>                <span class="vs">rf"\def\Tokens</span><span class="ch">{{</span><span class="sc">{</span>group(t)<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-40"><a href="#cb27-40" aria-hidden="true" tabindex="-1"></a>                <span class="vs">rf"\def\CacheNumbers</span><span class="ch">{{</span><span class="sc">{</span>group(cache)<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-41"><a href="#cb27-41" aria-hidden="true" tabindex="-1"></a>                <span class="vs">rf"\def\StateNumbers</span><span class="ch">{{</span><span class="sc">{</span>group(state)<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-42"><a href="#cb27-42" aria-hidden="true" tabindex="-1"></a>                <span class="vs">rf"\def\CacheRatio</span><span class="ch">{{</span><span class="sc">{</span>group(<span class="bu">round</span>(cache <span class="op">/</span> state))<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-43"><a href="#cb27-43" aria-hidden="true" tabindex="-1"></a>                <span class="vs">rf"\def\BreakEven</span><span class="ch">{{</span><span class="sc">{</span>state <span class="op">//</span> (<span class="dv">2</span> <span class="op">*</span> d)<span class="sc">}</span><span class="ch">}}</span><span class="vs">"</span>,</span>
-<span id="cb27-44"><a href="#cb27-44" aria-hidden="true" tabindex="-1"></a>            ]</span>
-<span id="cb27-45"><a href="#cb27-45" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb27-46"><a href="#cb27-46" aria-hidden="true" tabindex="-1"></a>        <span class="op">+</span> <span class="st">"</span><span class="ch">\n</span><span class="st">"</span></span>
-<span id="cb27-47"><a href="#cb27-47" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb27-48"><a href="#cb27-48" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(</span>
-<span id="cb27-49"><a href="#cb27-49" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"cache </span><span class="sc">{</span>cache<span class="sc">:,}</span><span class="ss"> numbers, state </span><span class="sc">{</span>state<span class="sc">:,}</span><span class="ss">, ratio </span><span class="sc">{</span>cache <span class="op">/</span> state<span class="sc">:.0f}</span><span class="ss">; P at n = 32,768: "</span></span>
-<span id="cb27-50"><a href="#cb27-50" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"</span><span class="sc">{</span><span class="dv">32_768</span><span class="op">**</span><span class="dv">2</span> <span class="op">*</span> <span class="dv">2</span> <span class="op">/</span> <span class="dv">2</span><span class="op">**</span><span class="dv">30</span><span class="sc">:g}</span><span class="ss"> GiB"</span></span>
-<span id="cb27-51"><a href="#cb27-51" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb27-52"><a href="#cb27-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-53"><a href="#cb27-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-54"><a href="#cb27-54" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> group(x):</span>
-<span id="cb27-55"><a href="#cb27-55" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Thousands separators that TeX math keeps tight: 131{,}072.</span></span>
-<span id="cb27-56"><a href="#cb27-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="ss">f"</span><span class="sc">{</span>x<span class="sc">:,}</span><span class="ss">"</span>.replace(<span class="st">","</span>, <span class="st">"{,}"</span>)</span>
-<span id="cb27-57"><a href="#cb27-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-58"><a href="#cb27-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-59"><a href="#cb27-59" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> render(tex):</span>
-<span id="cb27-60"><a href="#cb27-60" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compile one standalone TikZ source to PDF, then to a PNG at 220 dots per inch.</span></span>
-<span id="cb27-61"><a href="#cb27-61" aria-hidden="true" tabindex="-1"></a>    pdflatex <span class="op">=</span> os.environ.get(<span class="st">"PDFLATEX"</span>, <span class="st">"pdflatex"</span>)</span>
-<span id="cb27-62"><a href="#cb27-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> tempfile.TemporaryDirectory() <span class="im">as</span> tmp:</span>
-<span id="cb27-63"><a href="#cb27-63" aria-hidden="true" tabindex="-1"></a>        subprocess.run(</span>
-<span id="cb27-64"><a href="#cb27-64" aria-hidden="true" tabindex="-1"></a>            [</span>
-<span id="cb27-65"><a href="#cb27-65" aria-hidden="true" tabindex="-1"></a>                pdflatex,</span>
-<span id="cb27-66"><a href="#cb27-66" aria-hidden="true" tabindex="-1"></a>                <span class="st">"-interaction=nonstopmode"</span>,</span>
-<span id="cb27-67"><a href="#cb27-67" aria-hidden="true" tabindex="-1"></a>                <span class="st">"-halt-on-error"</span>,</span>
-<span id="cb27-68"><a href="#cb27-68" aria-hidden="true" tabindex="-1"></a>                <span class="ss">f"-output-directory=</span><span class="sc">{</span>tmp<span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb27-69"><a href="#cb27-69" aria-hidden="true" tabindex="-1"></a>                tex.name,</span>
-<span id="cb27-70"><a href="#cb27-70" aria-hidden="true" tabindex="-1"></a>            ],</span>
-<span id="cb27-71"><a href="#cb27-71" aria-hidden="true" tabindex="-1"></a>            cwd<span class="op">=</span>tex.parent,</span>
-<span id="cb27-72"><a href="#cb27-72" aria-hidden="true" tabindex="-1"></a>            check<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb27-73"><a href="#cb27-73" aria-hidden="true" tabindex="-1"></a>            capture_output<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb27-74"><a href="#cb27-74" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb27-75"><a href="#cb27-75" aria-hidden="true" tabindex="-1"></a>        shutil.copyfile(Path(tmp) <span class="op">/</span> tex.with_suffix(<span class="st">".pdf"</span>).name, tex.with_suffix(<span class="st">".pdf"</span>))</span>
-<span id="cb27-76"><a href="#cb27-76" aria-hidden="true" tabindex="-1"></a>    subprocess.run(</span>
-<span id="cb27-77"><a href="#cb27-77" aria-hidden="true" tabindex="-1"></a>        [</span>
-<span id="cb27-78"><a href="#cb27-78" aria-hidden="true" tabindex="-1"></a>            <span class="st">"pdftocairo"</span>,</span>
-<span id="cb27-79"><a href="#cb27-79" aria-hidden="true" tabindex="-1"></a>            <span class="st">"-png"</span>,</span>
-<span id="cb27-80"><a href="#cb27-80" aria-hidden="true" tabindex="-1"></a>            <span class="st">"-r"</span>,</span>
-<span id="cb27-81"><a href="#cb27-81" aria-hidden="true" tabindex="-1"></a>            <span class="st">"220"</span>,</span>
-<span id="cb27-82"><a href="#cb27-82" aria-hidden="true" tabindex="-1"></a>            <span class="st">"-singlefile"</span>,</span>
-<span id="cb27-83"><a href="#cb27-83" aria-hidden="true" tabindex="-1"></a>            tex.with_suffix(<span class="st">".pdf"</span>),</span>
-<span id="cb27-84"><a href="#cb27-84" aria-hidden="true" tabindex="-1"></a>            tex.with_suffix(<span class="st">""</span>),</span>
-<span id="cb27-85"><a href="#cb27-85" aria-hidden="true" tabindex="-1"></a>        ],</span>
-<span id="cb27-86"><a href="#cb27-86" aria-hidden="true" tabindex="-1"></a>        check<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb27-87"><a href="#cb27-87" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb27-88"><a href="#cb27-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-89"><a href="#cb27-89" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-90"><a href="#cb27-90" aria-hidden="true" tabindex="-1"></a>write_numbers()</span>
-<span id="cb27-91"><a href="#cb27-91" aria-hidden="true" tabindex="-1"></a>sources <span class="op">=</span> <span class="bu">sorted</span>(</span>
-<span id="cb27-92"><a href="#cb27-92" aria-hidden="true" tabindex="-1"></a>    p</span>
-<span id="cb27-93"><a href="#cb27-93" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> p <span class="kw">in</span> FIGURES.glob(<span class="st">"*.tex"</span>)</span>
-<span id="cb27-94"><a href="#cb27-94" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> p.stem <span class="kw">not</span> <span class="kw">in</span> (<span class="st">"attention-style"</span>,) <span class="kw">and</span> <span class="kw">not</span> p.stem.endswith(<span class="st">"-numbers"</span>)</span>
-<span id="cb27-95"><a href="#cb27-95" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb27-96"><a href="#cb27-96" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> shutil.which(os.environ.get(<span class="st">"PDFLATEX"</span>, <span class="st">"pdflatex"</span>)) <span class="kw">and</span> shutil.which(<span class="st">"pdftocairo"</span>):</span>
-<span id="cb27-97"><a href="#cb27-97" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> tex <span class="kw">in</span> sources:</span>
-<span id="cb27-98"><a href="#cb27-98" aria-hidden="true" tabindex="-1"></a>        render(tex)</span>
-<span id="cb27-99"><a href="#cb27-99" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"compiled:"</span>, <span class="st">", "</span>.join(p.stem <span class="cf">for</span> p <span class="kw">in</span> sources))</span>
-<span id="cb27-100"><a href="#cb27-100" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
-<span id="cb27-101"><a href="#cb27-101" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"pdflatex or pdftocairo not found; the figures were not recompiled"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>cache 33,554,432 numbers, state 16,512, ratio 2032; P at n = 32,768: 2 GiB
-compiled: attention-maps, cache-and-state, chunked-delta, householder, interference, overwrite, reordering, series-roadmap, softmax-attention-products</code></pre>
-</div>
-</div>
 </section>
 <section id="references" class="level2">
 <h2 class="anchored" data-anchor-id="references">References</h2>
