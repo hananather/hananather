@@ -9,6 +9,10 @@
 .reading-list a.book:hover { text-decoration-color: var(--site-link); }
 .rl-key { color: var(--site-muted); font-size: .92rem; }
 
+@media (max-width: 575.98px) {
+  .reading-list .by { display: block; }
+}
+
 /* Note page */
 .note-meta { color: var(--site-muted); margin: -.4rem 0 2rem; }
 .note-meta a { color: var(--site-muted); }

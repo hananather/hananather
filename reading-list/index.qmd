@@ -5,25 +5,26 @@ css: reading-list.css
 
 I read quite a bit. This is an arbitrary subset of some of the best works I've come across.
 
-## Nonfiction
+[Ordered chronologically, oldest to newest.]{.rl-key}
 
 ::: {.reading-list}
-- [The Autobiography of Benjamin Franklin]{.book} [by Benjamin Franklin]{.by}
-- [Deep Work]{.book} [by Cal Newport]{.by}
-- [Four Thousand Weeks]{.book} [by Oliver Burkeman]{.by}
-- [The Lessons of History]{.book} [by Will and Ariel Durant]{.by}
-- [Principles]{.book} [by Ray Dalio]{.by}
-- [The War of Art]{.book} [by Steven Pressfield]{.by}
-:::
-
-## Fiction
-
-::: {.reading-list}
-- [The Iliad]{.book} [by Homer]{.by}
-- [Don Quixote]{.book} [by Miguel de Cervantes]{.by}
-- [Anna Karenina]{.book} [by Leo Tolstoy]{.by}
-- [The Death of Ivan Ilyich]{.book} [by Leo Tolstoy]{.by}
-- [Brave New World]{.book} [by Aldous Huxley]{.by}
-- [Middlemarch]{.book} [by George Eliot]{.by}
-- [East of Eden]{.book} [by John Steinbeck]{.by}
+- [The Iliad]{.book} [by Homer · c. 8th century BCE]{.by}
+- [Don Quixote]{.book} [by Miguel de Cervantes · 1605–1615]{.by}
+- [The Autobiography of Benjamin Franklin]{.book} [by Benjamin Franklin · 1791]{.by}
+- [Self-Reliance]{.book} [by Ralph Waldo Emerson · 1841]{.by}
+- [Middlemarch]{.book} [by George Eliot · 1871–1872]{.by}
+- [Anna Karenina]{.book} [by Leo Tolstoy · 1875–1877]{.by}
+- [The Death of Ivan Ilyich]{.book} [by Leo Tolstoy · 1886]{.by}
+- [Civilization and Its Discontents]{.book} [by Sigmund Freud · 1930]{.by}
+- [Brave New World]{.book} [by Aldous Huxley · 1932]{.by}
+- [East of Eden]{.book} [by John Steinbeck · 1952]{.by}
+- [The Lessons of History]{.book} [by Will and Ariel Durant · 1968]{.by}
+- [The Denial of Death]{.book} [by Ernest Becker · 1973]{.by}
+- [Gödel, Escher, Bach]{.book} [by Douglas Hofstadter · 1979]{.by}
+- [Surely You're Joking, Mr. Feynman!]{.book} [by Richard P. Feynman · 1985]{.by}
+- [Chaos]{.book} [by James Gleick · 1987]{.by}
+- [The War of Art]{.book} [by Steven Pressfield · 2002]{.by}
+- [Deep Work]{.book} [by Cal Newport · 2016]{.by}
+- [Principles]{.book} [by Ray Dalio · 2017]{.by}
+- [Four Thousand Weeks]{.book} [by Oliver Burkeman · 2021]{.by}
 :::

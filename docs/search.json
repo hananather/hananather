@@ -137,21 +137,7 @@
     "href": "reading-list/index.html",
     "title": "Reading List",
     "section": "",
-    "text": "I read quite a bit. This is an arbitrary subset of some of the best works I’ve come across."
-  },
-  {
-    "objectID": "reading-list/index.html#nonfiction",
-    "href": "reading-list/index.html#nonfiction",
-    "title": "Reading List",
-    "section": "Nonfiction",
-    "text": "Nonfiction\n\n\nThe Autobiography of Benjamin Franklin by Benjamin Franklin\nDeep Work by Cal Newport\nFour Thousand Weeks by Oliver Burkeman\nThe Lessons of History by Will and Ariel Durant\nPrinciples by Ray Dalio\nThe War of Art by Steven Pressfield"
-  },
-  {
-    "objectID": "reading-list/index.html#fiction",
-    "href": "reading-list/index.html#fiction",
-    "title": "Reading List",
-    "section": "Fiction",
-    "text": "Fiction\n\n\nThe Iliad by Homer\nDon Quixote by Miguel de Cervantes\nAnna Karenina by Leo Tolstoy\nThe Death of Ivan Ilyich by Leo Tolstoy\nBrave New World by Aldous Huxley\nMiddlemarch by George Eliot\nEast of Eden by John Steinbeck"
+    "text": "I read quite a bit. This is an arbitrary subset of some of the best works I’ve come across.\nOrdered chronologically, oldest to newest.\n\n\nThe Iliad by Homer · c. 8th century BCE\nDon Quixote by Miguel de Cervantes · 1605–1615\nThe Autobiography of Benjamin Franklin by Benjamin Franklin · 1791\nSelf-Reliance by Ralph Waldo Emerson · 1841\nMiddlemarch by George Eliot · 1871–1872\nAnna Karenina by Leo Tolstoy · 1875–1877\nThe Death of Ivan Ilyich by Leo Tolstoy · 1886\nCivilization and Its Discontents by Sigmund Freud · 1930\nBrave New World by Aldous Huxley · 1932\nEast of Eden by John Steinbeck · 1952\nThe Lessons of History by Will and Ariel Durant · 1968\nThe Denial of Death by Ernest Becker · 1973\nGödel, Escher, Bach by Douglas Hofstadter · 1979\nSurely You’re Joking, Mr. Feynman! by Richard P. Feynman · 1985\nChaos by James Gleick · 1987\nThe War of Art by Steven Pressfield · 2002\nDeep Work by Cal Newport · 2016\nPrinciples by Ray Dalio · 2017\nFour Thousand Weeks by Oliver Burkeman · 2021"
   },
   {
     "objectID": "posts/introduction-to-llms/index.html",
