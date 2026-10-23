@@ -7,7 +7,46 @@ adjustment, calibration and small area estimation, and reduce variance enough to
 every departure logged in `prereg/deviations.md`. It is a development population, so generalization is **not**
 assessed. That is what the 8 held-out Census divisions are for (§9).
 
-<!-- BOTTOM LINE: PENDING -->
+## Bottom line
+
+**The mechanism works, but the gain is small, and most of it is not where the claim puts it.**
+
+1. **Calibration, the main use.** The register here is production-grade: lagged revenue, expenses, assets, employees and payroll.
+   - Text from mission and program descriptions explains about 4% of the residual variance of survey-only variables: RE **1.044** (1.037–1.052) over the same ML model without text.
+   - The gain is real. It survives random, permuted and constant-embedding controls, number masking, and a frozen previous-wave deployment.
+   - It matches the pre-registered prediction (1.04) and the population ceiling (1.034).
+   - It is well short of the 1.10 production bar.
+2. **A production system clears the bar, mostly without text.**
+   - The system: frozen ML heads on the register's own IRS codes plus text, in one bounded weight set. It beats today's GREG by **1.12** over the 10 headline variables (1.23 on the dollar items).
+   - The same system without text gives 1.07.
+   - So ML on codes already on the register is the bigger lever, and text adds about 5% on top. Neither clears 1.10 alone.
+3. **It buys nothing where a multipurpose survey binds.**
+   - The gains sit on dollar items: government grants, contributions, fundraising and program revenue, 1.18–1.41 each.
+   - Volunteers, officer compensation and the yes/no items get 1.00–1.07.
+   - Under the default CV targets, a proportion sets the sample size, and the saving is **zero**.
+4. **The other uses in the claim**:
+   - **Stratification:** no gain. Text-coded industry gives 1.00–1.02, and prediction strata *lose* 23–29%.
+   - **Small areas:** no gain. Fay–Herriot text/twin is 0.97–1.19 on average, and only about 2% better in the median domain.
+   - **Weak register without tax data:** 1.035. Text recovers 10% of what an administrative size measure gives.
+5. **Nonresponse is where the action is, and the lesson is not about text.**
+   - Calibrating survey-only variables to lagged size multiplies late-filer nonresponse bias **3–10×**.
+   - Text removes 19–35% of the bias that calibration adds.
+   - Plain weighting classes without size calibration beat every text arm.
+6. **Last year's value of the same variable is worth 7–11×** (government grants, fundraising, officer compensation). Where an administrative line exists (T3010, payroll), linking it beats any text by two orders of magnitude.
+7. **Protocol status.**
+   - This is a development population, and the strict pre-registered verdict is **HARNESS NOT VALIDATED**: four gates have failing items.
+   - Every failure is diagnosed:
+     - a variance-estimator problem shared with production GREG;
+     - a defective linear arm, since repaired;
+     - low power to realize planted signals;
+     - one noise-control artifact.
+   - The efficiency findings hold under every diagnosis. Confidence-interval claims for calibrated estimators do not.
+
+"Variance reduction, not productivity" is a correct description of the mechanism. As a value proposition for a
+survey with a tax-linked register, the reduction is 3–5%, and the larger and cheaper wins are elsewhere:
+- link administrative lags;
+- use ML on the codes the register already holds;
+- stop calibrating survey-only variables to size under size-related nonresponse.
 
 ---
 
@@ -278,6 +317,38 @@ MCAL at R = 500.
 - **Text-coded NTEE (S4).** It reaches 63% accuracy on known codes with E*'s 16 components, and 70% with all 256 LSA dimensions. Filling the missing codes does not move design efficiency. The register's MISSING level already behaves like a usable stratum, and size carries most of the stratification gain. The only movement is on register-type totals under GREG (1.11, 1.02–1.20), whose CVs are already below 1%.
 - **Prediction strata (S5) as pre-registered** lose 23–29%. The score split replaces two of four size classes, and losing size resolution costs far more than the text score adds. That holds even for government grants, the variable the score predicts (0.54 under GREG). A score split *inside* four size classes (H ≈ 88) was not run. Given the population ceilings in §4.1, it would at best recover a few percent.
 - **Real-world reading.** Autocoding missing activity codes from registration text is worth doing for **classification and domain publication**: it puts units in the right industry tables. It is not a variance-reduction tool for this kind of survey.
+
+---
+
+## 5. Scorecard against the pre-registered hypotheses
+
+These are development results on NE. The confirmatory status needs the held-out divisions.
+
+| ID | Hypothesis | Result | Status |
+|---|---|---|---|
+| **P1** | Text beats the same ML twin (production bar) | 1.044 (1.037–1.052) | **EXCLUDED**; any gain **YES**; equals the prediction of 1.04 |
+| **P2** | Frozen text system beats production GREG, with no harm, and valid | 1.121 (1.108–1.134); no harm holds | **MET** on efficiency. **Not a formal pass**: G4 validity fails, shared with GREG itself |
+| P2-twin | The same system without text | 1.071 (1.059–1.082) | EXCLUDED; any gain YES |
+| S-F1 | Realism without payroll | 1.043 | Reported |
+| H7 | The salaries gain disappears with payroll | 1.028 (1.007–1.050) without payroll → 1.002 (0.990–1.012) with it | **Supported** |
+| S-F2 | Text adds with the full prior return (≥ 1.05) | 1.015 over H; 1.001 on H_D | **Fail** |
+| S1 / G7 | No gain on register-type variables | 0.989–1.006 | Pass (no leakage) |
+| S2 | Text helps a weak register (≥ 1.20) | 1.000 (w) / 1.035 (wprof) | **EXCLUDED** |
+| S2b | Text substitutes for admin data (G ≥ 0.5) | G = 0.00 / 0.10 | **Fail** |
+| S4 | Text-coded NTEE helps the design (≥ 1.05) | HT 0.997, GREG 1.017 | **Fail** |
+| S5 | Prediction strata help (production bar) | 0.71–0.77 | **EXCLUDED** (a loss) |
+| S6 | Text reduces nonresponse bias against the least-biased text-free method | BRF −0.10 to −7.3 | **Fail**, both take-all scenarios |
+| S7 | Text improves Fay–Herriot small areas (≤ 0.90) | 0.97 (has gov. grants), 1.19 (gov. grants) | **Fail** |
+| S9 | A modern embedding is needed (≥ log 1.05 over LSA) | MiniLM 1.023 vs LSA 1.044 | **Fail**: LSA is enough |
+| M5 | Planted-signal recovery: ρ²_min(1,000) | No planted level ≤ 0.20 meets the bar (φ 0.20–0.34) | ρ²_min does not exist, so FALSIFIED is unreachable |
+| M6 | A frozen model keeps ≥ 75% of the gain | Per-variable frozen 0.73; single-weight frozen 1.06; difference (PPI) 0.85 | Borderline fail / pass / pass |
+| H14 | A single weight keeps the gain | 1.19 of P1's log gain | Pass |
+| M1 | Text is the main source of the best gain (Shapley share ≥ 0.5) | <!-- M1: PENDING --> | <!-- M1 status --> |
+
+**§9.6 verdict.**
+- Strict: **HARNESS NOT VALIDATED**, from gate failures in the NE cell.
+- Diagnosed: the efficiency pattern is "real but small text gain; production bar reached only with ML on codes, and only for dollar items". That is closest to **REDUCED TO ML, NOT TEXT**, but that verdict needs P2-twin MET (it is 1.071).
+- Formally, the pattern is **INCONCLUSIVE**. The binding failures are G4 (variance estimation, a remedy is available) and M5 (power).
 
 ---
 
