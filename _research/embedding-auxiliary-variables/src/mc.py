@@ -34,6 +34,10 @@ LAMS = (1e-3, 1e-2, 1e-1, 1.0, 10.0)
 # ----------------------------------------------------------------------------------------------
 # weighted ridge (standardised columns, intercept, per-target penalty)
 def _ridge_fit(F, Y, w, lam, hard):
+    # weights normalised to mean 1: with standardised columns the Gram diagonal is then ~n, so the
+    # penalty lam*n means the same thing whatever the weight scale (ratio weights d*x are ~1e11;
+    # without this the penalty was numerically zero -- defect found by the design review)
+    w = w / w.mean()
     mu = np.average(F, axis=0, weights=w)
     ymu = np.average(Y, axis=0, weights=w)
     sd = np.sqrt(np.average((F - mu) ** 2, axis=0, weights=w)) + 1e-12
@@ -107,19 +111,52 @@ class Cell:
         self.rep = 0
 
 
-def _clipped_pop_sum(cell, spec, F, lam, Fs, T_target, w, hard, lo, hi, folds):
-    """Population sum of x * clip(ratio prediction) -- clipping is nonlinear, so predict every unit."""
-    xt_U = cell.size + spec.get("ratio_offset", 1.0)
-    if folds is None:
-        b0, Bx = _ridge_fit(Fs, T_target, w, lam, hard)
-        return (np.clip(b0 + F @ Bx, lo, hi) * xt_U[:, None]).sum(0)
-    k = folds.max() + 1
-    tot = np.zeros(T_target.shape[1])
-    for f in range(k):
-        tr = folds != f
-        b0, Bx = _ridge_fit(Fs[tr], T_target[tr], w[tr], lam, hard)
-        tot += (np.clip(b0 + F @ Bx, lo, hi) * xt_U[:, None]).sum(0) / k
-    return tot
+def model_predict(cell, spec, F, i, Y_ts, d_ts, rng, groups=None, need_U=False):
+    """Fit the prediction model of an mcal/syn spec on the take-some sample.
+    Returns (M_s cross-fitted or in-sample (n,q), population sums of predictions (q,), M_U or None).
+    Ratio-scale fitting (y/x with weights d*x, predictions clipped to the sample's 1-99th pct ratio)
+    is used for continuous targets only; binary targets (names y_bin_*) use the additive model."""
+    hard = spec["hard"]
+    q = Y_ts.shape[1]
+    is_bin = np.array([y.startswith("y_bin_") for y in cell.ynames])
+    ratio_cols = np.flatnonzero(~is_bin) if spec.get("ratio", False) else np.array([], int)
+    add_cols = np.setdiff1d(np.arange(q), ratio_cols)
+    Fs = F[i]
+    off = spec.get("ratio_offset", 1.0)
+    xs, xU = cell.size[i] + off, cell.size + off
+    cf = spec.get("cf", True)
+    k = spec.get("k", 5)
+    folds = _folds(len(Fs), k, rng, groups) if cf else None
+    M = np.zeros_like(Y_ts, dtype=float)
+    sumM = np.zeros(q)
+    M_U = np.zeros((cell.N_ts, q)) if need_U else None
+    for cols, ratio in ((ratio_cols, True), (add_cols, False)):
+        if len(cols) == 0:
+            continue
+        T, w = (Y_ts[:, cols] / xs[:, None], d_ts * xs) if ratio else (Y_ts[:, cols], d_ts)
+        lam = _ridge_cv_lambda(Fs, T, w, hard, rng=rng, groups=groups)
+        lo, hi = (np.percentile(T, [1, 99], axis=0) if (ratio and spec.get("clip", True)) else (-np.inf, np.inf))
+        fits = []
+        if cf:
+            for f in range(k):
+                tr, te = folds != f, folds == f
+                b0, Bx = _ridge_fit(Fs[tr], T[tr], w[tr], lam, hard)
+                M[np.ix_(np.flatnonzero(te), cols)] = np.clip(b0 + Fs[te] @ Bx, lo, hi)
+                fits.append((b0, Bx))
+        else:
+            b0, Bx = _ridge_fit(Fs, T, w, lam, hard)
+            M[:, cols] = np.clip(b0 + Fs @ Bx, lo, hi)
+            fits.append((b0, Bx))
+        for b0, Bx in fits:
+            P = np.clip(b0 + F @ Bx, lo, hi)          # every take-some frame unit (clipping is nonlinear)
+            if ratio:
+                P = P * xU[:, None]
+            sumM[cols] += P.sum(0) / len(fits)
+            if need_U:
+                M_U[:, cols] += P / len(fits)
+        if ratio:
+            M[:, cols] = M[:, cols] * xs[:, None]
+    return M, sumM, M_U
 
 
 def _estimate(spec, cell: Cell, s_ts, d_ts, Y_ts, rng):
@@ -132,19 +169,17 @@ def _estimate(spec, cell: Cell, s_ts, d_ts, Y_ts, rng):
         t, e, _ = greg_total(Y_ts, d_ts, X[i], cell.tots[spec["X"]])
         return t, e
     if kind == "ridge":
+        # ridge-assisted GREG: coefficients from the same weighted ridge used to choose lambda (grouped
+        # in-sample CV), first `hard` columns unpenalised; t = sum_U m + sum_s d (y - m)
         X = cell.mats[spec["X"]]
         Xs = X[i]
         hard = spec["hard"]
-        lam = _ridge_cv_lambda(Xs, Y_ts, d_ts, hard, rng=rng)
-        mu = np.average(Xs, axis=0, weights=d_ts)
-        col_var = np.average((Xs - mu) ** 2, axis=0, weights=d_ts)
-        t, e = np.zeros(Y_ts.shape[1]), np.zeros_like(Y_ts)
-        for lv in np.unique(lam):
-            j = np.flatnonzero(lam == lv)
-            pen = np.r_[np.zeros(hard), lv * d_ts.sum() * col_var[hard:]]
-            t_, e_, _ = greg_total(Y_ts[:, j], d_ts, Xs, cell.tots[spec["X"]], penalty=pen)
-            t[j], e[:, j] = t_, e_
-        return t, e
+        grp = None if cell.groups is None else cell.groups[i]
+        lam = _ridge_cv_lambda(Xs, Y_ts, d_ts, hard, rng=rng, groups=grp)
+        b0, Bx = _ridge_fit(Xs, Y_ts, d_ts, lam, hard)
+        M = b0 + Xs @ Bx
+        E = Y_ts - M
+        return b0 * cell.N_ts + cell.tots[spec["X"]] @ Bx + d_ts @ E, E
     if kind == "frozen":
         M = cell.frozen[spec["m"]]
         if M.ndim == 3:                     # several previous-wave draws: cycle through them
@@ -161,50 +196,8 @@ def _estimate(spec, cell: Cell, s_ts, d_ts, Y_ts, rng):
         return M.sum(0) + d_ts @ E, E
     if kind in ("mcal", "syn"):
         F = cell.mats[spec["F"]]
-        Fs = F[i]
-        hard = spec["hard"]
-        ratio = spec.get("ratio", False)
-        sz = cell.size[i]
-        if ratio:  # model y/x with weights d*x  (ratio-type heteroscedasticity, Var(y) ~ x)
-            xt = sz + spec.get("ratio_offset", 1.0)
-            T_target, w = Y_ts / xt[:, None], d_ts * xt
-        else:
-            T_target, w = Y_ts, d_ts
-        lam = _ridge_cv_lambda(Fs, T_target, w, hard, rng=rng,
-                               groups=None if cell.groups is None else cell.groups[i])
-        sumF = cell.tots[spec["F"]]
-        key = (spec["F"], spec.get("ratio_offset", 1.0))
-        if ratio and key not in cell._cache:
-            xt_U = cell.size + spec.get("ratio_offset", 1.0)
-            cell._cache[key] = (xt_U.sum(), xt_U @ F)
-        sumxF = cell._cache.get(key)
-        def pop_sum(b0, Bx):
-            if ratio:
-                return b0 * sumxF[0] + sumxF[1] @ Bx
-            return b0 * cell.N_ts + sumF @ Bx
-        if spec.get("cf", True):
-            k = spec.get("k", 5)
-            folds = _folds(len(Fs), k, rng, None if cell.groups is None else cell.groups[i])
-            M = np.zeros_like(Y_ts)
-            sumM = np.zeros(Y_ts.shape[1])
-            for f in range(k):
-                tr, te = folds != f, folds == f
-                b0, Bx = _ridge_fit(Fs[tr], T_target[tr], w[tr], lam, hard)
-                M[te] = b0 + Fs[te] @ Bx
-                sumM += pop_sum(b0, Bx) / k
-        else:
-            b0, Bx = _ridge_fit(Fs, T_target, w, lam, hard)
-            M = b0 + Fs @ Bx
-            sumM = pop_sum(b0, Bx)
-        if ratio:
-            if spec.get("clip", True):
-                # robustness: keep predicted ratios inside the range seen in the sample (1st-99th pct);
-                # a few units with tiny x and large y otherwise create extreme ratios and leverage
-                lo, hi = np.percentile(T_target, [1, 99], axis=0)
-                M = np.clip(M, lo, hi)
-                if spec.get("_clip_pop", True):
-                    sumM = _clipped_pop_sum(cell, spec, F, lam, Fs, T_target, w, hard, lo, hi, folds if spec.get("cf", True) else None)
-            M = M * xt[:, None]
+        grp = None if cell.groups is None else cell.groups[i]
+        M, sumM, _ = model_predict(cell, spec, F, i, Y_ts, d_ts, rng, grp)
         if kind == "syn":
             return sumM, np.full_like(Y_ts, np.nan)
         Xb = cell.mats[spec["X_base"]]

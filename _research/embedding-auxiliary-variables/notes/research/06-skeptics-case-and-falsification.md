@@ -61,14 +61,23 @@ This note argues the case against the claim as hard as it can be argued, and the
    | Cross-fitted ridge on raw additive dimensions | 0.15–0.84 | Restored (84–96%) | — | — |
 
    Cross-fitting is necessary for valid inference, but it creates no efficiency gain on its own.
-8. **Leakage on this dataset is mainly about timing.** The text contains exact dollar values rarely (§4.3), so that is not where it comes from. The serious traps are:
+8. **Embedding a document to recover a number is the wrong tool** (§4.4).
+   - Even the bare string "Total revenue: $X" is read back by MiniLM only to a median ±41%.
+   - As a raw-scale ratio auxiliary it is **6.7× less efficient** than the extracted number.
+   - Inside 50–180 words of mission text, most of the number is lost.
+   - For PDFs, extract fields and embed only the narrative.
+9. **Leakage on this dataset is mainly about timing.** Exact y values never appear in the TY2022 mission and program text (0.0% in every size class, §4.3), so that is not where it comes from. Numbers do appear: 15–50% of texts have ≥ 4-digit numbers. The serious traps are:
    - a current BMF as the frame;
    - same-year text;
    - third-party web pages that quote 990 financials;
    - tuning on the truth;
    - folds that split near-duplicate chapter texts.
-9. **Coverage works against the claim.** Text and websites are most often present for large units ([n02]: websites about 45% below $200k against about 88% above $25M). Those are already take-all or well predicted by lagged size. Text is thinnest exactly where the frame is weakest: births, 990-N filers and micro units.
-10. **The skeptic would concede usefulness in production only in narrow cases** (§8):
+10. **Coverage works against the claim.** Text and websites are most often present for large units.
+   - Valid website URLs in this population cover 51% of units under $200k against 92% above $25M. [n02] found about 45% against about 88%.
+   - Those large units are already take-all or well predicted by lagged size. The take-all 1% hold 68% of revenue.
+   - Text is thinnest exactly where the frame is weakest: births, 990-N filers and micro units.
+   - **Red-team catch:** the population's `has_website` flag counts "N/A" and "NONE" as websites, giving 92.8% coverage instead of the true 72.5%. It must be rebuilt before use (§4.3).
+11. **The skeptic would concede usefulness in production only in narrow cases** (§8):
     - variables with **no** administrative lag (mission and activity variables in a new or redesigned survey);
     - **births** and units without admin history;
     - **text-defined domains** that no frame code captures;
@@ -101,7 +110,7 @@ where R²_{T|B} is the partial R² of the text given B, computed on take-some re
 | 0.33 | 1.50 | 33% |
 | 0.50 | 2.00 | 50% |
 
-**Ceiling vs achievable.** A population-fitted m with an oracle-chosen penalty is a *ceiling*. A sample-fitted m with p_eff effective parameters loses roughly a factor (1 + p_eff/n) of residual variance, the familiar GREG finite-sample penalty ([n01] §2.3). Consider a text block with p_eff ≈ 30 at n = 500:
+**Ceiling vs achievable.** A population-fitted m with an oracle-chosen penalty is a *ceiling*. A sample-fitted m with p_eff effective parameters loses roughly a factor (1 + p_eff/n) of residual variance. This is a heuristic, the familiar GREG finite-sample penalty ([n01] §2.3). Here it is applied to the text block's extra p_eff only. Consider a text block with p_eff ≈ 30 at n = 500:
 - a ceiling RE of 1.10 becomes about **1.04** in practice;
 - a ceiling of 1.05 becomes about **0.99**.
 
@@ -118,7 +127,9 @@ where R²_{T|B} is the partial R² of the text given B, computed on take-some re
 **Argument.**
 - Industry codes are *made from the same text*. StatCan assigns NAICS to the BN "major business activity" text with an automated classifier (G-Code). The US Census auto-coder assigns NAICS from the SS-4 business description for more than 80% of new applications ([n02] §2.4).
 - An embedding of that description is therefore largely a continuous version of the code.
-- For size variables, which dominate business-survey variance, the frame's lagged admin size (GST/HST revenue, T2/GIFI, PD7A payroll) already explains R² > 0.95 ([n02] table: StatCan has used tax data in place of survey data since the mid-1960s).
+- For size variables, which dominate business-survey variance, the frame's lagged admin size (GST/HST revenue, T2/GIFI, PD7A payroll) already explains most of the variance:
+  - on the 990, the raw-scale correlation between TY2023 and TY2022 revenue is 0.991, so R² ≈ 0.98 ([n03]);
+  - a comparably high R² for StatCan BR tax data is **[UNVERIFIED]**, though StatCan has used tax data in place of survey data since the mid-1960s ([n02]).
 
 **Where incremental signal could plausibly exist** (the skeptic's honest list):
 - (a) **Mission-driven or composition variables** that no register carries: volunteers, government-grant dependence, program type, grants to individuals, the share of program-service revenue.
@@ -153,6 +164,9 @@ where R²_{T|B} is the partial R² of the text given B, computed on take-some re
 Embed only what extraction cannot capture: narrative, funding-source descriptions, program content. For StatCan this is not hypothetical. T2/GIFI financials already arrive as *structured fields* from CRA, and the T3010 has structured financial lines. Rendering structured records as page images in order to embed them would be a step backwards ([n03] §4.8 makes the same point for the 990).
 
 **Evidence (§4.4).** On the NE population, a MiniLM embedding of the literal string "Total revenue: $X" was compared with the extracted number and with a digit-count feature.
+- The embedding reads the bare number back to a median ±41%.
+- As a raw-scale ratio auxiliary, it is **6.7× less efficient** than the extracted number.
+- Embedded inside the mission text, most of the number is lost (R² on the log scale drops from 0.95 to 0.31–0.42).
 
 **Tests.** H16 (extraction ≥ page embedding for size y) and H17 (multimodal increment). Arms B8 and NC7 (digits-masked text) are mandatory.
 
@@ -322,11 +336,105 @@ The lagged indicator comes from the TY2022 return, parsed into `/tmp/claude-0/da
 
 ### 4.3 Redundancy, magnitude, coverage and leakage diagnostics
 
-⟦DESCRIBE⟧
+Script: `describe.py`; population N = 20,626.
+
+**(a) How much of the embedding *is* the industry code?** The between-group share of embedding variance (the share explained by group means) is:
+
+| Grouping | LSA-256, all dimensions | MiniLM-384, all dimensions | LSA, 32 PCs | MiniLM, 32 PCs |
+|---|---|---|---|---|
+| NTEE10 (frame stratifier) | 3.0% | 4.3% | 6.3% | 5.5% |
+| NTEE 3-character code | 14.3% | 15.7% | 25.2% | 19.9% |
+| NTEE10 × BMF income code (≈ strata) | 4.6% | 5.5% | 8.7% | 7.0% |
+| State | 0.6% | 0.6% | 0.4% | 1.0% |
+
+- NTEE10 is predictable from 32 text PCs with 67% 5-fold accuracy (LSA and MiniLM alike), against a majority-class rate of 35%. NTEE is missing for 31% of this population.
+- **Verdict.** At most a quarter of the leading embedding variance is fine-code variance. The embedding is *not* mainly a re-encoding of the code. This agrees with §4.1, where the within-code residual carries the gain.
+
+**(b) Does text recover size?** Cross-validated R² for log(1 + lagged revenue). The number sits on *the same return* as the text, but is not *in* the text:
+
+| Features | R² |
+|---|---|
+| NTEE10 + state | 0.04 |
+| Fine code | 0.11 |
+| Meta-features (length, website flag, digits) | 0.11 |
+| MiniLM 32 PCs | 0.15 |
+| LSA 32 PCs | 0.23 |
+| Fine code + meta + LSA | 0.28 |
+| The lagged number itself | 1.00 |
+
+Text carries a weak, coarse size signal (R² ≈ 0.2–0.3, against 1.0 for the number). Part of that signal is simply length: the Spearman correlation of log word count with log revenue is 0.36. This is why size variables gain nothing once the lagged number is on the frame.
+
+**(c) Incremental R² on the log scale for TY2023 y** (5-fold CV ridge, unweighted; complements the design-weighted §4.1). Frame = NTEE10 + state + income code + log lagged size.
+
+| y | Frame | + fine code + meta | + fine code + meta + LSA | + lag of y | + lag + code + meta + LSA |
+|---|---|---|---|---|---|
+| Revenue | 0.779 | 0.779 | 0.779 | (in frame) | 0.779 |
+| Expenses | 0.871 | 0.871 | 0.871 | (in frame) | 0.871 |
+| Employees | 0.951 | 0.951 | 0.952 | (in frame) | 0.952 |
+| Salaries | 0.636 | 0.647 | 0.663 | 0.941 | 0.941 |
+| Program-service revenue | 0.347 | 0.416 | 0.491 | 0.913 | 0.913 |
+| Contributions | 0.227 | 0.303 | 0.387 | 0.841 | 0.843 |
+| Government grants | 0.197 | 0.265 | 0.335 | 0.687 | 0.697 |
+| Volunteers (capped) | 0.128 | 0.206 | 0.249 | 0.784 | 0.786 |
+| Fundraising expenses | 0.253 | 0.345 | 0.429 | 0.876 | 0.878 |
+
+- Partial R² of LSA given code + meta: 0.10–0.13 for the composition y (contributions, government grants, program revenue, fundraising); 0.05 for volunteers and salaries.
+- Partial R² given the lag: **0.00–0.03**.
+- The lag of y is worth 3–6 times what the text is worth, and the text adds almost nothing on top of it.
+
+**(d) Coverage, numbers in text, staleness, duplicates, concentration** (by lagged revenue class):
+
+| Class | n | Share of revenue | `has_website` flag | **Valid URL** | Median words | Has "$" | Has number with ≥ 4 digits | Exact lagged or current revenue/expenses in text | Mission unchanged t−1 → t |
+|---|---|---|---|---|---|---|---|---|---|
+| <$200k | 4,896 | 0.2% | 85.8% | **50.7%** | 50 | 2.8% | 14.9% | 0.0% | 88.1% |
+| $200–500k | 5,196 | 0.7% | 91.0% | **69.0%** | 60 | 2.8% | 17.4% | 0.0% | 84.3% |
+| $0.5–1M | 2,954 | 0.8% | 93.9% | **75.5%** | 70 | 2.8% | 20.6% | 0.0% | 83.2% |
+| $1–5M | 4,468 | 3.9% | 97.2% | **85.2%** | 95 | 3.8% | 27.0% | 0.0% | 81.2% |
+| $5–25M | 2,072 | 8.4% | 99.0% | **91.2%** | 122 | 6.1% | 34.6% | 0.0% | 80.5% |
+| >$25M | 1,040 | **86.0%** | 99.8% | **91.8%** | 184 | 11.1% | 50.2% | 0.0% | 78.8% |
+
+**Red-team findings from this table:**
+1. **`has_website` in `ne_pop.parquet` is wrong.**
+   - 21.7% of the non-empty website values are placeholders: "N/A" (4,011), "NONE", "NA", "SEE SCHEDULE O". Valid-URL coverage is therefore **72.5%**, not 92.8%.
+   - The gradient is steep: 51% of units under $200k against 92% above $25M.
+   - The flag must be rebuilt (valid URL = contains a dot and is not a placeholder) before it is used as a frame variable, a meta-feature, or a coverage stratum.
+   - The meta-features arm in §4.1 used the defective flag. Its 1.00–1.04 should be re-run with the corrected one.
+2. **8.4% of the valid URLs are shared by ≥ 2 EINs** (hospital systems, Scottish Rite, Tufts Medicine and the like). Website text would be identical across affiliates, which is the L7 fold-leakage risk.
+3. **The take-all 1% (206 units) holds 68% of revenue, and the top class holds 86%.** All text gains are fought over the remaining third of the total.
+4. **Exact y values never appear in the mission and program text** (0.0% in every class). Numbers do appear: 15–50% have ≥ 4-digit numbers, 3–11% have "$". The digit-masking ablation (NC7) is still required, because heavy units often state budgets or client counts.
+5. **4.8% of units share an identical normalized mission with at least one other unit.** The largest cluster (112 units) is the *empty* mission, where text exists only in the programs. Group k-fold on duplicate clusters is required.
 
 ### 4.4 Semantics, not magnitudes: embedding a sentence that literally states the number
 
-⟦NUMERACY⟧
+This is the cleanest possible version of "embed the financial statement". The prior-year revenue X is written out as text, embedded with MiniLM, and a 5-fold CV ridge on the 384 dimensions is asked to read it back. Random subsample of 6,000 units; scripts `numeracy.py` and `numeracy_raw.py`.
+
+| Input to the model | R² for log(lagged revenue), which *is* the number in the text | R² for log(TY2023 revenue) | Median multiplicative error |
+|---|---|---|---|
+| Extracted number (field extraction) | **1.000** | 0.704 | ×1.00 |
+| Digit count of X only | 0.932 | 0.670 | ×1.68 |
+| emb("Total revenue: $X") | 0.945 | 0.676 | ×1.41 |
+| emb("Total revenue: $X. " + mission) | 0.420 | 0.302 | ×2.81 |
+| emb(mission + " Total revenue: $X.") | 0.308 | 0.235 | ×2.95 |
+| emb(mission), no number | 0.165 | 0.165 | ×2.79 |
+
+Within one digit-count class (5, 6 or 7 digits), emb("Total revenue: $X") reaches R² 0.90, 0.80 and 0.94. So MiniLM reads more than the order of magnitude when the number stands *alone*. That is more numeracy than the skeptic expected.
+
+The surrounding text matters far more than that:
+- Wrapped in a 50–180-word mission, the number is mostly lost: R² falls from 0.95 to 0.31–0.42, and the error is close to the no-number arm. A real financial-statement page is the worst case, with hundreds of numbers pooled into one vector.
+
+What matters for estimation is the **raw scale**, where take-some ratio estimation lives:
+
+| Ratio auxiliary (take-some units, n = 6,000) | Residual-variance reduction vs no auxiliary |
+|---|---|
+| Exact extracted number | **18.7×** |
+| Number read back from the embedding of the bare sentence | 2.8× |
+
+So **RE(extraction)/RE(embedding) = 6.7**, even in the most favourable case for the embedding. Only 15% of the read-back values fall within 10% of the truth; the median error is ±41%.
+
+**Verdict on §3.2: confirmed.**
+- Numbers must be extracted, not embedded.
+- H16's threshold (ratio ≥ 2) is already exceeded on the easiest possible input.
+- Any multimodal "embed the PDF" arm must be benchmarked against *extracted fields from the same PDF*, not against "no auxiliary".
 
 ### 4.5 Raw embedding dimensions in OLS-GREG at n = 500 (design-based MC)
 
@@ -388,8 +496,11 @@ These arms are the **positive controls for the harness (PC3, NC10)**. Every conf
 | Text = substitute for the missing lag of y | **Confirmed** for every y tested (≤ 1.7% increment once the lag is present) |
 | Negative controls show spurious gains | **Not observed** with population cross-fitting (≤ 1.00). Noise blocks cost up to 18%. |
 | Tuning optimism | **Confirmed**, up to +0.09 RE |
-| p/n failure of raw dimensions | §4.5 |
-| Magnitudes not recoverable from embeddings | §4.4 |
+| p/n failure of raw dimensions | **Confirmed**: RE ≈ 0, coverage 0–5%, 43–44% negative weights; identical with random vectors |
+| Additive PCs harmless | **Falsified**: 32 additive PCs cost 14–40% at n = 500 |
+| Cross-fitting fixes everything | **Falsified**: it restores coverage, not efficiency |
+| Magnitudes not recoverable from embeddings | **Confirmed, with nuance**: a bare number is read back to ±41% (R² 0.95 on the log scale), but that is 6.7× less efficient than extraction on the raw scale, and it degrades to R² 0.3–0.4 inside real text |
+| Website coverage as recorded on the frame | **Data defect found**: the flag gives 92.8%, true coverage is 72.5% |
 
 ---
 
@@ -414,7 +525,7 @@ Each figure is the RE of the **best cross-fitted, design-based text-augmented es
 | P12 | Unit-level SAE, state × NTEE10 domains | EBLUP/GREG on frame | Domain MSE −0% to −15% (sampled); coverage worse | — | Domain random effects absorb much; gains mostly in non-sampled domains, where bias risk dominates | Not tested |
 | P13 | Neural embedding over TF-IDF/LSA on the *same* field | Same estimator with LSA | 1.00 | 0.97–1.05 | Short, formulaic texts; lexical features suffice | Not comparable yet (different fields) |
 | P14 | Image/PDF-page embedding over the text embedding of the same document | Same model, text mode | 1.00 | 0.98–1.02 | Text-native documents carry no visual signal | Not tested (990 has no PDFs) |
-| P15 | Page embedding vs extracted numeric field, for size y | Extracted field as ratio auxiliary | RE(embedding)/RE(field) ≤ 0.5 | — | §3.2 | §4.4 |
+| P15 | Page embedding vs extracted numeric field, for size y | Extracted field as ratio auxiliary | RE(embedding)/RE(field) ≤ 0.5 | — | §3.2 | 0.15 (= 1/6.7) even for the bare sentence. **Confirmed.** |
 
 ---
 
@@ -472,7 +583,7 @@ Every other test is secondary or a gate.
 | **H5** | Neural over lexical (proponent of embeddings) | RE(neural) / RE(LSA), **same field**, same estimator | ≥ 1.03 with lower bound ≥ 1.00 | Otherwise | Fail | Not yet comparable |
 | **H6** | Negative controls (gate) | NC1–NC4, every y | RE upper bound ≤ 1.02; placebo y within [0.97, 1.01] | Any NC with lower bound > 1.00 **invalidates the run** | Pass | Pass (0.82–1.00) |
 | **H7** | Inference validity (gate) | Cross-fitted text estimators | \|RB\| ≤ 1% (or ≤ 2 MCSE); coverage 93–96.5% at n = 1000 and ≥ 92% at n = 500; variance-estimator relative bias within ±10% | Otherwise the arm is excluded | Pass for PC-based and cross-fitted arms | Smoke (R = 60): cross-fitted coverage 85–97%; R too small |
-| **H8** | Harness sensitivity (gate) | PC1 injected signal; PC3 known failure; NC10 in-sample fits | PC1 recovered within ±0.03; PC3 shows RE < 1 and coverage < 90%; NC10 shows coverage < 90% for ≥ 1 y | Otherwise the harness **cannot be trusted** | Pass | NC10 in smoke: 72–77% coverage; §4.5 |
+| **H8** | Harness sensitivity (gate) | PC1 injected signal; PC3 known failure; NC10 in-sample fits | PC1 recovered within ±0.03; PC3 shows RE < 1 and coverage < 90%; NC10 shows coverage < 90% for ≥ 1 y | Otherwise the harness **cannot be trusted** | Pass | PC3 reproduced (RE ≈ 0, coverage 0–5%). NC10: in-sample ridge coverage 2–4% (§4.5); smoke-run model calibration 72–77%. PC1 not yet run. |
 | **H9** | Single-weight compatibility (proponent) | One set of text-calibrated weights for all published y | Negative weights ≤ 1%; g ∈ [0.2, 5]; ≥ 50% of the H2 gain kept on targets; ≤ 2% RE loss on every other y | Otherwise | Fail (multipurpose damage) | — |
 | **H10** | Leakage audit (gate) | (a) T2 vs T2-nodigits; (b) text(t) vs text(t−1); (c) NC5 change-y; (d) model vintage | (a) \|ΔRE\| ≤ 0.02; (c) partial R² ≤ 0.01; (d) Δ ≤ 0.03 on NC5. (b) is reported only, because same-year text is banned anyway | Any breach: the arm is excluded and the cause documented | Pass for t−1 text; possible breach for post-2024 API models on (d) | — |
 | **H11** | Realistic coverage (proponent) | H2 effect re-estimated on the *frame* population (births, no-text units; indicator method) | RE ≥ 1.07 | Otherwise | Fail (dilution) | — |
@@ -480,7 +591,7 @@ Every other test is secondary or a gate.
 | **H13** | Stratification (proponent) | Strata on m̂(text) trained on the tuning population, vs cum-√f / LH on size × NTEE | Anticipated CV at fixed n down ≥ 5% for ≥ 1 primary y; no other y up > 3% | Otherwise | Fail | — |
 | **H14** | SAE (proponent) | State × NTEE10 domains with ≥ 1 sampled unit; best frame-only GREG/EBLUP vs the same with text | Median domain RRMSE down ≥ 10%; median domain coverage ≥ 90%; ≤ 5% of domains with \|RB\| > 10% | Otherwise | Fail in sampled domains; gain only in non-sampled ones, with bias | — |
 | **H15** | Births (proponent) | Group without a t−1 return; name or registration text vs industry × region × size class | RE ≥ 1.20 on the group subtotal for ≥ 1 size y | Otherwise | Borderline | — |
-| **H16** | Extraction beats embedding (skeptic) | Size y: extracted field vs an embedding of the document containing it | RE(field)/RE(embedding) ≥ 2 and RE(field+embedding)/RE(field) ≤ 1.02 | Otherwise | Pass | §4.4 |
+| **H16** | Extraction beats embedding (skeptic) | Size y: extracted field vs an embedding of the document containing it | RE(field)/RE(embedding) ≥ 2 and RE(field+embedding)/RE(field) ≤ 1.02 | Otherwise | Pass | Ratio 6.7 on the bare sentence (§4.4) |
 | **H17** | Multimodal increment (proponent of the Cohere image mode) | Image or fused embedding vs a text embedding of the same document, same model, PDF-native population | ≥ 1.03 with lower bound ≥ 1.00 | Otherwise | Fail for text-native documents | — |
 | **H18** | Replication (gate) | Every PASS in H2, H3, H12, H14, H15 re-run on E2 and E3 | Same sign; \|ΔRE\| ≤ 0.05 | Otherwise the claim is downgraded to "population-specific" | — | — |
 | **H19** | Model and vendor robustness (gate) | Swap model version (embed-v4 ↔ v5; MiniLM ↔ another open model), input_type and dimension | \|ΔRE\| ≤ 0.03 for every passing y | Otherwise production would depend on a vendor choice; record this as a risk | — | — |
@@ -662,4 +773,10 @@ The skeptic concedes that embeddings are **useful in production** for a specific
 - Population: `/tmp/claude-0/data/pop/ne_pop.parquet` (built by `src/build_population.py`).
 - Embeddings: `/tmp/claude-0/data/emb/ne/{lsa256_full,minilm_mission}.npy`.
 - Diagnostics: `/tmp/claude-0/data/results/diag_ne_n1000.csv`; smoke MC `/tmp/claude-0/data/results/mc_ne_smoke3_metrics.csv` (R=60).
-- This note's scripts and outputs: `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/skeptic/` (`falsify_pop.py` → `falsify_pop.csv`; `falsify_bin.py` → `falsify_bin.csv`; `describe.py`; `numeracy.py`; `pn_mc.py` → `pn_mc_R500_n500.csv`). These live in the session scratchpad. Copy them into `src/` if they should persist.
+- This note's scripts and outputs: `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/skeptic/`:
+  - `falsify_pop.py` → `falsify_pop.csv`;
+  - `falsify_bin.py` → `falsify_bin.csv`;
+  - `describe.py` → `describe2.out`;
+  - `numeracy.py` → `numeracy2.out`;
+  - `numeracy_raw.py`;
+  - `pn_mc.py` → `pn_mc_R500_n500.csv`. These live in the session scratchpad. Copy them into `src/` if they should persist.

@@ -32,6 +32,7 @@ def anticipated_var(E: np.ndarray, design) -> np.ndarray:
 def wls_ridge_oof(F, Y, w, lam, unpen, folds):
     """Out-of-fold predictions of a weighted ridge (first `unpen` columns unpenalised)."""
     out = np.zeros_like(Y, dtype=float)
+    w = w / w[w > 0].mean()      # penalty on a fixed scale (see mc._ridge_fit)
     for f in np.unique(folds):
         tr = (folds != f) & (w > 0)
         te = folds == f
