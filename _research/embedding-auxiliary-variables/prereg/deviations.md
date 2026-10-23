@@ -87,3 +87,11 @@ Rejected review findings (11) and their refutations are in `notes/review/adversa
 | ID | What | Why | Comparison fixed in advance |
 |---|---|---|---|
 | D-34 | NR-LATE (TA-late imputation; the take-some part is identical under TA-follow-up), R = 1,000. Difference-form estimators, not anchored on size calibration: (a) frozen previous-wave heads, twin and text (PPI form) with weighting-class weights, and with text in the propensity; (b) current-sample cross-fitted ML heads, twin and text, in difference form with weighting-class weights (the protocol's NR_DR without propensity) and with propensity weights (AIPW). `mc._estimate` gains `form="diff"`. | Stage 3 found that size calibration multiplies nonresponse bias for three dollar items (D-30 left non-calibrated text methods untested). Stage 2A found that the frozen difference estimator is the one ML estimator with valid variance. | Take-some RB, RRMSE and coverage against NR_rhg_HT (least-biased text-free method) and the status quo, per S6 variable. Text vs twin within each form. |
+
+## Found by the claim-by-claim check of FINDINGS.md (2026-10-23)
+
+| ID | Protocol | Done instead | Effect |
+|---|---|---|---|
+| D-35 (unlogged until now) | S7: FH_text vs **FH_frame**, with frozen heads, an intercept, GVF-smoothed ψ and REML, on the planned state × NTEE10 domains; ZIP3 as the unplanned set | `sae.py`: a one-covariate Fay–Herriot (no intercept, Prasad–Rao moments, raw ψ) on current-sample cross-fitted twin and text models; state × NTEE10 only | S7 is a simplified version of the pre-registered test; read it as indicative |
+| D-36 | FREEZE-1 = `config/prereg_v1.yaml` + hash with user sign-off (U9), before any Stage-2 MC | The protocol text and the Stage-1 E* selection were committed before any Stage-2 result was read, but no yaml freeze or user sign-off exists | "Pre-registered" means "committed before results", not formally frozen |
+| D-34 result note | — | The robustness ranking across all 15 y (GM RRMSE ratio to the per-variable best method) was chosen **after** seeing the D-34 results | Exploratory |
