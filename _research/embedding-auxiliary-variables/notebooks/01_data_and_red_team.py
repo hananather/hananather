@@ -143,6 +143,34 @@ fye = pop.tax_period_end_t.dt.month.value_counts(normalize=True).head(4).round(3
 check("fiscal-year-end month mix (t)", fye, "info", "reference periods differ across units, as in real business surveys")
 
 # %% [markdown]
+# ### 4b. Independent-parser cross-check
+# Two parsers were written independently: `parse990_min.py` (explicit paths, used for the population) and
+# `parse990.py` (written by a separate agent from the IRS schema, with version-robust lookups). They are run on the
+# same 600 random TY2023 returns. Any disagreement in a target field would be a data-construction error.
+
+# %%
+import random, parse990, parse990_min
+files = sorted(glob.glob(f"{DATA}/xml/2023/*.xml.gz")); random.Random(0).shuffle(files)
+A, B = [], []
+for f in files[:600]:
+    b_ = gzip.open(f).read(); A.append(parse990_min.parse_return(b_)); B.append(parse990.parse_return(b_))
+A, B = pd.DataFrame(A), pd.DataFrame(B)
+agree = {}
+for c in [c for c in A.columns if c in B.columns]:
+    a_, b_ = A[c], B[c]
+    if a_.dtype == object or b_.dtype == object:
+        agree[c] = (a_.fillna("").astype(str).str.strip().str.upper() == b_.fillna("").astype(str).str.strip().str.upper()).mean()
+    else:
+        agree[c] = (a_.fillna(-9e99) == b_.fillna(-9e99)).mean()
+agree = pd.Series(agree).sort_values()
+display(agree[agree < 1].rename("agreement").to_frame())
+y_fields = ["expenses_cy", "revenue_cy", "employees_p1", "volunteers", "gov_grants", "prog_rev_cy", "contrib_cy",
+            "salaries_cy", "func_exp_fundraising", "officer_comp", "mission_p1", "program_desc"]
+yf = [f for f in y_fields if f in agree.index]
+check("independent parsers agree on all target and text fields", f"{agree[yf].min():.2%} (min over {len(yf)} fields)",
+      "pass" if agree[yf].min() > 0.995 else "fail", f"{(agree == 1).sum()} of {len(agree)} common fields identical")
+
+# %% [markdown]
 # ## 5. Text quality and leakage
 # Three questions. Is there usable text for everyone? Does the text quietly state the target? Is the text a stable
 # description (between-unit signal) or does it track year-to-year change?
