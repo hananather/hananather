@@ -186,7 +186,40 @@ Production P2 per variable, against today's GREG:
 
 <!-- FACTORIAL (LINCAL): PENDING -->
 
-<!-- STAGE 2B: PENDING -->
+### 4.3 A weak register (Stage 2B, R = 1,000): text still adds only a few percent
+
+Tier F0 has the IRS codes and BMF amounts but no return-based lags: new registrants, units without tax accounts,
+non-charity NPOs on a business-register-only frame. Its design D1-W stratifies on BMF income (D-28).
+
+| | **w**: D1-W as pre-registered | **wprof**: with large-enterprise profiling (D-28a) |
+|---|---|---|
+| **S2:** F0 text vs F0 twin, GM over R ∪ H_D (bar: point ≥ 1.20, lower ≥ 1.10) | 1.000 (0.999–1.002): **Excluded** | **1.035** (1.022–1.047): **Excluded**, any gain YES |
+| F0 twin vs F0 GREG (ML on codes) | 1.002 | 1.092 |
+| What admin lags add: best F1p arm vs F0 twin | 17–67× | 1.30–1.40× |
+| **S2b gap closure** (share of the lag gain that text recovers; ≥ 0.5 = substitutes) | 0.00 | **0.10–0.13**: does not substitute |
+
+Under **w** the design itself is broken by a register defect. Harvard, Tufts and Northeastern have zero BMF amounts
+and land in the smallest size classes with weights of 57–109. Total expenses then have RRMSE 32% and CI coverage
+13% under every F0 estimator. Nothing on the register, text included, can fix a design that samples the largest
+enterprises at random.
+
+Under **wprof**, text helps where a codes-only register is blind:
+
+| Variable | Text vs F0 twin |
+|---|---|
+| Employees | 1.14 |
+| Salaries | 1.11 |
+| Program revenue | 1.08 |
+| Contributions | 1.06 (a permuted-embedding control also reaches 1.015 here, upper bound 1.037) |
+| Grants to individuals | 1.06 |
+
+That is the "what kind of organization is this" signal. Text does nothing for revenue, expenses, government grants
+or fundraising, and over the 10 headline variables it gives 1.020.
+
+**Real-world reading.** For units without tax data, text gives a few percent. Any administrative size measure gives
+30–40% more, and profiling the largest units matters more than either. Text is not a substitute for admin data. Its
+one clear use in a thin register is as a *workforce / activity-type* signal (employees, payroll), where it gives
+10–14%.
 
 ### 4.4 Nonresponse (Stage 3): the problem is calibration, not a lack of covariates
 
@@ -293,4 +326,26 @@ large residual, but it is untested (U3).
 | One development population, reused for design | Guarded by the 8 held-out divisions, which are not yet run |
 | Not run in this session: designs D1-imp/D2a/D2b, PANEL, cost curve, bootstrap variance, divisions (D-12) | Those hypotheses stay open |
 
-<!-- USER ACTIONS / NEXT STEPS: PENDING -->
+---
+
+## 8. What I need from you
+
+In priority order. The protocol's §14 has the full list.
+
+| ID | Action | Unblocks |
+|---|---|---|
+| U9 | **Decide how to treat the NE gate failures** (§4.2). Accept the diagnoses: G4 is a variance-estimator issue shared by production GREG, the factorial defect is repaired, G6 is low power, G2 affects one variable. Or require reruns first (bootstrap variance, Stage 2E). Then sign off FREEZE-2. | The confirmatory runs on the 8 held-out divisions |
+| U9 | **Fix the falsification rule** (D-17). With the planted grid {0, .05, .10, .20} and φ ≈ 0.25 at n = 1,000, ρ²_min never exists, so FALSIFIED is unreachable. Options: extend the grid, raise n, or state the null as "the text partial ρ² realized at n = 1,000 is below what the planted ρ² = 0.2 achieves". | A falsifiable confirmatory test |
+| U5 | Set the survey's real CV targets. Today's default (SE ≤ 1 pp for national proportions) makes "share with volunteers" bind and zeroes any saving. | The cost and saving translation |
+| U8 | Persistent storage. Derived data (about 3 GB) live in a session-scoped `/tmp`. | Reproducibility; all reruns |
+| U1 | Allowlist `api.cohere.com` and add a production `COHERE_API_KEY`. A trial key cannot finish a pass. | Cohere embed-v4/v5 rungs. MiniLM was *worse* than LSA here, so expect little. |
+| U2 / U3 | T3010 CSVs (`open.canada.ca`); the UK Charity Commission extract plus a sample of accounts PDFs | Canadian replication; the multimodal test against extracted numbers |
+| U4 / U7 | Hugging Face (Qwen3-Embedding / Qwen3-VL); Common Crawl | On-prem modern embeddings; website text for the ICT-style use |
+| U6 / U11 | Confirm which T3010 / T1044 / PD7A lines exist (which y are truly survey-only in Canada), and the StatCan CV-band and Responsible-ML references | Realism of the headline set; the decision report |
+
+## 9. Next steps (proposed)
+
+1. **Confirmatory divisions.** The national TY2023 parse exists, and TY2021 is reachable without user action. Run P1/P2 on the 8 held-out divisions after FREEZE-2. NE is a development population and generalization is untested.
+2. **Bootstrap variance (Stage 2E)** for every calibrated arm, *including production GREG*: G4 shows the linearization variance under-covers by 4–6 pp here. This is useful to know regardless of text.
+3. **Nonresponse methods that are not anchored on size calibration** (DR, predictive-mean classes, text donors; D-30). Nonresponse is where the largest bias sits, and the only place text visibly helped.
+4. **Ladder and replication**: Cohere and Qwen rungs (U1, U4), T3010 (U2), CCEW PDFs vs extracted numbers (U3).
