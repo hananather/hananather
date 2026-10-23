@@ -176,6 +176,21 @@ mean of the model prediction.
 - The pattern is "about 2% better in the median domain, never 10%".
 - What does help small areas is the **ML twin on IRS codes**, relative to the production GREG model. Median domain RRMSE ratios are 0.91 for government grants, 0.88 for contributions and 0.86 for fundraising. That gain comes from codes, not text.
 
+### 4.6 Stratification (Stage 2F): no gain from text at the design stage
+
+Each design has n = 1,000 and the same take-all and allocation rules. The cell is HT and GREG at R = 2,000, and
+MCAL at R = 500.
+
+| Comparison | HT | GREG (production) | MCAL twin | Rule | Result |
+|---|---|---|---|---|---|
+| **S4:** D1-imp vs D1. The 31% missing NTEE10 codes are filled by text (63% CV accuracy), GM over all 15 y | 0.997 (0.970–1.029) | 1.017 (0.985–1.053) | 1.000 (0.935–1.070) | ≥ 1.05 | **Fail** |
+| **S5:** D2a vs D1-H44. Strata split on a frozen text score, GM over H | 0.709 (0.688–0.729) | 0.767 (0.744–0.791) | 0.731 (0.686–0.776) | Production bar | **Excluded** (a loss) |
+| Reference: D1-H44 vs D1, i.e. one more *size* class, GM over all 15 y | 1.050 | 1.018 | 1.037 | — | — |
+
+- **Text-coded NTEE (S4).** It reaches 63% accuracy on known codes with E*'s 16 components, and 70% with all 256 LSA dimensions. Filling the missing codes does not move design efficiency. The register's MISSING level already behaves like a usable stratum, and size carries most of the stratification gain. The only movement is on register-type totals under GREG (1.11, 1.02–1.20), whose CVs are already below 1%.
+- **Prediction strata (S5) as pre-registered** lose 23–29%. The score split replaces two of four size classes, and losing size resolution costs far more than the text score adds. That holds even for government grants, the variable the score predicts (0.54 under GREG). A score split *inside* four size classes (H ≈ 88) was not run. Given the population ceilings in §4.1, it would at best recover a few percent.
+- **Real-world reading.** Autocoding missing activity codes from registration text is worth doing for **classification and domain publication**: it puts units in the right industry tables. It is not a variance-reduction tool for this kind of survey.
+
 ---
 
 ## 6. Real-world translation: what data would play the role of the text
