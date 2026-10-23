@@ -111,7 +111,70 @@ About 45 checks are in `notebooks/01_data_and_red_team` (`results/01_red_team_ch
 - A numbers-masked text arm.
 - Placebo targets and random, permuted and constant embeddings.
 
-<!-- RESULTS: PENDING -->
+---
+
+## 4. Results
+
+### 4.1 Before any Monte Carlo: the population ceiling is below the bar
+
+The Stage-1 diagnostic fits the twin and the text model on the **whole population**, cross-fitted, so there is no
+sample-size penalty. It then asks how much of the twin's anticipated variance text removes. This bounds what any
+estimator using that text and learner could achieve.
+
+| | GM ceiling over the 10 headline variables | Largest single-variable ceiling |
+|---|---|---|
+| Previous wave (TY2021 → TY2022), used to select E* | E* (LSA, K = 16): **1.023**; best rung (LSA, K = 64): 1.040; MiniLM: ≤ 1.018 | grants to individuals 1.097, fundraising 1.096 (K = 64) |
+| Current wave, P1 pair | **1.034** | fundraising 1.092, contributions 1.083, gov. grants 1.071 |
+
+Even with the whole population to fit, text explains about 2–4% of the residual variance on average, and at most
+about 9% for any single variable. The production bar needs 9% *on average*. So before the Monte Carlo, the protocol's
+P1 prediction of 1.04 was already an upper-end estimate. Volunteers and officer compensation have ceilings below 1:
+for them the extra columns only cost.
+
+<!-- STAGE 2A / 2B: PENDING -->
+
+### 4.4 Nonresponse (Stage 3): the problem is calibration, not a lack of covariates
+
+Real late-filer nonresponse, R = 1,000. 61% of take-some units respond; 13.6% of take-all units do under TA-late. All
+figures are for the **take-some part** (§ D-29), which is identical under both take-all scenarios.
+
+| Relative bias of the take-some part, % | Weighting class + HT | + GREG on lagged size (status quo) | + ML twin (codes, no text) | + ML with text |
+|---|---|---|---|---|
+| Government grants | **4.5** | 14.8 | 13.3 | 10.0 |
+| Contributions | **2.6** | 13.1 | 11.9 | 8.0 |
+| Fundraising expenses | **1.8** | 19.7 | 18.7 | 15.0 |
+| Volunteers (capped 10k) | **5.0** | 8.6 | 8.8 | 5.8 |
+| Share lobbying | −11.8 | −5.3 | −5.1 | **−4.9** |
+
+What this shows:
+1. **Calibrating to lagged size multiplies nonresponse bias by 3–10×** for survey-only variables. This is the pilot's claim, now confirmed at R = 1,000. Respondents (early filers) are smaller, and their survey-only ratios to size do not carry over to large late filers. Calibration extrapolates exactly that ratio to the population size totals.
+2. **Text in the outcome model removes 19–35% of that added bias** relative to the same learner without text (government grants 25%, contributions 33%, fundraising 19%, volunteers 35%, lobbying 4%; bootstrap intervals exclude 0). RRMSE falls by 14–16% for grants and contributions. Text in the *propensity* model adds almost nothing beyond this.
+3. **Pre-registered S6 fails.** Its reference is the text-free method with the least bias, which is the plain weighting-class HT for 4 of the 5 variables. Against it the text arm has 1.1–2.0× the RRMSE on those four, and coverage 19–28 pp lower for grants, contributions and fundraising. Against the status quo GREG, text satisfies the bias criterion (BRF ≥ 30% on 3 of 5) and lowers RRMSE by 10–21% on grants, contributions and fundraising. It still fails the "RRMSE ratio ≤ 1 on every variable" condition on lobbying (1.007, interval 0.998–1.015). In any case S6 could not formally pass, because the NR1/NR2 gates were not run (D-30).
+4. **Published intervals would be badly wrong under the status quo.** Calibrated estimators cover the take-some part only 60–76% of the time for grants, contributions and fundraising, against 91–94% for weighting-class HT. With 86% of take-all units imputed under TA-late, coverage of total expenses is about 30% for *every* estimator: the take-all imputation error is not in any variance estimate.
+
+**Real-world reading.** For survey-only content under size-related nonresponse, the first fix is methodological. Do
+not calibrate survey-only variables to lagged size totals without checking the respondent/nonrespondent ratio pattern.
+Text is a partial repair *inside* a calibrated system, not a substitute for that check. Text-assisted methods that are
+not anchored on size calibration (doubly robust, predictive-mean classes, text donors) were not run (D-30). They are
+the natural next test, and the place where text might genuinely beat weighting classes.
+
+### 4.5 Small areas (Stage 4): no gain from text
+
+66 unplanned domains (state × NTEE10) with 0–50 sampled units each, R = 500. The Fay–Herriot covariate is the domain
+mean of the model prediction.
+
+| | ARRMSE ratio FH text / FH twin | Median domain ratio | Publishable share (RRMSE < 25%), text vs twin | Domains > 10% worse | S7 (≤ 0.90, + 5 pp publishable, < 5% worse) |
+|---|---|---|---|---|---|
+| Government grants | 1.19 | 0.97 | 19.7% vs 18.0% | 6.6% | **Fail** |
+| Share with gov. grants | 0.97 | 0.98 | 29.5% vs 27.9% | 0% | **Fail** |
+| Contributions | 1.00 | 0.98 | 33.3% vs 33.3% | 7.6% | Fail |
+| Fundraising expenses | 1.01 | 0.98 | 23.8% vs 22.2% | 11.1% | Fail |
+| Volunteers (capped 10k) | 1.07 | 1.00 | 3.0% vs 3.0% | 1.5% | Fail |
+
+- The mean ratio for government grants is driven by a few tiny-total domains. One domain with a $63k total has RRMSE above 16,000% under every model-based estimator (direct: 225%).
+- Restricted to the 28 domains holding ≥ 0.5% of the total, the ARRMSE is 34.3% (text) against 34.8% (twin).
+- The pattern is "about 2% better in the median domain, never 10%".
+- What does help small areas is the **ML twin on IRS codes**, relative to the production GREG model. Median domain RRMSE ratios are 0.91 for government grants, 0.88 for contributions and 0.86 for fundraising. That gain comes from codes, not text.
 
 ---
 
