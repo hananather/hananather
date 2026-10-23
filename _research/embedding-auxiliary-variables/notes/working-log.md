@@ -42,7 +42,7 @@ Running record of design decisions, so they can be reviewed and challenged. Newe
   - Strict §9.6 reading: HARNESS NOT VALIDATED. Both the strict and the diagnosed readings are reported; neither is hidden.
 - **RIDGECAL defect (D-32).** Replaced by LINCAL, rerun on the same samples (R = 2,000). That did not fix it either (D-33): linear calibration on the full code block explodes in about 0.4% of replicates. Attribution now uses the stable codes × text 2 × 2 within the ML learner.
 - **Stage 2B weak register (D-28).**
-  - Run as pre-registered (D-1W). Smoke testing exposed a BMF defect: 722 units, 6.7% of expenses, with zero amounts. So a profiling sensitivity (wprof) was pre-declared before any result was read.
+  - Run as pre-registered (D1-W). Smoke testing exposed a BMF defect: 722 units, 6.7% of expenses, with zero amounts. So a profiling sensitivity (wprof) was pre-declared before any result was read.
 - **Stage 2F design-stage text (D-31)** was added on a free core. It covers the "stratification" use from the claim, which was otherwise untested.
 - **Stage 3, S6 reference corrected to the protocol's minimum-bias rule (D-29).** This happened after the TA-late results were read, and the correction goes against text. A pre-run review then added bootstrap intervals, the total-RRMSE condition, and the gate caveat (D-30).
 - **Review rounds.**

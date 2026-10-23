@@ -338,6 +338,9 @@ def _estimate(spec, cell: Cell, s_ts, d_ts, Y_ts, rng):
         M, sumM, M_U = model_predict(cell, spec, F, i, Y_ts, d_ts, rng, grp, need_U=(kind == "mcalm"))
         if kind == "syn":
             return sumM, np.full_like(Y_ts, np.nan)
+        if spec.get("form") == "diff":          # difference / AIPW form: no calibration to X_base (D-34)
+            E = Y_ts - M
+            return sumM + d_ts @ E, E
         Xb = cell.mats[spec["X_base"]]
         if kind == "mcalm":
             jj = [cell.ynames.index(h) for h in spec["heads"]]

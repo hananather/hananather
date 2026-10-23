@@ -132,6 +132,52 @@ def nr(scenario, R, k, K):
     print("done", round(time.time() - t0), "s", flush=True)
 
 
+def dr(R, k, K):
+    """Deviation D-34: difference-form (PPI / AIPW) nonresponse estimators, not anchored on size calibration.
+    Frozen heads come from Stage 2A's prep (trained on previous-wave respondents). Scenario TA-late; the
+    take-some part is identical under TA-follow-up."""
+    os.makedirs(OUT, exist_ok=True)
+    pop, des, mats, cats = setup()
+    resp = (pop.days_to_file_t <= 300).fillna(False).to_numpy()
+    x = pop.lag_expenses.clip(lower=0).to_numpy(float)
+    z = np.load(f"{DATA}/results/stage2_ne_v3/prep.npz")
+    frozen = {"fz_twin": z["fz_twin"], "fz_text": z["fz_text"]}       # (J, N, 15), same y order as YS
+    cell = Cell(pop[YS].to_numpy(float), YS, des, mats, x, groups=np.load(f"{OUT}/fold_groups.npy"), resp=resp,
+                frozen=frozen, cat_masks=cats)
+    Y, L = cell.Y, last_cycle_matrix(pop)
+    ta_values = ta_imputer(pop, cell, Y, L, resp, "late")
+    nr = lambda adj, **kw: {"nr": True, "nr_adj": adj, **kw}
+    specs = {
+        "NR_rhg_HT": {"kind": "ht", **nr("rhg")},
+        "NR_SQ_rhg_GREG_size_cat@F1p": {"kind": "greg", "X": "size_cat@F1p", **nr("rhg")},
+        "NR_rhg_FZDIFF_bmfmax@F1p": {"kind": "frozen", "m": "fz_twin", **nr("rhg")},
+        "NR_rhg_FZDIFF_bmfmax@F1p+Estar": {"kind": "frozen", "m": "fz_text", **nr("rhg")},
+        "NR_rhg_DIFF_bmfmax@F1p": {"kind": "mcal", "F": "FC@F1p", "ratio": True, "form": "diff", **nr("rhg")},
+        "NR_rhg_DIFF_bmfmax@F1p+Estar": {"kind": "mcal", "F": "FC@F1p+Estar", "ratio": True, "form": "diff", **nr("rhg")},
+        "NR_ps_DIFF_bmfmax@F1p": {"kind": "mcal", "F": "FC@F1p", "ratio": True, "form": "diff", **nr("ps", ps_F="FC@F1p")},
+        "NR_ps_DIFF_bmfmax@F1p+Estar": {"kind": "mcal", "F": "FC@F1p+Estar", "ratio": True, "form": "diff", **nr("ps", ps_F="FC@F1p+Estar")},
+        "NR_ps_FZDIFF_bmfmax@F1p+Estar": {"kind": "frozen", "m": "fz_text", **nr("ps", ps_F="FC@F1p+Estar")},
+    }
+    a, b = round(k * R / K), round((k + 1) * R / K)
+    t0 = time.time()
+    ta_used = {}
+    def ta_vals(r):
+        v = ta_values(r); ta_used[r] = v; return v
+    df = run_cell(cell, specs, R=R, seed=SEED, rep_range=(a, b), ta_values=ta_vals)
+    df.to_parquet(f"{OUT}/dr_late_part_{k}_of_{K}.parquet")
+    pd.DataFrame([(r, y, v[j]) for r, v in ta_used.items() for j, y in enumerate(YS)], columns=["rep", "y", "ta_used"]) \
+        .to_parquet(f"{OUT}/dr_late_ta_part_{k}_of_{K}.parquet")
+    print("done", round(time.time() - t0), "s", flush=True)
+
+
+def merge_dr(K):
+    df = pd.concat([pd.read_parquet(f"{OUT}/dr_late_part_{k}_of_{K}.parquet") for k in range(K)], ignore_index=True)
+    df.to_parquet(f"{OUT}/dr_late.parquet")
+    pd.concat([pd.read_parquet(f"{OUT}/dr_late_ta_part_{k}_of_{K}.parquet") for k in range(K)], ignore_index=True) \
+        .to_parquet(f"{OUT}/dr_late_ta.parquet")
+    print("merged", df.shape)
+
+
 def merge_nr(scenario, K):
     df = pd.concat([pd.read_parquet(f"{OUT}/nr_{scenario}_part_{k}_of_{K}.parquet") for k in range(K)], ignore_index=True)
     df.to_parquet(f"{OUT}/nr_{scenario}.parquet")
@@ -167,5 +213,9 @@ if __name__ == "__main__":
         nr(sys.argv[2], int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5]))
     elif c == "merge_nr":
         merge_nr(sys.argv[2], int(sys.argv[3]))
+    elif c == "merge_dr":
+        merge_dr(int(sys.argv[2]))
+    elif c == "dr":
+        dr(int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4]))
     elif c == "sae":
         sae(int(sys.argv[2]))

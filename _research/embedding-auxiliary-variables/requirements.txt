@@ -1,0 +1,14 @@
+# versions used in the cloud runs (Python 3.13); newer minor versions should work
+numpy>=2.5
+pandas>=3.0
+pyarrow>=26
+scipy>=1.18
+scikit-learn>=1.9
+matplotlib>=3.11
+lxml>=6.1
+onnxruntime>=1.29       # MiniLM rung (ONNX, CPU)
+tokenizers>=0.23
+jupyter
+jupytext>=1.19
+nbconvert>=7.17
+cohere>=5               # optional: Cohere embed-v4/v5 rungs (needs COHERE_API_KEY)
