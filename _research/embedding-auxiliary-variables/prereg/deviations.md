@@ -26,3 +26,24 @@ Entries are added **before** the affected results are read. Entries marked *post
 | D-14 (*post hoc*) | Matrix C includes a **valid-URL** flag (test C3: contains a dot; not N/A, NONE or "see schedule o") | Stage 2A used `has_website` (field non-empty): 92.8% against 72.5% valid | Flag rebuilt after the Stage 2A launch | One weakly informative dummy. Negligible. Fixed for later stages. |
 | D-15 | Lags and text from the *first original* TY2022 submission ≤ D (test B3) | From the most recent TY2022 submission (originals and amendments). `avail_D` uses that submission's date. | The index keeps the latest return per EIN-year | Conservative: a unit whose amendment came after D is treated as unavailable even if its original was filed before D. Affects about 1.5% of units. |
 | D-16 (*post hoc*) | Stage 1 selection on the previous wave with B5 applied | First run omitted B5. Rerun with B5: E* unchanged (LSA T2, K = 16; GM ceiling 1.0227; best 1.0404). | Caught by audit against §10.1 | None (selection unchanged) |
+
+## Adversarial-review round (2026-10-23), applied before any R = 2,000 result was read
+
+Four lens reviewers raised 29 findings and adversarial verifiers confirmed 18. The Stage 2A run in progress was **stopped and restarted** with every fix below. Stage 3/4 runs had not started.
+
+| ID | Finding | Action |
+|---|---|---|
+| D-6 (withdrawn) | Clipping the fold-averaged model biased the calibration total downward by −0.05 to −0.08 SE (2–4 MC SE), more for the text arm | **Reverted** to the protocol's average of clipped fold predictions |
+| D-17 | ρ²_min used an undocumented 2-of-3 rule | Rule = ceil(0.8 × plantings) = 3 of 3 (protocol 4 of 5 with 5 plantings); 2-of-3 reported as a sensitivity. Note: with planted levels {0, .05, .10, .20} and a 1.10 bar, ρ²_min ≤ 0.10 needs φ ≥ 0.905 at ρ² = 0.10, so **FALSIFIED is nearly unreachable by construction**. This is a protocol-level issue flagged for the user at FREEZE-2. |
+| D-18 | G9 cannot pass on masked F2: masking late filers' survey lags caps officer_comp at about 1.26× | New **F2o** oracle tier with the survey lags unmasked, used for G9. Realistic masked F2 is kept for S-F2. |
+| D-19 | Gates G5 and G6 were never evaluated, and G2(N4)/G3/G4 were coded narrower than the protocol | G5 (against Stage-1-style ceilings), G6 (planted), and G3/G4 over every text arm and comparator are now implemented |
+| D-20 | Fold groups covered exact mission duplicates only, and frozen training used ungrouped folds | Groups = exact duplicates ∪ cosine > 0.95 clusters on E* ∪ shared valid URLs (11.5% of units in multi-unit groups, up from 4.8%). Frozen training uses the same groups. |
+| D-21 | TY2021 fallback text used without checking that it was filed by D (56 units) | Fallback requires a TY2021 submission ≤ D, otherwise name only |
+| D-22 | Response timing came from the latest (possibly amended) TY2023 submission | Response timing now uses the **first** TY2023 submission (424 units reclassified) |
+| D-23 | Units unavailable at D still carried website information from their post-D return | Website is set unknown for units unavailable at D |
+| D-24 (Stage 3) | Take-all nonrespondents were imputed from availability-masked (zeroed) lags, biasing every arm by up to −33% | Imputation now uses the **unmasked own TY2022 value × NTEE10 trend** among responding take-all units, with a fallback to lag_expenses × ratio. Take-some bias is reported separately. |
+| D-25 (Stage 3) | Propensities were fitted in-sample on about 450 standardized columns (in-sample AUC 0.90 against 0.58 cross-fitted) | Propensities are cross-fitted on the shared folds, with C chosen by inner CV log-loss and categorical columns on the raw scale |
+| D-26 (Stage 3) | The variance of the propensity arms ignored within-stratum weight variation | Residuals are multiplied by g_k = dr_k / mean_h(dr) in v_R |
+| D-27 (Stage 4) | SAE twin and text arms got different fold vectors | One shared fold vector per replicate |
+
+Rejected review findings (11) and their refutations are in `notes/review/adversarial-review-round1.json`.

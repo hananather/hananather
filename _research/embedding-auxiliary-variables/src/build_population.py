@@ -121,9 +121,14 @@ def apply_availability(pop: pd.DataFrame, avail_date, prev2=None):
         out.loc[~av, k] = 0.0
     src = np.where(av, "t-1", "name").astype(object)
     tm, tf = out.text_mission.to_numpy(object).copy(), out.text_full.to_numpy(object).copy()
+    # nothing from the post-D t-1 return may be used for unavailable units: website unknown at D
+    out.loc[~av, "has_website"] = 0
+    out.loc[~av, "website"] = None
     if prev2 is not None:
         p2 = prev2.drop_duplicates("ein").set_index("ein")
-        have2 = out.ein.isin(p2.index).to_numpy() & ~av
+        sub2 = pd.to_datetime(p2.SubmittedOn, errors="coerce")
+        ok2 = sub2[sub2 <= D].index                 # t-2 text only if that return was itself filed by D
+        have2 = out.ein.isin(ok2).to_numpy() & ~av
         e2 = out.ein[have2]
         tm[have2] = [clean_text(a, b) for a, b in zip(p2.loc[e2, "mission_p1"], p2.loc[e2, "mission_p3"])]
         tf[have2] = [clean_text(a, b, c) for a, b, c in zip(p2.loc[e2, "mission_p1"], p2.loc[e2, "mission_p3"], p2.loc[e2, "program_desc"])]
@@ -163,6 +168,16 @@ def apply_edits(pop: pd.DataFrame):
     return p, pd.DataFrame(log, columns=["rule", "ein", "before", "after"])
 
 
+def original_submission_days(pop, index_csv, fye_col="tax_period_end_t"):
+    """Days from FYE to the FIRST submitted full-990 return of that tax year (originals, not later
+    amendments), from the GivingTuesday yearly index."""
+    ix = pd.read_csv(index_csv, dtype=str, usecols=["EIN", "FormType", "SubmittedOn"], low_memory=False)
+    ix = ix[ix.FormType == "990"]
+    first = pd.to_datetime(ix.SubmittedOn, errors="coerce").groupby(ix.EIN).min()
+    sub = pd.to_datetime(pop.ein.map(first))
+    return (sub - pd.to_datetime(pop[fye_col])).dt.days
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--prev", required=True)
@@ -171,11 +186,18 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--prev2", default=None, help="parsed t-2 returns (text fallback)")
     ap.add_argument("--avail-date", default=None, help="design date D, e.g. 2024-06-30")
+    ap.add_argument("--index-t", default=None, help="yearly index CSV of year t (response timing from originals)")
     a = ap.parse_args()
     prev, curr = pd.read_parquet(a.prev), pd.read_parquet(a.curr)
     prev2 = pd.read_parquet(a.prev2) if a.prev2 else None
     bmf = pd.read_csv(a.bmf, dtype=str, low_memory=False)
     pop, edits = apply_edits(build(prev, curr, bmf))
+    if a.index_t:
+        pop["days_to_file_t_latest"] = pop.days_to_file_t
+        d0 = original_submission_days(pop, a.index_t)
+        d0 = d0.where((d0 >= 0) & (d0 <= 3 * 365))           # same rule as edit E3
+        pop["days_to_file_t"] = d0.fillna(pop.days_to_file_t)
+        print("response timing from original submissions; changed units:", int((pop.days_to_file_t != pop.days_to_file_t_latest).sum()))
     if a.avail_date:
         pop = apply_availability(pop, a.avail_date, prev2)
     if a.avail_date:

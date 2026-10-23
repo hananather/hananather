@@ -58,8 +58,8 @@ import plotstyle; plotstyle.use()
 from analysis import cell_metrics, paired_re
 from report import Y_LABEL
 pd.set_option("display.width", 220); pd.set_option("display.max_columns", 40)
-OUT = f"{DATA}/results/stage34_ne"
-RES = os.path.join(PROJ, "results", "stage34_ne"); os.makedirs(RES, exist_ok=True)
+OUT = f"{DATA}/results/stage34_ne_v3"
+RES = os.path.join(PROJ, "results", "stage34_ne_v3"); os.makedirs(RES, exist_ok=True)
 S6_Y = ["y_gov_grants", "y_contrib", "y_fundraising_exp", "y_volunteers_cap10k", "y_bin_lobbying"]
 
 # %% [markdown]
@@ -71,12 +71,18 @@ for scen in ["follow", "late"]:
     p = f"{OUT}/nr_{scen}.parquet"
     if not os.path.exists(p):
         print("missing", p); continue
-    d = pd.read_parquet(p); truth = json.load(open(f"{OUT}/nr_{scen}_meta.json"))["truth"]
+    d = pd.read_parquet(p); meta = json.load(open(f"{OUT}/nr_{scen}_meta.json")); truth = meta["truth"]
     cm = cell_metrics(d, truth); cm["scenario"] = scen
+    # take-some part only: remove the take-all total actually used (true or imputed) from each estimate
+    ta = pd.read_parquet(f"{OUT}/nr_{scen}_ta.parquet")
+    dts = d.merge(ta, on=["rep", "y"]); dts["est"] = dts.est - dts.ta_used
+    truth_ts = {y: truth[y] - meta["truth_ta"][y] for y in truth}
+    cts = cell_metrics(dts[["rep", "estimator", "y", "est", "var"]], truth_ts).rename(columns=lambda c: c + "_ts" if c not in ("estimator", "y") else c)
+    cm = cm.merge(cts[["estimator", "y", "rb_pct_ts", "rrmse_pct_ts"]], on=["estimator", "y"])
     nr_rows.append(cm)
-    t = cm.pivot(index="y", columns="estimator", values="rb_pct")
-    t.index = [Y_LABEL.get(i, i) for i in t.index]
-    print(f"\n=== TA-{scen}: relative bias (%) ==="); display(t.round(2))
+    for col, lab in [("rb_pct", "relative bias of the total (%)"), ("rb_pct_ts", "relative bias of the take-some part (%)")]:
+        t = cm.pivot(index="y", columns="estimator", values=col); t.index = [Y_LABEL.get(i, i) for i in t.index]
+        print(f"\n=== TA-{scen}: {lab} ==="); display(t.round(2))
     c = cm.pivot(index="y", columns="estimator", values="coverage_pct"); c.index = [Y_LABEL.get(i, i) for i in c.index]
     print(f"=== TA-{scen}: coverage (%) ==="); display(c.round(1))
 nr = pd.concat(nr_rows) if nr_rows else pd.DataFrame()
@@ -86,7 +92,7 @@ def s6(nr, scen, text="NR_rhg_MCAL_bmfmax@F1p+Estar", sq="NR_SQ_rhg_GREG_size_ca
     m = nr[nr.scenario == scen].set_index(["estimator", "y"])
     out = []
     for y in S6_Y:
-        b_t, b_s, b_w = m.loc[(text, y), "rb_pct"], m.loc[(sq, y), "rb_pct"], m.loc[(twin, y), "rb_pct"]
+        b_t, b_s, b_w = m.loc[(text, y), "rb_pct_ts"], m.loc[(sq, y), "rb_pct_ts"], m.loc[(twin, y), "rb_pct_ts"]   # take-some part
         out.append({"y": Y_LABEL.get(y, y), "bias text %": b_t, "bias SQ %": b_s, "bias twin %": b_w,
                     "BRF vs SQ": 1 - abs(b_t) / abs(b_s) if b_s else np.nan, "BRF vs twin": 1 - abs(b_t) / abs(b_w) if b_w else np.nan,
                     "RRMSE ratio vs SQ": m.loc[(text, y), "rrmse_pct"] / m.loc[(sq, y), "rrmse_pct"],

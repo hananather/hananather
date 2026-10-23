@@ -77,6 +77,10 @@ def run_sae(cell, domains, models: dict, R=200, seed=0, verbose=True):
         s = des.draw(rng_draw)
         rng = np.random.default_rng([seed, r, 7])
         s_ts = s[cell.ts[s]]
+        from mc import make_folds          # one shared fold vector per replicate for all models (T4)
+        cell.fold_of[:] = -1
+        grp = None if cell.groups is None else cell.groups[cell.ts_index[s_ts]]
+        cell.fold_of[cell.ts_index[s_ts]] = make_folds(len(s_ts), 5, np.random.default_rng([seed, r, 1]), grp, des.strata[s_ts])
         i = cell.ts_index[s_ts]
         d_ts, Y_ts = cell.d[s_ts], Y[s_ts]
         ds_dom = dom_ts[i]

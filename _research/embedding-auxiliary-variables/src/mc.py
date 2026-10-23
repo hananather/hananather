@@ -264,11 +264,10 @@ def model_predict(cell, spec, F, i, Y_ts, d_ts, rng=None, groups=None, need_U=Fa
             b0, Bx = _ridge_fit(Fs, T, w, lam, hard, cat, lamc)
             M[:, cols] = np.clip(b0 + Fs @ Bx, lo, hi)
             fits.append((b0, Bx))
-        # population predictions from the fold-averaged model (exact average of the linear fold
-        # predictions; differs from averaging clipped predictions only through the clip) -- deviation D-6
-        b0m = np.mean([f_[0] for f_ in fits], 0)
-        Bxm = np.mean([f_[1] for f_ in fits], 0)
-        P = np.clip(b0m + F @ Bxm, lo, hi)
+        # population predictions: average of the fold models' clipped predictions (protocol m-bar).
+        # (Clipping the prediction of the fold-averaged model instead -- former D-6 -- biased the
+        # calibration total downward for zero-inflated ratios; found by the adversarial review.)
+        P = np.mean([np.clip(b0_ + F @ Bx_, lo, hi) for b0_, Bx_ in fits], 0)
         if ratio:
             P = P * xU[:, None]
         sumM[cols] = P.sum(0)
@@ -358,19 +357,43 @@ def _nr_weights(spec, cell: Cell, s_ts, d_ts):
     """Respondent subset and nonresponse-adjusted weights (take-all units handled by the caller).
     nr_adj = 'none' : no adjustment (naive)
              'rhg'  : response homogeneity groups = design strata (weighting-class adjustment)
-             'ps'   : logistic propensity on matrix spec['ps_F'], then rescaled within strata"""
+             'ps'   : penalised logistic propensity on spec['ps_F'] (categorical columns on the raw 0/1
+                      scale, continuous standardised), C chosen by 3-fold CV log-loss inside the sample,
+                      propensities CROSS-FITTED on the replicate's shared folds, then rescaled within
+                      strata (protocol §7.2)."""
     rmask = cell.resp[s_ts]
     r_ts, dr = s_ts[rmask], d_ts[rmask].copy()
     adj = spec.get("nr_adj", "rhg")
     h_s, h_r = cell.design.strata[s_ts], cell.design.strata[r_ts]
     if adj == "ps":
         from sklearn.linear_model import LogisticRegression
-        F = cell.mats[spec["ps_F"]][cell.ts_index[s_ts]]
-        mu, sd = F.mean(0), F.std(0) + 1e-9
-        lr = LogisticRegression(C=spec.get("ps_C", 1.0), max_iter=500)
-        lr.fit((F - mu) / sd, rmask.astype(int), sample_weight=d_ts / d_ts.mean())
-        p = lr.predict_proba((F[rmask] - mu) / sd)[:, 1]
-        dr = dr / np.clip(p, 0.02, 1.0)
+        i = cell.ts_index[s_ts]
+        F = cell.mats[spec["ps_F"]][i]
+        cat = cell.cats.get(spec["ps_F"])
+        cat = np.zeros(F.shape[1], bool) if cat is None else cat
+        mu, sd = F.mean(0), F.std(0)
+        sd = np.where(cat | (sd < 1e-12), 1.0, sd)
+        mu = np.where(cat, 0.0, mu)
+        Z = (F - mu) / sd
+        yb = rmask.astype(int)
+        sw = d_ts / d_ts.mean()
+        folds = cell.fold_of[i]
+        best_C, best = 1.0, np.inf
+        for C in spec.get("ps_Cs", (0.01, 0.1, 1.0)):
+            ll = 0.0
+            for f in range(3):
+                tr, te = (folds % 3) != f, (folds % 3) == f
+                lr = LogisticRegression(C=C, max_iter=300).fit(Z[tr], yb[tr], sample_weight=sw[tr])
+                p_ = np.clip(lr.predict_proba(Z[te])[:, 1], 1e-6, 1 - 1e-6)
+                ll -= (sw[te] * (yb[te] * np.log(p_) + (1 - yb[te]) * np.log(1 - p_))).sum()
+            if ll < best:
+                best, best_C = ll, C
+        p = np.zeros(len(s_ts))
+        for f in np.unique(folds):
+            tr, te = folds != f, folds == f
+            lr = LogisticRegression(C=best_C, max_iter=300).fit(Z[tr], yb[tr], sample_weight=sw[tr])
+            p[te] = lr.predict_proba(Z[te])[:, 1]
+        dr = dr / np.clip(p[rmask], 0.02, 1.0)
     if adj in ("rhg", "ps"):
         for h in np.unique(h_s):
             num = d_ts[h_s == h].sum()
@@ -381,16 +404,20 @@ def _nr_weights(spec, cell: Cell, s_ts, d_ts):
     return r_ts, dr
 
 
-def _var_counts(E, design, r_ts):
-    """Stratified linearisation variance using respondent counts r_h in place of n_h."""
+def _var_counts(E, design, r_ts, dr=None):
+    """Stratified linearisation variance using respondent counts r_h in place of n_h. With dr (the
+    adjusted weights), residuals are multiplied by g_k = dr_k / (N_h / r_h), so the variation of
+    propensity weights within a stratum enters the variance (it is 1 under weighting classes)."""
     E = np.atleast_2d(E.T).T
     h_r = design.strata[r_ts]
     v = np.zeros(E.shape[1])
     for h in np.unique(h_r):
-        rh, Nh = (h_r == h).sum(), design.N_h[h]
+        m = h_r == h
+        rh, Nh = m.sum(), design.N_h[h]
         if rh < 2 or rh >= Nh:
             continue
-        v += Nh ** 2 * (1 - rh / Nh) * E[h_r == h].var(axis=0, ddof=1) / rh
+        Eh = E[m] if dr is None else E[m] * (dr[m] / dr[m].mean())[:, None]
+        v += Nh ** 2 * (1 - rh / Nh) * Eh.var(axis=0, ddof=1) / rh
     return v
 
 
@@ -424,7 +451,7 @@ def run_cell(cell: Cell, specs: dict, R=500, seed=0, verbose=True, ta_values=Non
                 if spec.get("nr"):
                     r_ts, dr = _nr_weights(spec, cell, s_ts, d_ts)
                     t, e = _estimate(spec, cell, r_ts, dr, cell.Y[r_ts], rng)
-                    v = _var_counts(e, des, r_ts) if np.isfinite(e).all() else np.full(len(t), np.nan)
+                    v = _var_counts(e, des, r_ts, dr) if np.isfinite(e).all() else np.full(len(t), np.nan)
                 else:
                     t, e = _estimate(spec, cell, s_ts, d_ts, Y_ts, rng)
                     v = strat_var_total(e, des, s_ts) if np.isfinite(e).all() else np.full(len(t), np.nan)

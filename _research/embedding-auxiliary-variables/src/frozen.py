@@ -62,7 +62,7 @@ def joint_features(prev, curr, T, prev_E=None, curr_E=None, K=32, min_count=20):
 
 
 def train_frozen(prev, curr, ynames, T="F1p", prev_E=None, curr_E=None, n=1000, J=20, K=32, seed=0,
-                 resp_days=300, respondents_only=True):
+                 resp_days=300, respondents_only=True, prev_groups=None):
     """Returns ({'fz_twin': (J, N, q), 'fz_text': (J, N, q), 'fz_twin:<y>': (J, N, 1), ...}, log)."""
     feats = joint_features(prev, curr, T, prev_E, curr_E, K)
     des, _ = production_design(prev, n)
@@ -90,7 +90,7 @@ def train_frozen(prev, curr, ynames, T="F1p", prev_E=None, curr_E=None, n=1000, 
             if (hr == hh).any():
                 w0[hr == hh] *= d[s][h == hh].sum() / d[r][hr == hh].sum()
         log.append({"draw": b, "n_ts": len(s), "n_resp": len(r)})
-        folds = make_folds(len(r), 5, rng, None, hr)
+        folds = make_folds(len(r), 5, rng, None if prev_groups is None else prev_groups[r], hr)
         for name, (F_prev, F_curr, cat) in feats.items():
             for j_set, use_ratio in ((~is_bin, True), (is_bin, False)):
                 j = np.flatnonzero(j_set)

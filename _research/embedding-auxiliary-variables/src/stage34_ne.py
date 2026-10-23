@@ -21,42 +21,80 @@ from embed import load
 from experiments import text_groups
 from frame import production_design
 from mc import Cell, run_cell
-from protocol import H_SET, R_SET, add_text, tier_mats
+from protocol import H_SET, R_SET, add_text, fold_groups, tier_mats
 from sae import run_sae, sae_metrics
 
 DATA = os.environ.get("EMBAUX_DATA", "/tmp/claude-0/data")
-OUT = f"{DATA}/results/stage34_ne"
+OUT = f"{DATA}/results/stage34_ne_v3"
 SEED, N_SAMPLE, K_STAR = 20261023, 1000, 16
 YS = H_SET + R_SET + ["y_bin_has_gov_grants"]
-LAST_CYCLE = {  # own last-cycle value used to impute take-all nonrespondents
-    "y_revenue": "lag_revenue", "y_expenses": "lag_expenses", "y_employees": "lag_employees", "y_salaries": "lag_salaries",
-    "y_contrib": "lag_contrib", "y_prog_rev": "lag_prog_rev", "y_gov_grants": "oracle_lag_gov_grants",
-    "y_fundraising_exp": "oracle_lag_func_exp_fundraising", "y_officer_comp": "oracle_lag_officer_comp",
-    "y_volunteers_cap10k": "oracle_lag_volunteers",
-}
+# own last-cycle value of every take-all unit (certainty units were in last cycle's sample): the
+# UNMASKED TY2022 amounts (the frame's lag_* columns are masked for units unavailable at D, which
+# must not leak into imputation -- adversarial-review finding)
+LAST_CYCLE_SRC = {"y_revenue": "revenue_cy", "y_expenses": "expenses_cy", "y_employees": "employees_p1",
+                  "y_salaries": "salaries_cy", "y_contrib": "contrib_cy", "y_prog_rev": "prog_rev_cy",
+                  "y_gov_grants": "gov_grants", "y_fundraising_exp": "func_exp_fundraising",
+                  "y_officer_comp": "officer_comp", "y_volunteers_cap10k": "volunteers",
+                  "y_bin_lobbying": "lobbying", "y_bin_foreign_activities": "foreign_activities",
+                  "y_bin_grants_to_indiv_us": "grants_to_indiv_us"}
 
 
 def setup():
-    pop = pd.read_parquet(f"{DATA}/pop/ne_pop_v2.parquet")
-    # last-cycle binaries for take-all imputation, from the TY2022 returns
-    p22 = pd.read_parquet(f"{DATA}/parsed/ne_2022.parquet").set_index("ein")
-    for b, src in [("y_bin_lobbying", "lobbying"), ("y_bin_foreign_activities", "foreign_activities"),
-                   ("y_bin_grants_to_indiv_us", "grants_to_indiv_us")]:
-        pop[f"last_{b}"] = p22.loc[pop.ein, src].fillna(False).astype(float).to_numpy()
-    pop["last_y_bin_has_volunteers"] = (pop.oracle_lag_volunteers > 0).astype(float)
-    pop["last_y_bin_has_gov_grants"] = (pop.oracle_lag_gov_grants > 0).astype(float)
-    pop["oracle_lag_volunteers"] = pop.oracle_lag_volunteers.clip(upper=10_000)
+    pop = pd.read_parquet(f"{DATA}/pop/ne_pop_v3.parquet")
+    p22 = pd.read_parquet(f"{DATA}/parsed/ne_2022.parquet").set_index("ein").reindex(pop.ein)
+    for y, c in LAST_CYCLE_SRC.items():
+        v = p22[c]
+        v = v.astype(float) if v.dtype != object else v.map(lambda z: float(z) if z is not None else np.nan)
+        if y.startswith("y_bin_"):
+            v = v.fillna(0.0)
+        elif y in ("y_gov_grants", "y_fundraising_exp", "y_officer_comp"):
+            v = v.fillna(0.0)                 # blank Part VIII/IX lines are zeros
+        pop[f"cyc_{y}"] = v.to_numpy(float)
+    pop["cyc_y_volunteers_cap10k"] = np.clip(pop["cyc_y_volunteers_cap10k"], None, 10_000)
+    pop["cyc_y_bin_has_volunteers"] = (pop["cyc_y_volunteers_cap10k"].fillna(0) > 0).astype(float)
+    pop["cyc_y_bin_has_gov_grants"] = (pop["cyc_y_gov_grants"].fillna(0) > 0).astype(float)
     des, _ = production_design(pop, N_SAMPLE)
     mats, cats = tier_mats(pop, des, ("F1p",))
-    add_text(mats, cats, pop, ("F1p",), "Estar", load(f"{DATA}/emb/ne_v2", "lsa256_full")[0], K_STAR)
+    add_text(mats, cats, pop, ("F1p",), "Estar", load(f"{DATA}/emb/ne_v3", "lsa256_full")[0], K_STAR)
     return pop, des, mats, cats
 
 
 def last_cycle_matrix(pop):
-    cols = []
-    for y in YS:
-        cols.append(pop[LAST_CYCLE[y]].to_numpy(float) if y in LAST_CYCLE else pop[f"last_{y}"].to_numpy(float))
-    return np.column_stack(cols)
+    return np.column_stack([pop[f"cyc_{y}"].to_numpy(float) for y in YS])
+
+
+def ta_imputer(pop, cell, Y, L, resp, scenario):
+    """TA-hist-own (protocol §7.2): y_imp = own y_{t-1} x NTEE10 trend among responding take-all units
+    (sum y_t / sum y_{t-1} within the group; binaries untrended). Missing own value -> TA-hist-aux:
+    lag_expenses x ratio of y_t to lag_expenses among responding take-all units."""
+    ta_idx = np.flatnonzero(cell.ta)
+    grp = pop.ntee_major10.to_numpy()[ta_idx]
+    is_bin = np.array([y.startswith("y_bin_") for y in YS])
+    xlag = pop.lag_expenses.clip(lower=0).to_numpy(float)[ta_idx]
+    Yta, Lta = Y[ta_idx], L[ta_idx]
+
+    def values(r):
+        if scenario == "follow":
+            rr = np.random.default_rng([SEED, r, 3]).random(len(ta_idx)) < 0.9
+        else:
+            rr = resp[ta_idx]
+        out = Yta[rr].sum(0).copy()
+        nr = ~rr
+        ok_all = rr & np.isfinite(Lta).all(1)
+        for j in range(len(YS)):
+            for g in np.unique(grp[nr]):
+                m_nr = nr & (grp == g)
+                if is_bin[j]:
+                    trend = 1.0
+                else:
+                    m_r = rr & (grp == g) & np.isfinite(Lta[:, j])
+                    den = Lta[m_r, j].sum()
+                    trend = Yta[m_r, j].sum() / den if den > 0 else (Yta[ok_all, j].sum() / max(Lta[ok_all, j].sum(), 1e-9))
+                own = Lta[m_nr, j]
+                aux = xlag[m_nr] * (Yta[rr, j].sum() / max(xlag[rr].sum(), 1e-9))
+                out[j] += np.where(np.isfinite(own), own * trend, aux).sum()
+        return out
+    return values
 
 
 def nr(scenario, R, k, K):
@@ -64,17 +102,12 @@ def nr(scenario, R, k, K):
     pop, des, mats, cats = setup()
     resp = (pop.days_to_file_t <= 300).fillna(False).to_numpy()
     x = pop.lag_expenses.clip(lower=0).to_numpy(float)
-    cell = Cell(pop[YS].to_numpy(float), YS, des, mats, x, groups=text_groups(pop), resp=resp, cat_masks=cats)
+    gpath = f"{OUT}/fold_groups.npy"
+    if not os.path.exists(gpath):
+        np.save(gpath, fold_groups(pop, load(f"{DATA}/emb/ne_v3", "lsa256_full")[0]))
+    cell = Cell(pop[YS].to_numpy(float), YS, des, mats, x, groups=np.load(gpath), resp=resp, cat_masks=cats)
     Y, L = cell.Y, last_cycle_matrix(pop)
-    ta_idx = np.flatnonzero(cell.ta)
-
-    def ta_values(r):
-        if scenario == "follow":
-            rr = np.random.default_rng([SEED, r, 3]).random(len(ta_idx)) < 0.9
-        else:
-            rr = resp[ta_idx]
-        return Y[ta_idx[rr]].sum(0) + L[ta_idx[~rr]].sum(0)
-
+    ta_values = ta_imputer(pop, cell, Y, L, resp, scenario)
     specs = {
         "FULLRESP_GREG_size_cat@F1p": {"kind": "greg", "X": "size_cat@F1p"},
         "NR_rhg_HT": {"kind": "ht", "nr": True, "nr_adj": "rhg"},
@@ -86,10 +119,15 @@ def nr(scenario, R, k, K):
     }
     a, b = round(k * R / K), round((k + 1) * R / K)
     t0 = time.time()
-    df = run_cell(cell, specs, R=R, seed=SEED, rep_range=(a, b), ta_values=ta_values)
+    ta_used = {}
+    def ta_vals(r):
+        v = ta_values(r); ta_used[r] = v; return v
+    df = run_cell(cell, specs, R=R, seed=SEED, rep_range=(a, b), ta_values=ta_vals)
     df.to_parquet(f"{OUT}/nr_{scenario}_part_{k}_of_{K}.parquet")
-    json.dump({"truth": dict(zip(YS, Y.sum(0).tolist())), "resp_rate_ts": float(resp[cell.ts].mean()),
-               "resp_rate_ta_real": float(resp[cell.ta].mean()), "secs": time.time() - t0},
+    pd.DataFrame([(r, y, v[j]) for r, v in ta_used.items() for j, y in enumerate(YS)], columns=["rep", "y", "ta_used"]) \
+        .to_parquet(f"{OUT}/nr_{scenario}_ta_part_{k}_of_{K}.parquet")
+    json.dump({"truth": dict(zip(YS, Y.sum(0).tolist())), "truth_ta": dict(zip(YS, Y[cell.ta].sum(0).tolist())),
+               "resp_rate_ts": float(resp[cell.ts].mean()), "resp_rate_ta_real": float(resp[cell.ta].mean()), "secs": time.time() - t0},
               open(f"{OUT}/nr_{scenario}_meta.json", "w"), indent=1)
     print("done", round(time.time() - t0), "s", flush=True)
 
@@ -97,6 +135,8 @@ def nr(scenario, R, k, K):
 def merge_nr(scenario, K):
     df = pd.concat([pd.read_parquet(f"{OUT}/nr_{scenario}_part_{k}_of_{K}.parquet") for k in range(K)], ignore_index=True)
     df.to_parquet(f"{OUT}/nr_{scenario}.parquet")
+    ta = pd.concat([pd.read_parquet(f"{OUT}/nr_{scenario}_ta_part_{k}_of_{K}.parquet") for k in range(K)], ignore_index=True)
+    ta.to_parquet(f"{OUT}/nr_{scenario}_ta.parquet")
     print("merged", df.shape)
 
 
@@ -106,7 +146,10 @@ def sae(R):
     x = pop.lag_expenses.clip(lower=0).to_numpy(float)
     ys = ["y_gov_grants", "y_contrib", "y_fundraising_exp", "y_volunteers_cap10k", "y_bin_has_gov_grants",
           "y_bin_has_volunteers", "y_bin_lobbying", "y_expenses"]
-    cell = Cell(pop[ys].to_numpy(float), ys, des, mats, x, groups=text_groups(pop), cat_masks=cats)
+    gpath = f"{OUT}/fold_groups.npy"
+    if not os.path.exists(gpath):
+        np.save(gpath, fold_groups(pop, load(f"{DATA}/emb/ne_v3", "lsa256_full")[0]))
+    cell = Cell(pop[ys].to_numpy(float), ys, des, mats, x, groups=np.load(gpath), cat_masks=cats)
     models = {"B0": {"kind": "greg", "X": "size_cat@F1p"},
               "twin": {"kind": "mcal_ratio", "F": "FC@F1p", "X_base": "size_cat@F1p"},
               "text": {"kind": "mcal_ratio", "F": "FC@F1p+Estar", "X_base": "size_cat@F1p"}}

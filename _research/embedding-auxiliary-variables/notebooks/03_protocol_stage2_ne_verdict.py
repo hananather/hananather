@@ -43,15 +43,15 @@ sys.path.insert(0, os.path.join(PROJ, "src"))
 DATA = os.environ.get("EMBAUX_DATA", "/tmp/claude-0/data")
 import plotstyle; plotstyle.use()
 from protocol import H_SET, H_D, H_S, R_SET
-from analysis import gates, primary, no_harm, factorial, planted, cell_metrics, paired_re
+from analysis import gates, primary, no_harm, factorial, planted, cell_metrics, paired_re, rho2_min
 from report import Y_LABEL
 pd.set_option("display.width", 220); pd.set_option("display.max_columns", 40); pd.set_option("display.max_colwidth", 60)
-OUT = f"{DATA}/results/stage2_ne"
+OUT = f"{DATA}/results/stage2_ne_v3"
 df = pd.read_parquet(f"{OUT}/mc.parquet")
 meta = json.load(open(f"{OUT}/meta.json")); truth = meta["truth"]
 pinfo = pd.read_csv(f"{OUT}/planted_info.csv")
 print(f"R = {meta['R']}, estimators = {df.estimator.nunique()}, targets = {df.y.nunique()}, failures = {sum(meta['failures'].values())}")
-RES = os.path.join(PROJ, "results", "stage2_ne"); os.makedirs(RES, exist_ok=True)
+RES = os.path.join(PROJ, "results", "stage2_ne_v3"); os.makedirs(RES, exist_ok=True)
 
 # %% [markdown]
 # ## 1. Validity gates (read before any efficiency number)
@@ -68,7 +68,9 @@ RES = os.path.join(PROJ, "results", "stage2_ne"); os.makedirs(RES, exist_ok=True
 # | G9 | The harness can detect a known large gain: last year's value of the same variable |
 
 # %%
-G = gates(df, truth)
+ceil = json.load(open(f"{OUT}/ceilings_P1.json"))
+G = gates(df, truth, ceilings=ceil, pinfo=pinfo)
+print("failure count (G1 requires <= 0.5% of replicate-estimator cells):", sum(meta["failures"].values()))
 G.to_csv(f"{RES}/gates.csv", index=False)
 summary = G.groupby("gate")["pass"].agg(["sum", "count"]).assign(all_pass=lambda d: d["sum"] == d["count"])
 display(summary)
@@ -133,9 +135,8 @@ print("text share of the total log gain:", round(F_mean.phi_C_text / F_mean.log_
 # %%
 PL = planted(df, truth, pinfo)
 display(PL.round(3))
-met = PL.assign(met=(PL.re_mc >= 1.10) & (PL.lo95 >= 1.05)).groupby("rho2").met.sum()
-rho2_min = next((r for r, k in met.items() if k >= 2), None)
-print("plantings meeting the bar by level:", met.to_dict(), "| rho2_min(1000) =", rho2_min)
+r_strict, r_lenient, met = rho2_min(PL)
+print("plantings meeting the bar by level:", met, "| rho2_min(1000) =", r_strict, "(3 of 3; protocol-equivalent) | lenient 2 of 3:", r_lenient)
 print("protocol-form planted family (diagnostic, D-3): achieved rho2 by a =",
       pinfo[pinfo.family == "pr"].groupby("a").rho2_achieved.mean().round(3).to_dict())
 

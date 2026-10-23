@@ -32,6 +32,9 @@ TIER_LAGS = {
     "F2": F1_LAGS + ["lag_salaries", "lag_contrib", "lag_prog_rev", "oracle_lag_gov_grants",
                      "oracle_lag_func_exp_fundraising", "oracle_lag_officer_comp"],
 }
+# G9 positive control: the same lags with NO availability mask on the survey-only lags (the realistic
+# F2 masks them for late filers, which caps the attainable gain, e.g. 1.26 for officer_comp)
+TIER_LAGS["F2o"] = TIER_LAGS["F2"]
 
 
 def _dum(s, drop_first=True, prefix=None):
@@ -87,7 +90,7 @@ def tier_mats(pop: pd.DataFrame, design, tiers=("F1p",), min_count=20):
         lags = pop[TIER_LAGS[T]].clip(lower=0).to_numpy(float).copy() if TIER_LAGS[T] else np.zeros((len(pop), 0))
         # extras beyond F1 are unknown when the t-1 return is not available at D
         for j, c in enumerate(TIER_LAGS[T]):
-            if c not in F1_LAGS:
+            if c not in F1_LAGS and not (T == "F2o" and c.startswith("oracle_lag_")):
                 lags[:, j] *= av
         avb = np.c_[1 - av, (1 - av) * x]
         mats[f"size_cat@{T}"] = np.c_[S, lags, nt, st, avb]
@@ -376,3 +379,42 @@ def ceiling_av(pop, design, F, cat, ynames, lams=(1e-3, 1e-2, 1e-1, 1.0, 10.0), 
                         av += fac[h] * E[m].var(0, ddof=1)
                 best[jset] = np.minimum(best[jset], av)
     return best
+
+
+def fold_groups(pop, E=None, cos=0.95):
+    """Protocol rule T4 groups: exact normalised-mission duplicates, cosine > `cos` near-duplicate
+    clusters on the embedding E, and shared valid URLs, merged by union-find."""
+    from experiments import text_groups
+    N = len(pop)
+    parent = np.arange(N)
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    def union_labels(lab):
+        lab = np.asarray(lab)
+        order = np.argsort(lab, kind="stable")
+        for a, b in zip(order[:-1], order[1:]):
+            if lab[a] == lab[b] and lab[a] >= 0:
+                ra, rb = find(a), find(b)
+                if ra != rb:
+                    parent[rb] = ra
+    union_labels(text_groups(pop))
+    url = pop.website.fillna("").str.strip().str.lower().str.replace(r"^(https?://)?(www\.)?", "", regex=True).str.rstrip("/")
+    valid = url.str.contains(r"\.") & ~url.isin(["n/a", "none", "na", "see schedule o", "n.a."])
+    union_labels(np.where(valid, pd.factorize(url)[0], -1))
+    if E is not None:
+        from sklearn.neighbors import NearestNeighbors
+        X = np.asarray(E, float)
+        X = X / np.maximum(np.linalg.norm(X, axis=1, keepdims=True), 1e-12)
+        nn = NearestNeighbors(radius=1 - cos, metric="cosine").fit(X)
+        for i, nb in enumerate(nn.radius_neighbors(X, return_distance=False)):
+            for j in nb:
+                if j != i:
+                    ri, rj = find(i), find(j)
+                    if ri != rj:
+                        parent[rj] = ri
+    return np.array([find(i) for i in range(N)])

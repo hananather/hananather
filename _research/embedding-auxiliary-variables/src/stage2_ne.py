@@ -17,24 +17,25 @@ from experiments import text_groups
 from frame import production_design
 from frozen import train_frozen
 from mc import Cell, run_cell
-from protocol import (H_SET, R_SET, J4, add_text, control_embeddings, placebo_targets, planted_targets,
+from protocol import (H_SET, R_SET, J4, add_text, control_embeddings, fold_groups, placebo_targets, planted_targets,
                       specs_primary, specs_tier, tier_mats)
 
 DATA = os.environ.get("EMBAUX_DATA", "/tmp/claude-0/data")
-OUT = f"{DATA}/results/stage2_ne"
+OUT = f"{DATA}/results/stage2_ne_v3"
+POP, EMB, FZ, PREV = "ne_pop_v3", "ne_v3", "ne_frozen_v3", "ne_wave2022_pop_v3"
 SEED, N_SAMPLE, K_STAR = 20261023, 1000, 16   # E* = LSA T2, K=16 (Stage 1, tie rule)
 REAL_Y = H_SET + R_SET + ["y_bin_has_gov_grants"]
 
 
 def setup():
-    pop = pd.read_parquet(f"{DATA}/pop/ne_pop_v2.parquet")
+    pop = pd.read_parquet(f"{DATA}/pop/{POP}.parquet")
     des, info = production_design(pop, N_SAMPLE)
-    tiers = ("F1", "F1p", "F2")
+    tiers = ("F1", "F1p", "F2", "F2o")
     mats, cats = tier_mats(pop, des, tiers)
-    Es = load(f"{DATA}/emb/ne_v2", "lsa256_full")[0]          # E* = LSA T2, K = 64 (Stage 1)
-    emb = {"Estar": Es, "Estar64": Es, "L4": load(f"{DATA}/emb/ne_v2", "minilm_full")[0],
-           "Estar_nonum": load(f"{DATA}/emb/ne_v2", "lsa256_full_nonum")[0]}
-    add_text(mats, cats, pop, ("F1", "F1p", "F2"), "Estar", Es, K_STAR, linear_factorial=False)
+    Es = load(f"{DATA}/emb/{EMB}", "lsa256_full")[0]          # E* = LSA T2, K = 64 (Stage 1)
+    emb = {"Estar": Es, "Estar64": Es, "L4": load(f"{DATA}/emb/{EMB}", "minilm_full")[0],
+           "Estar_nonum": load(f"{DATA}/emb/{EMB}", "lsa256_full_nonum")[0]}
+    add_text(mats, cats, pop, ("F1", "F1p", "F2", "F2o"), "Estar", Es, K_STAR, linear_factorial=False)
     add_text(mats, cats, pop, ("F1p",), "Estar", Es, K_STAR, linear_factorial=True)
     for nm in ("L4", "Estar_nonum"):
         add_text(mats, cats, pop, ("F1p",), nm, emb[nm], K_STAR)
@@ -50,14 +51,15 @@ def prep():
     pop, des, info, mats, cats, ctrl = setup()
     t0 = time.time()
     plc = placebo_targets(pop, des, seed=SEED)
-    planted, pinfo = planted_targets(pop, des, load(f"{DATA}/emb/ne_v2", "lsa256_full")[0], mats["FC@F1p"], cats["FC@F1p"],
+    planted, pinfo = planted_targets(pop, des, load(f"{DATA}/emb/{EMB}", "lsa256_full")[0], mats["FC@F1p"], cats["FC@F1p"],
                                      levels=(0.0, 0.05, 0.10, 0.20), plantings=3, K=K_STAR, seed=SEED)
     print("planted calibrated", round(time.time() - t0), "s", flush=True)
     pinfo.to_csv(f"{OUT}/planted_info.csv", index=False)
-    prev = pd.read_parquet(f"{DATA}/pop/ne_wave2022_pop_v2.parquet")
-    Ep = load(f"{DATA}/emb/ne_frozen", "lsa256_full_prev")[0]
-    Ec = load(f"{DATA}/emb/ne_frozen", "lsa256_full_curr")[0]
-    fz, flog = train_frozen(prev, pop, REAL_Y, "F1p", Ep, Ec, n=N_SAMPLE, J=20, K=K_STAR, seed=SEED)
+    prev = pd.read_parquet(f"{DATA}/pop/{PREV}.parquet")
+    Ep = load(f"{DATA}/emb/{FZ}", "lsa256_full_prev")[0]
+    Ec = load(f"{DATA}/emb/{FZ}", "lsa256_full_curr")[0]
+    fz, flog = train_frozen(prev, pop, REAL_Y, "F1p", Ep, Ec, n=N_SAMPLE, J=20, K=K_STAR, seed=SEED,
+                            prev_groups=fold_groups(prev, Ep))
     flog.to_csv(f"{OUT}/frozen_training_log.csv", index=False)
     print("frozen heads trained", round(time.time() - t0), "s", flush=True)
     extra = {**plc, **planted}
@@ -81,11 +83,15 @@ def build_cell():
         for y in J4:
             frozen[f"{key}:{y}"] = z[f"{key}__{y}"]
     x = pop.lag_expenses.clip(lower=0).to_numpy(float)
-    cell = Cell(Y, ynames, des, mats, x, groups=text_groups(pop), frozen=frozen, cat_masks=cats)
+    gpath = f"{OUT}/fold_groups.npy"            # computed once (the radius search is memory-heavy)
+    if not os.path.exists(gpath):
+        np.save(gpath, fold_groups(pop, load(f"{DATA}/emb/{EMB}", "lsa256_full")[0]))
+    cell = Cell(Y, ynames, des, mats, x, groups=np.load(gpath), frozen=frozen, cat_masks=cats)
     n_sc = cell.mats["size_cat@F1p"].shape[1]
     specs = specs_primary("F1p", "Estar", controls=ctrl, extra_text=("L4", "Estar_nonum", "Estar64"), with_frozen=True, n_sc=n_sc)
     specs.update(specs_tier("F1", "Estar"))
     specs.update(specs_tier("F2", "Estar"))
+    specs.update(specs_tier("F2o", "Estar"))
     return cell, specs, ynames
 
 
