@@ -245,8 +245,8 @@ alike. The stable sub-design is codes × text within the ratio-scale learner:
 | Shapley shares within the ML learner (log scale) | codes 0.037, **text 0.063**; text share **0.63** (0.58–0.68) |
 
 Within the ML system, text is the larger contributor (M1 passes, conditionally on the learner). It needs the
-ratio-scale formulation: entered linearly, the same text components cost 5%. The case for codes and text is
-the same "what kind of organization is this" signal, with text slightly richer.
+ratio-scale formulation: entered linearly, the same text components cost 5%. Codes and text carry overlapping
+information about what kind of organization a unit is, and text is somewhat richer.
 
 ### 4.3 A weak register (Stage 2B, R = 1,000): text still adds only a few percent
 

@@ -1,3 +1,5 @@
+> **Superseded by `FINDINGS.md`.** These are pilot findings from R = 40–60 runs, before the protocol and before the estimator fixes. They are kept for the record. Where they differ from FINDINGS.md, FINDINGS.md holds.
+
 # Early empirical findings (pilot runs, 2026-10-23). Read before designing the protocol.
 
 All figures are from the **New England pilot population**: IRS Form 990 full filers in MA, CT, ME, NH, VT and RI that filed for both TY2022 and TY2023.

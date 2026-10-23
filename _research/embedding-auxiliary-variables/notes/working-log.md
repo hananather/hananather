@@ -35,3 +35,16 @@ Running record of design decisions, so they can be reviewed and challenged. Newe
 - HT and GREG: unbiased, coverage about 95%.
 - Ridge-difference without cross-fitting on 128-d noisy embeddings: +6.7% relative bias and 51% coverage. This is the overfitting pitfall, and the harness detects it.
 - An additive linear model in the embedding on the raw scale did worse than plain GREG, for a y whose ratio y/x depends on text. Embeddings should enter as **text-dependent ratios** (features x·PC or a ratio-scale model), not as additive terms. This matters for skewed business-type populations.
+
+## 2026-10-23 (afternoon): protocol runs, gate diagnosis, extra stages
+- **Stage 2A (R = 2,000, 35 estimators, 30 targets)** finished after 2.8 h on 3 workers.
+  - Four gates have failing items. Each was diagnosed in notebook 03 §1b; the findings are in FINDINGS §4.2.
+  - Strict §9.6 reading: HARNESS NOT VALIDATED. Both the strict and the diagnosed readings are reported; neither is hidden.
+- **RIDGECAL defect (D-32).** Replaced by LINCAL, rerun on the same samples (R = 2,000). That did not fix it either (D-33): linear calibration on the full code block explodes in about 0.4% of replicates. Attribution now uses the stable codes × text 2 × 2 within the ML learner.
+- **Stage 2B weak register (D-28).**
+  - Run as pre-registered (D-1W). Smoke testing exposed a BMF defect: 722 units, 6.7% of expenses, with zero amounts. So a profiling sensitivity (wprof) was pre-declared before any result was read.
+- **Stage 2F design-stage text (D-31)** was added on a free core. It covers the "stratification" use from the claim, which was otherwise untested.
+- **Stage 3, S6 reference corrected to the protocol's minimum-bias rule (D-29).** This happened after the TA-late results were read, and the correction goes against text. A pre-run review then added bootstrap intervals, the total-RRMSE condition, and the gate caveat (D-30).
+- **Review rounds.**
+  - A pre-run review of the 2B runner and the NR/2B analysis: 6 minor findings confirmed and fixed, 1 refuted. Errata were added to D-14 (the valid-URL flag was never rebuilt), D-28a and D-29.
+  - A claim-by-claim verification of FINDINGS.md against the results.
