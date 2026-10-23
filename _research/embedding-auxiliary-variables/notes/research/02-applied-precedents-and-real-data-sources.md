@@ -309,3 +309,107 @@ Charities: https://www.irs.gov/eoefile · https://990data.givingtuesday.org/ · 
 SAE/geo: https://www.rti.org/publication/error-components-model-prediction-county-crop-areas-using-survey-satellite-data · https://ideas.repec.org/a/bla/jorssa/v182y2019i1p283-303.html · https://projecteuclid.org/journals/statistical-science/volume-34/issue-2/Producing-Official-County-Level-Agricultural-Estimates-in-the-United-States/10.1214/18-STS687.full · https://www150.statcan.gc.ca/n1/daily-quotidien/250917/dq250917b-eng.htm · https://openknowledge.worldbank.org/entities/publication/05c87b75-ecc1-4221-9e41-a11cf118aba1 · https://ideas.repec.org/p/wbk/wbrwps/10512.html · https://ideas.repec.org/p/wbk/wbrwps/10348.html · https://ideas.repec.org/a/eee/deveco/v172y2025ics0304387824001263.html · https://doi.org/10.3390/math9212780 · https://www.worldbank.org/en/events/2023/02/07/guidelines-to-small-area-estimation-for-poverty-mapping · https://www.adb.org/publications/mapping-poverty-data-integration-ai · https://reference-global.com/article/10.1515/jos-2015-0017 · https://arxiv.org/abs/1303.6668 · https://arxiv.org/abs/1905.01627 · https://refubium.fu-berlin.de/handle/fub188/19625 · https://eprints.soton.ac.uk/405559 · https://cs.stanford.edu/groups/vision/pdf/gebru2017pnas.pdf · https://pmc.ncbi.nlm.nih.gov/articles/PMC8292408 · https://arxiv.org/abs/2507.22291 · https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_SATELLITE_EMBEDDING_V1_ANNUAL · https://arxiv.org/abs/2411.07207 · https://arxiv.org/abs/2511.01408 · https://arxiv.org/abs/2604.23166
 
 Methods/LLM: https://www.bankofengland.co.uk/working-paper/2025/revealing-economic-facts-llms-know-more-than-they-say · https://arxiv.org/abs/2305.09620 · https://arxiv.org/abs/2604.17267 · https://arxiv.org/abs/2604.01160 · https://arxiv.org/abs/2609.10904 · https://isi-iass.org/home/?p=3865 · https://arxiv.org/html/2508.10149v1 · https://journals.sagepub.com/doi/10.1177/0282423X251347540 · https://ideas.repec.org/a/spr/metron/v83y2025i1d10.1007_s40300-024-00280-9.html · https://projecteuclid.org/journals/statistical-science/volume-32/issue-2/Model-Assisted-Survey-Estimation-with-Modern-Prediction-Techniques/10.1214/16-STS589.pdf · https://ideas.repec.org/a/bes/jnlasa/v100y2005p1429-1442.html · https://arxiv.org/abs/2003.12156 · https://arxiv.org/pdf/2002.09736 · https://journals.sagepub.com/doi/10.1177/0282423X241244671 · https://devincaughey.github.io/files/dormant/caughey_hartman_2017_lasso_weighting.pdf · https://vercel.com/ai-gateway/models/embed-v4.0.md
+
+---
+
+## Verification log
+
+Adversarial pass, 2026-10-23.
+
+**Tools.**
+- **Web.** WebFetch failed on DNS (`ENOTFOUND`) for arxiv.org and www.ajs.or.at. The shared WebSearch budget was exhausted before this pass began. Shell curl got no connection (code 000) to arxiv.org, export.arxiv.org, api.crossref.org, doi.org, semanticscholar.org, istat.it, cros.ec.europa.eu, nber.org, ideas.repec.org, ec.europa.eu, www150.statcan.gc.ca, unece.org, journals.sagepub.com, pmc.ncbi.nlm.nih.gov and dl.acm.org.
+- **GitHub.** The GitHub API and MCP were limited to the session's own repository. codeload.github.com returned 403.
+- **Sources used.** The local files under `/tmp/claude-0/data/raw990/`, the public GCS and S3 buckets, and raw.githubusercontent.com.
+
+**How to read the outcomes.**
+- *Third-party* means a repository copy or summary, not the publisher's own page.
+- The verifier's scripts and downloads are in `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/verify02/`, and the pre-edit copy of this note is `02-before.md` in that folder.
+- All of these are session-scratchpad files and do not persist.
+
+### A. Local recomputations (§0.4, §5.2, §5.3)
+
+| ID | Claim | Method | Outcome |
+|---|---|---|---|
+| B1 | 545,256 TY2022 990/990-EZ returns after dropping amended returns and deduplicating on EIN | `recheck_idx_bmf.py` on `idx_2022.csv`. All 700,822 index rows have TaxYear 2022. | CONFIRMED |
+| B2 | The BMF dated 2026-05-28 has 1,966,267 rows | same script | CONFIRMED (all EINs unique) |
+| B3 | FILING_REQ_CD counts: 02 = 1,011,989, 01 = 508,223, 06 = 286,167, 00 = 146,404 | same | CONFIRMED |
+| B4 | Coverage by BMF income class of 2.5 / 49 / 70 / 78 / 80 / 84%, and 26.5% overall | same | CONFIRMED (2.5 / 49.3 / 70.2 / 78.0 / 79.7 / 84.2%; 26.51%) |
+| B5 | NTEE missing for 29.6% of BMF rows | same | CONFIRMED |
+| B6 | Sample-350 table: index `Website`, XML website, mission medians and Sched-O medians | `recheck_s350.py` on the 350 downloaded XMLs | CONFIRMED (every cell reproduces exactly) |
+| B7 | Sample-350 "median program-desc words" | `recheck_prog*.py`. The original regex matched every `<Desc>`, mostly `OtherExpensesGrp`, `ProgramServiceRevenueGrp` and similar line items. | **CORRECTED** from 20 / 26 / 34 / 52 / 80 / 84.5 / 155 to **16 / 24.5 / 22 / 34.5 / 62.5 / 58 / 111**, using only Part III 4a–4d and 990-EZ program descriptions |
+| B8 | Median mission words | `recheck_mis.py` | CLARIFIED. The values reproduce, but they sum Part I line 1 and Part III line 1. The longest single field gives 10.5 / 12.5 / 24 / 27 / 28 / 25 / 32 words. |
+| B9 | Mission and program text present in 100% of the sample | B6 and B7 scripts | CONFIRMED, also under the corrected program parse |
+| B10 | Index `Website` non-null for >$25M filers, by version: v4.0 100%, v4.1 87.5%, v5.0 60.8% | `recheck_idx_bmf.py` | CONFIRMED. CLARIFIED that n = 1, 8 and 14,550. |
+| B11 | The index `Website` column undercounts | B6 script | CONFIRMED. 28% of >$25M sample returns have a null index value but a website in the XML. |
+| B12 | Website presence of about 45% under $200k and 88% over $25M (§0.4); ~42–48% → 70–72% → 82–88% (§5.2) | B6 | CONFIRMED |
+| B13 | FILING_REQ_CD 02 means 990-N and 06 means church | `frc_check.py` | Consistent with the data: 97.6% of 02 rows with positive income are ≤ $50k, and 100% of 06 rows have FOUNDATION = 10. Still [UNVERIFIED] against the IRS dictionary. |
+| B14 | FILING_REQ_CD 00 means "not required" | `frc_check.py` | **CORRECTED.** 95% of these rows have PF_FILING_REQ_CD = 1, and 76% filed a TY2022 990-PF. They are mostly private foundations. |
+| B15 | Part of the >$5M non-coverage is likely 990-PF filers | `gt5m.py` | CONFIRMED. 8,723 of 10,107 (86%) filed a TY2022 990-PF. |
+| B16 | 990-N filers have no text | B4 script | CLARIFIED. 8.8% of 02 rows have a TY2022 990/990-EZ. |
+
+### B. Sandbox reachability and data access
+
+| ID | Claim | Method | Outcome |
+|---|---|---|---|
+| C1 | `storage.googleapis.com/alphaearth_foundations/` returns HTTP 200 and lists `satellite_embedding/v1/annual/{year}/{UTM zone}/*.tiff` | curl (XML listing and JSON API) | CONFIRMED. Years 2017–2025 are present. |
+| C2 | The tiles are COGs | 400-byte range read of one tile | CONFIRMED (GDAL `LAYOUT=IFDS_BEFORE_DATA` structural metadata) |
+| C3 | "About 3.5 GB" per tile | JSON listing, 995 tiles from 2022, zones 1x | **CORRECTED**: median 2.6 GB, maximum 3.8 GB |
+| C4 | The GivingTuesday lake `gt990datalake-rawdata` is reachable, with index, BMF and Extracts paths as described | curl listing | CONFIRMED |
+| C5 | IRS AWS 990 dataset discontinued after 31 Dec 2021 | curl | PARTIAL. The `irs-form-990` bucket lists as empty and `index_2020.json` / `index_2021.json` return 404. The date is not checked. |
+
+### C. Documentation and citation checks
+
+| ID | Claim | Source used | Outcome |
+|---|---|---|---|
+| D1 | AlphaEarth: 64-d, unit-norm, 10 m, annual, 2017 onward; arXiv 2507.22291 | `google/earthengine-catalog` `GOOGLE_SATELLITE_EMBEDDING_V1_ANNUAL.jsonnet` | CONFIRMED. The author list was added from the catalog's citation (Brown, Kazmierski, Pasquarella et al.). |
+| D2 | AlphaEarth licence [UNVERIFIED] | same | RESOLVED: CC BY 4.0 |
+| D3 | AlphaEarth inputs "Sentinel-2, Landsat, SAR, elevation, climate and text" | same | PARTIAL. Optical, radar, LiDAR, Landsat and Sentinel-1/2 are confirmed. Elevation, climate and text are not. |
+| D4 | Earth Engine dataset `GOOGLE_SATELLITE_EMBEDDING_V1_ANNUAL` | same | CLARIFIED. The asset ID is `GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL`. The published layers come from model v2.1, and the bucket is "provider pays" as of July 2026. |
+| D5 | AlphaEarth "about 24% error reduction" | not available | [UNVERIFIED] |
+| D6 | PDFM title and arXiv 2411.07207 | `google-research/population-dynamics` README (BibTeX) | CONFIRMED |
+| D7 | PDFM authors "Agarwal, M., Prasad, G., et al." | same | **CORRECTED**. There are 34 authors. Agarwal is first and Prasad is last, not second. |
+| D8 | PDFM inputs, and US county and ZCTA embeddings | same | CONFIRMED. "Maps data" was added, and the README now says 17+ countries. |
+| D9 | PDFM state of the art on 27 tasks | same | PARTIAL. A 27-task `conus27` benchmark file exists. The results were not checked. |
+| D10 | PDFM access "by request for academic/non-commercial use" | same | **CORRECTED**. Research use is free subject to approval. Commercial and public-sector use is through a paid Early Access Program. |
+| D11 | Rolf et al. 2021, MOSAIKS: authors, title, *Nature Communications*, DOI | `Global-Policy-Lab/mosaiks-paper` README | CONFIRMED. The volume and article number (12, 4392) were not checked. |
+| D12 | Jean et al. 2016 | `nealjean/predicting-poverty` README | PARTIAL. The title, year and five DHS countries are confirmed. The *Science* volume, pages, DOI and the 75% figure are not. |
+| D13 | Ma 2021: NVSQ, DOI, 90% / 88%, >439,000 nonprofits | `ma-ji/npo_classifier` readme.md (citation and BibTeX abstract) | CONFIRMED. Volume and pages 50(3):662–687 were added. "From 990 text" was dropped because the abstract does not say it. |
+| D14 | BHF 1988, *JASA* 83(401):28–36, with title | `cran/sae` man/eblupBHF.Rd; `cran/emdi` man/ebp.Rd | CONFIRMED. The DOI and the Iowa, 1978 and 0.45 ha details were not checked. |
+| D15 | Wu & Sitter 2001, *JASA*, with ambiguous title | `cran/NonProbEst` man/model_calibrated.Rd | CONFIRMED. The title is "A model-calibration approach to using complete auxiliary information from survey data", 96(453):185–193. The linked StatCan document (11-522-X, 2002) cannot be this article and is flagged. |
+| D16 | Kinne & Lenz, "Predicting innovative firms using web mining and deep learning" | `datawizard1337/ARGUS` README (links ZEW DP 19-001) | PARTIAL. The title is confirmed. The PLoS ONE volume, article number and DOI are not. |
+| D17 | embed-v4 takes text and image input, mixed or interleaved | `cohere-ai/cohere-developer-experience`: pages/models/embed.mdx and openapi.yaml, downloaded earlier this session | CONFIRMED ("Mixed texts/images (i.e. PDFs)"; an input "can contain a mix of text and image components") |
+| D18 | embed-v4 has 128k context | same | CONFIRMED |
+| D19 | embed-v4 output dimensions 256/512/1024/1536 | same | CONFIRMED (default 1536) |
+| D20 | "Cohere's own docs were not reached" | same | **CORRECTED**. Cohere's docs were reached through its GitHub repository. They also list `embed-v5.0-pro` and `embed-v5.0-fast` (up to 2048 dimensions), and limits of 96 inputs per call and 20 MB of images. |
+| D21 | About $0.12 per 1M input tokens | LiteLLM `model_prices` JSON (third-party) | PARTIAL. 1.2e-7 per token is listed for Cohere, Bedrock, OCI and Azure. The image price is not listed, and Cohere's pricing page was not reached. |
+| D22 | CRA T3010 Section C2 program descriptions are published | Third-party copy of the CRA Open Data Dictionary v2.0 | CONFIRMED (`NEW_ONGOING_PROGRAMS_<year>.csv`, ≤2,500 characters, English or French, fiscal periods ending 2013–2023). CLARIFIED that this is not "short text". |
+| D23 | UK CC extract tables (`charity`, `charity_annual_return_parta/partb`, classification, area of operation, published report) | Third-party `ccew-fields.md` and download scripts | CONFIRMED. A `charity_activities` free-text field was noted. |
+| D24 | UK CC Part B only for income >£500k | Third-party repository note | PARTIAL (corroborated; not official) |
+| D25 | ACNC weekly updates; withheld records | Third-party ACNC data notes | CONFIRMED. Withheld charities are excluded. CLARIFIED that basic religious charities (8,449 of 53,697 AIS 2024 rows) report no financials. |
+
+### D. Not re-checked: tagged [UNVERIFIED: not re-checked] in place
+
+All of these could not be reached with the tools available. None was found to be wrong.
+
+| Group | Items (count) |
+|---|---|
+| §2.1 ISTAT | Barcaroli et al. 2015 (AJS); Barcaroli, Scannapieco & Summa 2016 (RIEDS); DGINS 2018; Barcaroli, Bianchi et al. 2016; Barcaroli & Scannapieco 2019 (SJIAOS); Bianchi et al. 2019 ITACOSM; ICT 2018 tech report; 2020 experimental statistic; Righi et al. 2018 (9) |
+| §2.2 ESSnet / WIN | CROS pages; WIN dates, membership and lead; URL-finding methodology; OBEC production status (4) |
+| §2.3 CBS / ZEW | Daas & van der Doef 2020; the 93% accuracy figure; CBS beta product; CBS × Dataprovider 50,000; Kinne & Lenz bibliographic details; Kinne & Axenbeck 2018 (6) |
+| §2.4 Registers | Oyarzun 2018; UNECE 2024; CRA BN and RC1C; StatCan BR documentation; Census BFS >80%; SS-4 wording; Cuffe et al. (59%); ABS 2008; Hoberg & Phillips 2016; Ma online date (10) |
+| §2.5 Web and online data | StatCan ASML; StatCan scraping policy; NCSES BERD; Beręsewicz et al. 2021; arXiv 2106.03263; Meireles et al. 2023; Glaeser, Kim & Luca (7) |
+| §3.1 Remote sensing | BHF details (Iowa counties, 1978, 0.45 ha); NASS 1982–87; Erciulescu et al. 2019; Cruze et al. 2019; Bellow 2020; StatCan model-based crops (6) |
+| §3.2 Poverty mapping | Jean et al. details; Engstrom et al. 2022; Newhouse 2023; Merfeld & Newhouse 2023; Corral, Henderson & Segovia 2025; Corral et al. 2021; Corral et al. 2022 guidelines; ADB 2020 (8) |
+| §3.3 Phones, search, Wikipedia, street imagery | Blumenstock et al. 2015; Steele et al. 2017; Schmid et al. 2017; Marchetti et al. 2015; Porter et al. 2014; Sheehan et al. 2019; Gebru et al. 2017 (7) |
+| §3.4 Embedding era | AlphaEarth inputs and 24%; AlphaEarth application preprints; PDFM v6 date; PDFM affiliations; Buckmann et al. 2025; Kim & Lee (6) |
+| §3.5 Estimation theory | Montanari & Ranalli 2005; Breidt & Opsomer 2017; Dagdoug, Goga & Haziza (JASA venue, already flagged); Goga 2025; Ranalli 2025; Dagdoug & Haziza 2026; An et al. 2026; Kim & Tam 2021; Ye & Yoganarasimhan 2026; PPI-IPW preprints; Parker 2024; Caughey & Hartman 2017; the Wu–Sitter StatCan link (13) |
+| §0 and §5 numbers | Eurostat website shares (2023, 2025, by size and country); ABS 31% / 95%; Mazzoni et al. 64% (**no full citation given**); Canada 2013 46%; US vendor surveys; AI use 12.2%; StatCan tax data since the 1960s; Companies House >90% and 2027; ODBus 450,000; IRS e-file dates; CRA 83,771; ACNC >46,000 (12) |
+
+**Totals.** 134 claims examined. 46 were checked against evidence:
+- 28 confirmed;
+- 6 corrected (B7, B14, C3, D7, D10, D20);
+- 4 clarified;
+- 7 partial;
+- 1 unverifiable (D5).
+
+The other 88 claims were tagged as not re-checked. Nothing was removed. A citation that is still tagged should be re-checked with web access before the note is cited externally. Priority goes to those that carry the argument in §0: Corral, Henderson & Segovia 2025; Newhouse 2023; the ISTAT reports; Beręsewicz et al. 2021; and the Eurostat coverage figures.

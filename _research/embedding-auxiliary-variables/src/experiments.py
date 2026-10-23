@@ -36,6 +36,31 @@ def kmeans_groups(E: np.ndarray, k=10, seed=0):
     return KMeans(k, n_init=4, random_state=seed).fit_predict(E)
 
 
+def codes_block(pop: pd.DataFrame, min_count=40):
+    """Every other code on the IRS frame ("BMF-max"): rare levels (< min_count units) pooled.
+    This is the strongest text-free categorical description a register would hold."""
+    cols = []
+    for c in ["bmf_foundation", "bmf_affiliation", "bmf_classification", "bmf_deductibility", "bmf_organization",
+              "bmf_subsection", "bmf_acct_pd"]:
+        if c in pop:
+            cols.append(pop[c].astype(str))
+    if "bmf_activity" in pop:
+        cols.append(pop.bmf_activity.astype(str).str[:3].rename("bmf_activity3"))
+    if "bmf_ntee_cd" in pop:
+        cols.append(pop.bmf_ntee_cd.astype(str).rename("ntee_full"))
+    blocks = []
+    for v in cols:
+        vc = v.value_counts()
+        v = v.where(v.map(vc) >= min_count, "OTHER")
+        blocks.append(pd.get_dummies(v, drop_first=True, prefix=v.name, dtype=float).to_numpy())
+    if "bmf_group" in pop:
+        blocks.append((~pop.bmf_group.astype(str).isin(["0", "0000", "NA"])).to_numpy(float)[:, None])
+    for c in ["bmf_asset_amt", "bmf_income_amt", "bmf_revenue_amt"]:
+        if c in pop:
+            blocks.append(np.log1p(pop[c].clip(lower=0).to_numpy(float))[:, None])
+    return np.concatenate(blocks, 1) if blocks else np.zeros((len(pop), 0))
+
+
 def build_mats(pop: pd.DataFrame, design, embeddings: dict, K_add=10, K_ratio=32):
     """embeddings: name -> (N, D) array. Returns (mats dict, size vector, emb_names)."""
     S = dummies(pd.Series(design.strata), prefix="h").to_numpy()
@@ -59,6 +84,16 @@ def build_mats(pop: pd.DataFrame, design, embeddings: dict, K_add=10, K_ratio=32
     if "ntee_imputed" in pop:
         cat_imp = np.c_[dummies(pop.ntee_imputed, True).to_numpy(), dummies(pop.state, True).to_numpy()]
         mats["size_catimp"] = np.c_[S, lag, cat_imp]
+    if "avail_t1" in pop:   # design-date availability: indicator + fallback-size column in every matrix
+        av = pop.avail_t1.to_numpy(float)
+        avb = np.c_[1 - av, (1 - av) * x]
+        for k in ["size", "size_cat", "weak", "ml_frame"]:
+            mats[k] = np.c_[mats[k], avb]
+        mats["ml_frame_ratio"] = np.c_[mats["ml_frame_ratio"], 1 - av]
+    codes = codes_block(pop)
+    if codes.shape[1]:
+        mats["size_codes"] = np.c_[mats["size_cat"], codes]
+        mats["ml_codes_ratio"] = np.c_[mats["ml_frame_ratio"], codes]
     sx, se = x / x.std(), emp / max(emp.std(), 1e-9)
     names = []
     for nm, E in embeddings.items():
@@ -68,6 +103,8 @@ def build_mats(pop: pd.DataFrame, design, embeddings: dict, K_add=10, K_ratio=32
         mats[f"size_cat+{nm}:ratio{K_ratio}"] = np.c_[mats["size_cat"], Zr * x[:, None], Zr * emp[:, None]]
         mats[f"ml+{nm}"] = np.c_[mats["ml_frame"], Zr, Zr * sx[:, None] * x.std(), Zr * se[:, None] * emp.std()]
         mats[f"mlr+{nm}"] = np.c_[mats["ml_frame_ratio"], Zr]
+        if codes.shape[1]:
+            mats[f"mlrc+{nm}"] = np.c_[mats["ml_codes_ratio"], Zr]
         mats[f"weak+{nm}:add{K_ratio}"] = np.c_[mats["weak"], Zr]
         names.append(nm)
     return mats, x, names
@@ -88,7 +125,15 @@ def conventional_specs():
     }
 
 
-def embedding_specs(nm, K_add=10, K_ratio=32, full=True, n_hard_size_cat=None):
+def codes_specs():
+    """BMF-max conventional comparators (need build_mats to have found the bmf_* code columns)."""
+    return {
+        "GREG_size_codes": {"kind": "greg", "X": "size_codes"},
+        "MCAL_codes_ratio": {"kind": "mcal", "F": "ml_codes_ratio", "hard": 0, "X_base": "size", "cf": True, "ratio": True},
+    }
+
+
+def embedding_specs(nm, K_add=10, K_ratio=32, full=True, n_hard_size_cat=None, codes=False):
     sp = {
         f"GREG_size_cat+{nm}:add{K_add}": {"kind": "greg", "X": f"size_cat+{nm}:add{K_add}"},
         f"RIDGE_size_cat+{nm}:ratio{K_ratio}": {"kind": "ridge", "X": f"size_cat+{nm}:ratio{K_ratio}", "hard": n_hard_size_cat},
@@ -98,6 +143,8 @@ def embedding_specs(nm, K_add=10, K_ratio=32, full=True, n_hard_size_cat=None):
         f"MCAL_ratio_sep+{nm}": {"kind": "mcal", "F": f"mlr+{nm}", "hard": 0, "X_base": "sep", "cf": True, "ratio": True},
         f"GREG_weak+{nm}:add{K_ratio}": {"kind": "greg", "X": f"weak+{nm}:add{K_ratio}"},
     }
+    if codes:
+        sp[f"MCAL_ratio_codes+{nm}"] = {"kind": "mcal", "F": f"mlrc+{nm}", "hard": 0, "X_base": "size", "cf": True, "ratio": True}
     if full:
         sp[f"MCAL_ratio+{nm}:nocf"] = {"kind": "mcal", "F": f"mlr+{nm}", "hard": 0, "X_base": "size", "cf": False, "ratio": True}
         sp[f"SYN_ratio+{nm}"] = {"kind": "syn", "F": f"mlr+{nm}", "hard": 0, "ratio": True}

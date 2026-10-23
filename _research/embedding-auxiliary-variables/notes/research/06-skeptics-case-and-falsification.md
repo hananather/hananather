@@ -182,6 +182,10 @@ Under a Gaussian homoscedastic model, note 01 derives E[v̂]/V ≈ (1 − p/n)/(
 - p/n = 0.17 (p = 85, n = 500): about 0.69, giving nominal 95% CIs that cover about 90%;
 - p/n = 0.87 (p = 437, n = 500): about 0.014, so the CIs are useless.
 
+The MC on the heavy-tailed 990 population is *worse* than this Gaussian prediction (§4.5):
+- p = 85: variance estimator −49% to −58%, coverage 73–82%;
+- p = 437: −100%, coverage 0–1%.
+
 Flexible learners such as kNN, forests or GBMs fitted *in-sample* on near-unique embeddings interpolate. The estimator then collapses towards the synthetic Σ_U m̂ and its variance estimate collapses with it ([n01] §2.4). Cross-fitting (Zrnic & Candès 2024; Dagdoug & Haziza 2026; An, Dagdoug, Haziza & Tillé 2026; [n01]) or a model frozen from an *independent* prior cycle is required.
 
 **Spurious in-sample gains.** Any R² or RE computed on the data used to fit the embedding model is optimistic. Tuning λ, k or the model choice on the population (or on the evaluation replicates) adds further optimism, measured at up to 0.09 in RE here (§4.1).
@@ -210,6 +214,7 @@ Flexible learners such as kNN, forests or GBMs fitted *in-sample* on near-unique
 - **Websites.**
   - EU enterprises with 10+ persons: 78% overall; 76.7% for small against 95.7% for large. Micro firms are far lower.
   - US nonprofit e-filers: about 45% below $200k revenue against about 88% above $25M.
+  - NE continuing full-990 filers (this note, §4.3): valid URLs for 51% below $200k against 92% above $25M.
 - **Frame-time text.**
   - Among all BMF entities, only about 26.5% have a TY2022 990/990-EZ, and so any text.
   - The roughly 1.0M 990-N filers have none.
@@ -303,15 +308,16 @@ The frame ladder:
 | PLACEBO: log-normal noise | 1.00 | 1.00 | 0.99 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
 Column definitions:
-- Columns 3–11 are RE relative to the *strong* frame, except "LSA over fine code + meta", which is RE relative to strong + fine code + meta.
-- The last two columns are RE of (frame + LSA) relative to the same frame without LSA.
+- Columns 3–11 (LSA text through meta-features only) are RE relative to the *strong* frame.
+- Column 12 ("LSA over fine code + meta") is RE relative to strong + fine code + meta.
+- Columns 13–14 are RE of (frame + LSA) relative to the same frame without LSA.
 - **Fine code** = NTEE 3-character codes with ≥20 units, the rest pooled, entered with the same ratio block and penalty as the text. **Meta-features** = log word counts, has-website, number of programs, "$" present, digit count. **Within-strata permutation** keeps each stratum's (NTEE10 × size class) mix of texts but breaks the unit-to-text link.
 - † For revenue, the richer frames are *worse* than strong (strong+lagy: 0.86; register-plus: 0.85; the unpenalized interaction columns overfit the heavy tail). So "text over that frame" is measured against a degraded frame. Against the best frame (strong), the best text arm reaches only 0.97.
 - ‡ Register-plus does not include the lagged *indicator* itself; see §4.2.
 
 What this already says:
 1. **Size variables (revenue, expenses, employees): text RE < 1 against the best frame.** The best text arm reaches 0.97, 0.99 and 1.01; the LSA text arm 0.93–0.97. That is no better than random vectors (0.90–0.96). The skeptic's prior holds, and the text is *harmful* when added naively.
-2. **Redundancy with the industry code is not what limits the text.** The code-centroid version of the text loses almost all the gain; the within-code residual keeps most of it. Text over fine code + meta-features is still 1.10–1.40 for salaries, contributions, government grants, fundraising and the binary indicators. **The skeptic's "it just re-encodes NTEE" prior is falsified for these y.**
+2. **Redundancy with the industry code is not what limits the text.** The code-centroid version of the text loses almost all the gain; the within-code residual keeps most of it. Text over fine code + meta-features is still 1.10–1.40 for salaries, contributions, government grants and fundraising, and 1.02–1.14 for the binary indicators. **The skeptic's "it just re-encodes NTEE" prior is falsified for these y.**
 3. **Redundancy with the lagged y limits it completely.** With the lag of the same y on the frame:
    - salaries 1.003, contributions 0.96, program revenue 0.96, government grants 0.93, fundraising 1.001, officer compensation 0.99, volunteers 1.005.
    - Against the *best* frame per y, the only remaining ceilings above 1.05 are the activity indicators. Those also vanish once the lagged indicator is added (§4.2).
@@ -483,7 +489,10 @@ How to read this:
 4. **Cross-fitting restores near-nominal coverage for the binary y (94–96%), but not efficiency.** On raw additive dimensions the cross-fitted ridge is still 16–84% as efficient as the base GREG. For contributions, a heavy-tailed total, the relative bias is +15.6% because of extrapolation on outliers.
 
    *Cross-fitting is necessary for validity, but it does not create a gain.*
-5. **The base itself under-covers heavy-tailed totals** (contributions 80%, government grants 84%) at n = 500. Text does not fix this. The benchmark must report it, so that an embedding arm is not credited with "improving coverage" merely by changing the residual tails.
+5. **For contributions, plain HT beats the 53-column base GREG by 1.73×.** Lagged size is a poor working model for contributions at n = 500, and the extra columns cost more than they return.
+
+   This is the weak-baseline trap in miniature. "Text-GREG beats GREG" can simply mean "this GREG was a bad comparator". B* must be chosen per y on the tuning population, from a ladder that includes HT/Hájek and post-stratification.
+6. **The base itself under-covers heavy-tailed totals** (contributions 80%, government grants 84%) at n = 500. Text does not fix this. The benchmark must report it, so that an embedding arm is not credited with "improving coverage" merely by changing the residual tails.
 
 These arms are the **positive controls for the harness (PC3, NC10)**. Every confirmatory run must reproduce them.
 
@@ -506,7 +515,7 @@ These arms are the **positive controls for the harness (PC3, NC10)**. Every conf
 
 ## 5. (a) The skeptic's prior, with predicted magnitudes
 
-Each figure is the RE of the **best cross-fitted, design-based text-augmented estimator** against the **best conventional estimator B*** under the same design (§7). Totals; n = 1000 under the production design. The prior was written from theory and sibling-note evidence before §4 was run. The last column records what §4 already shows. *Sample-level* RE is expected to fall roughly a factor (1 + p_eff/n) below the population ceilings.
+Each figure is the RE of the **best cross-fitted, design-based text-augmented estimator** against the **best conventional estimator B*** under the same design (§7). Totals; n = 1000 under the production design. The prior was derived from theory and sibling-note evidence. **Honesty note:** the numbers were written down *alongside* the first §4 run, not blind to it. P1–P7 are therefore partly informed by NE and are not a clean test. P8–P15 are genuine out-of-sample predictions. The last column records what §4 already shows. *Sample-level* RE is expected to fall roughly a factor (1 + p_eff/n) below the population ceilings.
 
 | # | y type / use | Comparator B* | Prior median RE | Prior 80% interval | Reasoning | NE ceiling (§4) |
 |---|---|---|---|---|---|---|
@@ -564,7 +573,7 @@ Each figure is the RE of the **best cross-fitted, design-based text-augmented es
 
 **Primary family** (Holm, one-sided α = 0.05; 12 tests). The six headroom y below, each tested under two comparators:
 - the y: government grants, contributions, program-service revenue, fundraising expenses, has government grants, grants to individuals;
-- the comparators: **S1** (B* chosen from B2 and B4) and **S3** (B* chosen from B3 and B4).
+- the comparators: **S1** (B* chosen from B0, B1, B2 and B4) and **S3** (B* chosen from B0, B1, B3 and B4).
 
 Every other test is secondary or a gate.
 
@@ -613,7 +622,7 @@ Every other test is secondary or a gate.
 
 | ID | Baseline | Real-world analogue | Role |
 |---|---|---|---|
-| B0 | HT (Hájek for means) under the **production** design | Expansion estimator | Reference only; **never** the comparator |
+| B0 | HT (Hájek for means) under the **production** design | Expansion estimator | Reference. It is never the *headline* comparator, but it is eligible as B* when it beats every model-assisted baseline on the tuning population (heavy-tailed y) |
 | B1 | Post-stratified / GREG on industry × region × size class | Weak register (births, S1 frames) | Comparator for births (H15) |
 | B2 | Separate-ratio / GREG on lagged admin size (revenue, expenses, assets, employees) × stratum, plus take-all | BR with GST/T2/PD7A; BMF with prior return | **Primary comparator in S1** |
 | B3 | B2 + lag of the same y (and lagged indicators), × stratum | T3010-style register-plus; BR with payroll for salaries | **Primary comparator in S3** |
@@ -624,7 +633,7 @@ Every other test is secondary or a gate.
 | B8 | Extracted numeric fields from the document (PDF arm) | Document AI or XBRL/GIFI | H16 |
 | B9 | Oracle lagged survey y; injected-signal auxiliary | Upper bound / calibration of the harness | PC1 and PC2 |
 
-**Choosing B\*.** For each y, B* is chosen on the *tuning population* from {B2, B4} (S1) or {B3, B4} (S3) and then frozen. The text arm uses the same estimator family, the same penalty-selection rule and the same CV budget.
+**Choosing B\*.** For each y, B* is chosen on the *tuning population* from {B0, B1, B2, B4} (S1) or {B0, B1, B3, B4} (S3) and then frozen. HT or post-stratification can beat a many-column GREG for heavy-tailed y (contributions: HT 1.73× better than the base GREG at n = 500, §4.5). The text arm uses the same estimator family, the same penalty-selection rule and the same CV budget.
 
 ### 7.2 Negative controls (mandatory; expected value in brackets)
 
@@ -701,7 +710,7 @@ The skeptic concedes that embeddings are **useful in production** for a specific
 | Annual business / industry surveys (financial y) | BN "major business activity" text from registration; codes made from it ([n02]) | **Yes**: GST/HST revenue, T2/GIFI, PD7A payroll | Near-universal for BN units | **No gain expected** (P1, H1) | 990 revenue, expenses, salaries vs B3 |
 | Same surveys, *births* in the current cycle | BN text and name only | No | All births | Plausible but small (P8, H15) | 990 units without a t−1 return |
 | Charities / nonprofit satellite account (financial y) | T3010 program descriptions (public) | **Yes**: the whole prior T3010 | ~84k registered charities ([n03]) | **No gain** vs register-plus (P4, P7) | 990 S3 scenario (register-plus) |
-| Nonprofit volunteering / program-activity content | T3010 program text | **No** (volunteers are not on T3010 **[UNVERIFIED]**) | All registered charities | **Most plausible use** (P3, P5, P6; H2) | 990 volunteers, program type and grants to individuals under S1 |
+| Nonprofit volunteering / program-activity content | T3010 program text | **No** (volunteers are not on T3010 **[UNVERIFIED]**) | All registered charities | **Most plausible use** (P3, P6; H2). On NE, though, volunteers reach only 1.04, activity indicators 1.03–1.17 and funding-mix dollars 1.13–1.20 (ceilings, before the finite-sample penalty). | 990 volunteers, program type and grants to individuals under S1 |
 | ICT, AI-use, e-commerce and innovation surveys | Websites (crawled), BN text | No | Websites size-graded: EU 77% small vs 96% large; Canada 2013 42% small vs 91% large ([n02]) | Plausible, if the whole frame is crawled at design time; ISTAT/CBS precedent ([n02]) | Needs a web-crawl population (not reachable from this sandbox) |
 | Area-level SAE (poverty, income) | Area profiles (Wikipedia), satellite or POI embeddings | Census and admin covariates are strong | Complete | Text profiles **leak** (L3). Satellite embeddings are acceptable. | County SAE with census truth ([n03] §2.10) |
 | Financial statements as PDFs (public companies; UK charities' accounts) | PDF pages | Structured filings usually exist (XBRL, the CCEW annual return) | Larger entities only | Extract fields (H16). Image embeddings for narrative only (H17). | UK CCEW accounts PDFs ([n03] R2) |

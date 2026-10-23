@@ -22,7 +22,7 @@ import time
 import numpy as np
 import pandas as pd
 
-from mc import _folds, _ridge_cv_lambda, _ridge_fit
+from mc import model_predict
 from survey import greg_total
 
 
@@ -92,23 +92,9 @@ def run_sae(cell, domains, models: dict, R=200, seed=0, verbose=True):
                 M_s = M_U[i]
             else:
                 F = cell.mats[spec["F"]]
-                Fs = F[i]
-                ratio = spec["kind"] == "mcal_ratio"
-                xs = cell.size[i] + 1.0
-                xU = cell.size + 1.0
-                T, w = (Y_ts / xs[:, None], d_ts * xs) if ratio else (Y_ts, d_ts)
                 grp = None if cell.groups is None else cell.groups[i]
-                lam = _ridge_cv_lambda(Fs, T, w, 0, rng=rng, groups=grp)
-                folds = _folds(len(Fs), 5, rng, grp)
-                M_s = np.zeros_like(Y_ts); M_U = np.zeros((cell.N_ts, q))
-                for f in range(5):
-                    tr, te = folds != f, folds == f
-                    b0, Bx = _ridge_fit(Fs[tr], T[tr], w[tr], lam, 0)
-                    M_s[te] = b0 + Fs[te] @ Bx
-                    M_U += (b0 + F @ Bx) / 5
-                if ratio:   # same robustness rule as mc.py: clip predicted ratios to the sample's 1-99th pct
-                    lo, hi = np.percentile(T, [1, 99], axis=0)
-                    M_s, M_U = np.clip(M_s, lo, hi) * xs[:, None], np.clip(M_U, lo, hi) * xU[:, None]
+                mspec = {"hard": 0, "ratio": spec["kind"] == "mcal_ratio", "cf": True}
+                M_s, _, M_U = model_predict(cell, mspec, F, i, Y_ts, d_ts, rng, grp, need_U=True)
                 # calibrate the prediction on the base matrix (model calibration, as nationally)
                 Xb = cell.mats[spec["X_base"]]
                 M_cal_U, M_cal_s = np.zeros_like(M_U), np.zeros_like(M_s)
