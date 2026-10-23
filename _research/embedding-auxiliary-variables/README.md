@@ -4,48 +4,53 @@
 for stratification, nonresponse adjustment, calibration and small area estimation. This is variance reduction,
 not productivity."
 
-**Approach.** Take a real finite population where every unit's survey value is known. Rebuild the information an
-agency would actually hold at design time (a register from the previous year, with text descriptions). Redraw the
-survey thousands of times with a production-style design. Then compare estimators that use text embeddings against
-the best conventional estimators, using bias, variance, RMSE, CI coverage and equivalent-sample-size gains.
+**Approach.** Take a real finite population where every unit's survey value is known (IRS Form 990 non-profits).
+Rebuild exactly what a statistical agency would hold on the design date: a register from the previous year with
+codes, lagged administrative amounts and free-text descriptions, restricted to information filed by then. Redraw a
+production-style survey thousands of times. Then compare text-assisted estimators against the strongest text-free
+alternatives under a **pre-registered protocol** with validity gates, negative, positive and leakage controls, and
+explicit pass/fail rules.
 
-## Testbed (proof of concept)
+Start with `FINDINGS.md` (results and decision), then `notes/benchmark-protocol.md` (the design).
 
-- **Population:** IRS Form 990 full filers in New England (MA, CT, ME, NH, VT, RI) that filed for both TY2022 and TY2023. N = 20,626.
-- **Frame (design time):**
-  - IRS Business Master File snapshot of 2023-08-16;
-  - TY2022 return: lagged revenue, expenses, assets and employees, plus mission and program text.
-- **Targets (survey year):** TY2023 values of revenue, expenses, employees, salaries, government grants, program revenue, contributions, fundraising expenses, officer compensation, volunteers, and yes/no indicators.
-- **Real nonresponse mechanism:** a return filed more than 300 days after fiscal year end counts as a nonrespondent.
-- **National population:** about 330k units, being added for small area estimation by state.
-- **Data source:** GivingTuesday 990 data lake, public bucket `s3://gt990datalake-rawdata`.
+## Testbed
+
+| Element | Choice | Real-world analogue |
+|---|---|---|
+| Population | New England full Form 990 filers in TY2022 and TY2023, N = 20,626 (development / proof of concept). Eight held-out US Census divisions (285k units) are reserved for confirmation. | National non-profit survey population |
+| Frame (design date D = 2024-06-30) | IRS BMF snapshot 2023-08-16 (all codes); TY2022 return **only if filed by D**, else BMF amounts, TY2021 text, or name | Business register + prior-year tax data, as known at design time |
+| Register tiers | F0 codes only · F1 + lagged revenue / expenses / assets / employees · **F1p + payroll (primary)** · F2 + full prior return · F2o (unmasked oracle) | BR-only frames; BR + tax summary; BR + PD7A payroll; charity returns (T3010) |
+| Survey targets | TY2023: 10 headline variables not on the F1p register (gov. grants, contributions, program revenue, fundraising, officer comp., volunteers, and 4 yes/no items) + 4 register-type controls | Survey-only content of a non-profit survey |
+| Text | TY2022 mission + program descriptions (median 71 words) | Registration "nature of business" text; charity program descriptions |
+| Nonresponse | TY2023 return filed > 300 days after FYE (real behaviour: 61% of take-some, 13% of take-all units respond) | Late / non-returned questionnaires |
+| Previous wave | TY2021 → TY2022, used to select the embedding and to train frozen models | Last cycle's survey |
+
+Data source: GivingTuesday 990 data lake, public bucket `s3://gt990datalake-rawdata`.
 
 ## Layout
 
 | Path | What |
 |---|---|
-| `notes/benchmark-protocol.md` | The pre-registered protocol: estimands, designs, estimators, controls, hypotheses and thresholds |
-| `notes/early-findings.md` | Pilot results and the bugs they exposed |
-| `notes/working-log.md` | Decision log |
-| `notes/research/` | Literature (methods and applied), dataset scouting and red team, embedding models and Cohere, 990 parsing spec, the skeptic's case |
-| `notebooks/01_data_and_red_team.ipynb` | Population construction and data-quality / leakage checks (pass/warn/fail table) |
-| `notebooks/02_benchmark_results.ipynb` | Stage-1 diagnostics, Monte Carlo results, controls, nonresponse, frozen previous-wave models |
-| `src/` | `fetch990` / `parse990_min` / `parse_all` / `build_population` (data); `embed` (cached embeddings: TF-IDF-LSA, MiniLM, Cohere, random); `survey` / `frame` / `mc` / `experiments` / `frozen` / `diagnostics` (estimation) |
-| `results/` | Small CSV outputs (metrics, check tables) |
+| `FINDINGS.md` | Results, verdict, real-world interpretation, next steps |
+| `notes/benchmark-protocol.md` | Pre-registered protocol v1.0, from a judge-panel synthesis of three independent drafts (`notes/design/`) |
+| `prereg/deviations.md` | Every departure from the protocol, logged before the affected results were read |
+| `notes/research/01–06` | Methods literature; applied precedents and NSO data sources; dataset scouting and red team; embedding models and Cohere; 990 parsing spec; the skeptic's case. Each is citation-verified. |
+| `notes/review/` | Adversarial code and design review (18 confirmed findings, all fixed) |
+| `notes/early-findings.md`, `notes/working-log.md` | Pilot findings and the decision log |
+| `notebooks/01_data_and_red_team` | Population construction and about 45 data-quality, leakage and timing checks (pass/flag/fail) |
+| `notebooks/02_benchmark_results` | Pilot v1 Monte Carlo (pre-protocol; kept for the record; known defects listed in protocol §0.3) |
+| `notebooks/03_protocol_stage2_ne_verdict` | **Stage 2A: primary pairs P1/P2, gates G1–G9, attribution factorial, planted-signal power** |
+| `notebooks/04_protocol_nonresponse_and_sae` | Stage 3 (late-filer nonresponse with take-all imputation) and Stage 4 (small area estimation) |
+| `src/` | Data: `fetch990`, `parse990_min`, `parse990` (an independent second parser, cross-checked), `parse_all`, `build_population`. Embeddings: `embed` (cached, hashed; TF-IDF/LSA, MiniLM, Cohere, random). Estimation: `survey`, `frame`, `mc`, `protocol`, `frozen`, `sae`, `analysis`. Runners: `stage2_ne`, `stage34_ne`. Tests: `test_harness` (11 tests, all pass). |
+| `results/` | Small CSV/JSON outputs |
 
-The raw XML and the derived parquet files live outside the repository (`EMBAUX_DATA`, default `/tmp/claude-0/data`) and can be rebuilt with:
+The raw XML and derived parquet files live outside the repository (`EMBAUX_DATA`, default `/tmp/claude-0/data`). The scripts in `src/` rebuild them from the public bucket. A full rebuild plus the New England runs takes a few CPU hours.
 
-```bash
-python3 src/fetch990.py --index-dir $D/raw990 --out $D/xml --years 2022 2023 --states MA CT ME NH VT RI
-python3 src/parse_all.py --xml-dir $D/xml --manifest $D/xml/manifest_2022.csv --year 2022 --out $D/parsed/ne_2022.parquet
-python3 src/parse_all.py --xml-dir $D/xml --manifest $D/xml/manifest_2023.csv --year 2023 --out $D/parsed/ne_2023.parquet
-python3 src/build_population.py --prev $D/parsed/ne_2022.parquet --curr $D/parsed/ne_2023.parquet --bmf $D/raw990/bmf_2023_8_16.csv --out $D/pop/ne_pop.parquet
-```
-
-## To run the Cohere arm (needs user action)
+## Running the Cohere arm (needs user action)
 
 1. Add `api.cohere.com` to the environment's allowed network domains.
-2. Add `COHERE_API_KEY` as an environment secret. A production key is needed; a trial key is capped at 1,000 calls per month.
-3. Run `embed.build(cache, "cohere_v4_full", "cohere", texts, "text_full", model="embed-v4.0", input_type="classification", dim=1024)`, then rerun the notebooks.
+2. Add a production `COHERE_API_KEY` as an environment secret. A trial key's 1,000 calls/month cannot complete one pass.
+3. Embed once and cache: `embed.build(cache, "cohere_v4_full", "cohere", texts, "text_full", model="embed-v4.0", input_type="classification", dim=1536)`.
+4. Add it as a secondary ladder rung. Under the protocol, an API model can never replace the pre-registered E*.
 
-The benchmark treats Cohere as one rung of an embedding ladder (TF-IDF-LSA → MiniLM → Cohere text → Cohere multimodal). The Form 990 data contain no PDFs or images. A genuine multimodal test needs either website screenshots (URLs exist for about 50% of units) or a population with document images, such as UK Charity Commission accounts PDFs (see `notes/research/03-…`).
+The Form 990 data contain no PDFs or images. The protocol's multimodal arm uses UK Charity Commission accounts PDFs or archived website screenshots, each compared against structured extraction of the numbers on the page.
