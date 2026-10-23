@@ -31,7 +31,8 @@ Data source: GivingTuesday 990 data lake, public bucket `s3://gt990datalake-rawd
 
 | Path | What |
 |---|---|
-| `FINDINGS.md` | Results, verdict, real-world interpretation, next steps |
+| `FINDINGS.md` | **Start here.** Results, critical assessment, the recommended direction (prediction-powered estimation), next steps |
+| `LOCAL_SETUP.md`, `scripts/` | Rebuilding everything on a laptop from the public data lake (`reproduce_ne.sh`, same seeds) |
 | `notes/benchmark-protocol.md` | Pre-registered protocol v1.0, from a judge-panel synthesis of three independent drafts (`notes/design/`) |
 | `prereg/deviations.md` | Every departure from the protocol, logged before the affected results were read |
 | `notes/research/01–06` | Methods literature; applied precedents and NSO data sources; dataset scouting and red team; embedding models and Cohere; 990 parsing spec; the skeptic's case. Each is citation-verified. |
