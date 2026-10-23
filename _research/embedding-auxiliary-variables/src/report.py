@@ -15,6 +15,7 @@ Y_LABEL = {
     "y_volunteers_cap10k": "Volunteers (capped 10k)", "y_volunteers": "Volunteers (raw)",
     "y_bin_has_gov_grants": "Share with gov. grants", "y_bin_grants_to_indiv_us": "Share granting to individuals",
     "y_bin_lobbying": "Share lobbying", "y_bin_has_volunteers": "Share with volunteers",
+    "y_bin_foreign_activities": "Share with foreign activities",
 }
 Y_TYPE = {
     "y_expenses": "register-type", "y_revenue": "register-type", "y_employees": "register-type",
@@ -22,7 +23,7 @@ Y_TYPE = {
     "y_contrib": "survey-only", "y_fundraising_exp": "survey-only", "y_officer_comp": "survey-only",
     "y_volunteers_cap10k": "survey-only (heavy-tailed)", "y_volunteers": "survey-only (heavy-tailed)",
     "y_bin_has_gov_grants": "proportion", "y_bin_grants_to_indiv_us": "proportion",
-    "y_bin_lobbying": "proportion", "y_bin_has_volunteers": "proportion",
+    "y_bin_lobbying": "proportion", "y_bin_has_volunteers": "proportion", "y_bin_foreign_activities": "proportion",
 }
 CONTROL_EMB = ("random", "PERM_")
 

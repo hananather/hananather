@@ -122,7 +122,8 @@ display(nh.round(3)); print("no-harm condition holds:", ok)
 F_t, F_mean = factorial(df, truth)
 F_t["label"] = F_t.y.map(lambda y: Y_LABEL.get(y, y))
 display(F_t.round(4)); print("mean over H:"); display(F_mean.round(4).to_frame("mean"))
-print("text share of the total log gain:", round(F_mean.phi_C_text / F_mean.log_RE_total, 3) if F_mean.log_RE_total else np.nan)
+# a share is only meaningful when the total gain is positive
+print("text share of the total log gain:", round(F_mean.phi_C_text / F_mean.log_RE_total, 3) if F_mean.log_RE_total > 0.01 else "n/a (total log gain <= 0.01)")
 
 # %% [markdown]
 # ## 4. Planted-signal recovery: what the harness can detect
