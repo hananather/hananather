@@ -1,0 +1,17 @@
+variable,system,achieved,target,n_TS needed
+Government grants,B0 (production GREG),8.537654819187525,5.0,2315.035622016288
+Government grants,P2 (frozen text system),7.680880529220027,5.0,1873.710600363846
+Contributions,B0 (production GREG),3.5097153469333504,5.0,391.2229136920237
+Contributions,P2 (frozen text system),3.016445024002146,5.0,288.9823529105953
+Fundraising expenses,B0 (production GREG),6.363798002774375,5.0,1286.214098638856
+Fundraising expenses,P2 (frozen text system),5.357660173141325,5.0,911.655635580264
+Volunteers (capped 10k),B0 (production GREG),18.060257385163954,10.0,2589.812800737851
+Volunteers (capped 10k),P2 (frozen text system),17.769907718799363,10.0,2507.2107854570827
+Share with volunteers,B0 (production GREG),2.5803428700928746,1.0,5286.586445827872
+Share with volunteers,P2 (frozen text system),2.58182719467297,1.0,5292.6703405434
+Share granting to individuals,B0 (production GREG),1.504483425550091,1.0,1797.1954799374193
+Share granting to individuals,P2 (frozen text system),1.4531669275804915,1.0,1676.685130814498
+Share with foreign activities,B0 (production GREG),0.6309713349548535,1.0,316.11111147455966
+Share with foreign activities,P2 (frozen text system),0.6267186260996802,1.0,311.86433162241497
+Share lobbying,B0 (production GREG),0.7083320907669749,1.0,398.37707454338926
+Share lobbying,P2 (frozen text system),0.7055026240149498,1.0,395.2007582786318

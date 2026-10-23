@@ -131,7 +131,62 @@ about 9% for any single variable. The production bar needs 9% *on average*. So b
 P1 prediction of 1.04 was already an upper-end estimate. Volunteers and officer compensation have ceilings below 1:
 for them the extra columns only cost.
 
-<!-- STAGE 2A / 2B: PENDING -->
+### 4.2 Calibration (Stage 2A, R = 2,000): a real but small text gain, and a production system that clears the bar mostly through ML
+
+**Validity gates first.** Four of nine gates have failing items, so under the strict letter of §9.6 the
+proof-of-concept verdict is **HARNESS NOT VALIDATED**. Each failure was diagnosed (notebook 03 §1b):
+
+| Gate | What failed | Diagnosis | Claims quarantined |
+|---|---|---|---|
+| G2 noise controls | Random / permuted embeddings "gain" 1.5–2.3% on officer compensation (upper bound > 1.03), and 1.7% on gov. grants (permuted) | Averaged over H the controls give 0.993–0.999. Extra penalized columns shift the cross-validated penalty, and that happens to help officer compensation. Text beats every control by **1.045–1.051** over H. | The per-variable text gain on officer compensation (1.033) is not text-specific |
+| G3 placebo | (a) The linear `RIDGECAL+C` arms. (b) Frozen single-weight text vs frozen twin on a size-proportional noise placebo: 1.064 | (a) An estimator defect (D-32), now replaced by LINCAL. (b) A comparator effect: the twin's head constraints *cost* 8% against GREG on that placebo, the text heads only 2%. Text vs GREG is 0.977. | (a) The factorial, until LINCAL. (b) Part of P2's text increment may be "less weight distortion" rather than text information. |
+| G4 validity | Variance relative bias −15% to −39% for every calibrated text arm | Shared exactly by the text-free comparators (twin −15.6%, production GREG −10.0%; studentized SD 1.17–1.20 > 1.10). Rule T-V: the linearization variance underestimates for calibration estimators in this heavy-tailed population. HT (+4.6%) and the frozen difference estimator (+3.2%) are fine. | Interval claims (coverage) for **all** calibration estimators, the status quo included. Not the MSE comparisons. Remedy: replicate bootstrap (Stage 2E, not run). |
+| G6 planted | At planted ρ² = 0.2 the Monte Carlo realizes φ = 0.20–0.34 of the theoretical log-gain (needs ≥ 0.8) | The ratio-scale learner's weights d·x̃ are very unequal, so its effective sample size is small and the text coefficients are shrunk hard. ρ²_min(1,000) does not exist within the planted grid. | **FALSIFIED cannot be reached** (§9.6 needs ρ²_min ≤ 0.10), and a stronger text signal than exists here would be under-exploited at n = 1,000 |
+
+Gates G1 (design sanity), G5 (ceiling consistency), G7 (no gain on register variables, so no leakage), G8 (numbers
+masked: 1.044 vs 1.044) and G9 (the lag of y is worth 6.8–11.1×) pass.
+
+**Efficiency results, read as development evidence.** GM-RE over the 10 headline variables, 90% bootstrap intervals:
+
+| Comparison | GM-RE over H | H_D (5 dollar items) | H_S (5 survey items) | Production bar / any gain |
+|---|---|---|---|---|
+| **P1:** text vs the same ML twin (current sample) | **1.044** (1.037–1.052) | 1.056 | 1.033 | EXCLUDED / **YES** |
+| P1′: text vs NTEE10-only twin | 1.086 (1.076–1.096) | 1.136 | 1.038 | EXCLUDED / YES |
+| **P2:** frozen production system vs production GREG | **1.121** (1.108–1.134) | 1.226 | 1.025 | **MET** / YES; no-harm holds; G4 fails (above) |
+| P2-twin: the same system without text | 1.071 (1.059–1.082) | 1.139 | 1.007 | EXCLUDED / YES |
+| P2 text increment (frozen text vs frozen twin) | 1.047 (1.037–1.056) | 1.077 | 1.018 | EXCLUDED / YES |
+| ML twin (codes, no text) vs GREG, current sample | 1.051 (1.042–1.061) | 1.107 | — | — |
+| S-F1: P1 without the payroll register | 1.043 | 1.054 | 1.032 | EXCLUDED / YES |
+| S-F2: P1 with the full prior return (charity frame) | 1.015 | **1.001** | 1.029 | EXCLUDED / NO on H_D |
+| E* with K = 64 instead of 16 | 1.040 | 1.051 | 1.029 | — |
+| MiniLM (L4) instead of LSA | 1.023 | 1.025 | 1.022 | — |
+
+Per variable, P1 (text vs twin):
+- **gains:** grants to individuals 1.098, gov. grants 1.084, contributions 1.078, fundraising 1.060;
+- **no text-specific gain:** officer compensation (1.033, not distinguishable from noise controls), volunteers 1.019, lobbying 1.015, foreign activities 1.008.
+
+Production P2 per variable, against today's GREG:
+- **dollar items:** fundraising 1.41, contributions 1.35, gov. grants 1.24, program revenue 1.18. Each is a 15–29% take-some saving if that variable alone set n.
+- **no gain:** officer compensation 1.00, volunteers 1.03, the yes/no items 1.00–1.07.
+
+**What this means**
+1. **Text works, and only a little.** The 4.4% gain matches the pre-registered prediction (1.04) and the population ceiling (1.034). It survives every negative control, masking numbers, a frozen previous-wave deployment (P2 increment 1.047), and the modern-embedding check: MiniLM is *worse* than LSA, and K = 64 is no better than K = 16.
+2. **Most of the production gain is ML on the codes the register already has**: the ratio-scale learner on the full IRS code block (BMF-max). The same learner on NTEE10-level codes alone is *worse* than GREG (0.993), while the full codes add 5.8%. Text then adds 4–5% on top. Neither text alone (P1) nor ML alone (P2-twin) clears 1.10; together they do, and only on the dollar items (H_D 1.23). On survey-type items (volunteers, yes/no) the whole system gives 1.025.
+3. **Last year's value of the same variable dwarfs everything.** With the prior return's own lines (F2o), GREG improves 2.4× over H and the ML twin 5.2× on H_D. Text then adds nothing (S-F2 H_D 1.001; at F2o 0.99–1.00). Where an administrative lag of y exists, as for registered charities with T3010, link it; text is irrelevant.
+4. **Payroll removes the salaries gain**, as predicted (H7). Text on salaries is 1.028 without payroll on the register and 1.002 with it. Text gives nothing on any register-type variable (G7).
+5. **The pitfalls are real and large.**
+   - Without cross-fitting, coverage drops to 72–82% for the dollar items, against 87–90% with it, and GM-RE falls 5%.
+   - The synthetic estimator (no design correction) is biased by +3.8% (gov. grants), +4.7% (fundraising) and +8.8% (volunteers).
+   - Any deployment must keep the model-assisted form and cross-fitting.
+
+**What it buys.**
+- **Binding constraint:** a multipurpose survey's n is set by its hardest target. Under the protocol's default targets (assumptions, U5), the SE ≤ 1 pp target for the share with volunteers binds, and the frozen text system changes it by −0.1%. The saving is **zero**.
+- **Dollar targets only:** if only dollar totals had targets, government grants would bind and the take-some saving would be about 19%. Of that, about 9 points would come from text: the system without text saves about 10%.
+- **CV bands:** none changes. Gov. grants goes from 8.5% to 7.7%, both B.
+
+<!-- FACTORIAL (LINCAL): PENDING -->
+
+<!-- STAGE 2B: PENDING -->
 
 ### 4.4 Nonresponse (Stage 3): the problem is calibration, not a lack of covariates
 

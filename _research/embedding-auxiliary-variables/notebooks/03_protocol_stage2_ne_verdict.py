@@ -48,6 +48,9 @@ from report import Y_LABEL
 pd.set_option("display.width", 220); pd.set_option("display.max_columns", 40); pd.set_option("display.max_colwidth", 60)
 OUT = f"{DATA}/results/stage2_ne_v3"
 df = pd.read_parquet(f"{OUT}/mc.parquet")
+# D-32: the linear factorial cells, rerun as LINCAL on the same samples; the RIDGECAL rows are defective
+if os.path.exists(f"{OUT}/mc_lincal.parquet"):
+    df = pd.concat([df[~df.estimator.str.startswith("RIDGECAL")], pd.read_parquet(f"{OUT}/mc_lincal.parquet")], ignore_index=True)
 meta = json.load(open(f"{OUT}/meta.json")); truth = meta["truth"]
 pinfo = pd.read_csv(f"{OUT}/planted_info.csv")
 print(f"R = {meta['R']}, estimators = {df.estimator.nunique()}, targets = {df.y.nunique()}, failures = {sum(meta['failures'].values())}")
@@ -75,6 +78,32 @@ G.to_csv(f"{RES}/gates.csv", index=False)
 summary = G.groupby("gate")["pass"].agg(["sum", "count"]).assign(all_pass=lambda d: d["sum"] == d["count"])
 display(summary)
 display(G[~G["pass"]])
+
+# %% [markdown]
+# ### 1b. Diagnosing the failed gates (protocol §9.2 diagnosis rules)
+# Each failure is traced to its cause, and the claims it quarantines are named.
+# - **G2 (noise controls):** is the failure confined to particular y, and does text beat the noise controls themselves?
+# - **G4 (validity):** rule T-V says a studentized-error SD > 1.10 means the variance estimator underestimates. Is it specific to text, or shared by the text-free comparators and production GREG?
+# - **G3 (placebo), frozen single-weight arm:** is the gain over the frozen twin a property of the twin's weights rather than text?
+# - **G6 (planted):** what share of a known text signal does the learner realize at n = 1,000?
+
+# %%
+from protocol import gm_re as _gm
+tw = "MCAL_bmfmax@F1p"
+d2 = []
+for c in ["N1random", "N2perm", "N3permh"]:
+    a = _gm(df, truth, f"{tw}+{c}", tw, H_SET, B=1000); b = _gm(df, truth, f"{tw}+Estar", f"{tw}+{c}", H_SET, B=1000)
+    d2.append({"control": c, "GM-RE control vs twin (H)": a[0], "lo": a[1], "hi": a[2], "GM-RE text vs control (H)": b[0], "lo ": b[1], "hi ": b[2],
+               "officer comp: control vs twin": a[3]["y_officer_comp"], "gov grants: control vs twin": a[3]["y_gov_grants"]})
+print("G2 diagnosis:"); display(pd.DataFrame(d2).round(4))
+cmA = cell_metrics(df[df.y.isin(H_SET + R_SET)], truth)
+d4 = cmA[cmA.estimator.isin(["HT", "GREG_size_cat@F1p", "FROZEN_diff_bmfmax@F1p+Estar", tw, f"{tw}+Estar", "FROZEN_calm_bmfmax@F1p", "FROZEN_calm_bmfmax@F1p+Estar"])] \
+    .groupby("estimator")[["var_rb_pct", "stud_sd", "coverage_pct"]].median()
+print("G4 diagnosis (medians over the 14 real y): variance relative bias, studentized-error SD, coverage"); display(d4.round(3))
+d3 = [{"pair": f"{a} vs {b}", "y": y, **dict(zip(["re", "lo", "hi"], paired_re(df, truth, a, b, y, B=1000)))}
+      for a, b in [("FROZEN_calm_bmfmax@F1p+Estar", "FROZEN_calm_bmfmax@F1p"), ("FROZEN_calm_bmfmax@F1p", "GREG_size_cat@F1p"),
+                   ("FROZEN_calm_bmfmax@F1p+Estar", "GREG_size_cat@F1p"), (f"{tw}+Estar", tw)] for y in ["y_plc_noise"]]
+print("G3 diagnosis (size-proportional noise placebo y = x~ * lognormal(0, 2)):"); display(pd.DataFrame(d3).round(3))
 
 # %% [markdown]
 # ## 2. Primary pairs and secondaries
@@ -117,6 +146,9 @@ display(nh.round(3)); print("no-harm condition holds:", ok)
 # %% [markdown]
 # ## 3. Attribution: learner (A) × codes (B) × text (C), Shapley shares of log RE
 # The 8-cell factorial runs on the same samples and folds. Shares sum to log RE(all three on | none).
+# - Factor A is the learner: ratio-scale ridge on log features vs a linear raw-scale learner.
+# - Every cell other than GREG uses the same cross-fitting and model calibration.
+# - The linear cells are LINCAL (D-32). The originally run RIDGECAL cells failed G3/G4.
 
 # %%
 F_t, F_mean = factorial(df, truth)
@@ -168,5 +200,49 @@ for y in H_SET + R_SET:
     rows.append({"variable": Y_LABEL.get(y, y), "CV B0 %": b0, "band B0": cv_band(b0), "CV P2 %": p2, "band P2": cv_band(p2),
                  "RE": re, "take-some saving %": 100 * (1 - 1 / re)})
 tr = pd.DataFrame(rows).round(2); display(tr)
-print("binding saving over H (minimum):", round(tr[tr.variable.isin([Y_LABEL.get(y, y) for y in H_SET])]["take-some saving %"].min(), 1), "%")
 tr.to_csv(f"{RES}/real_world_translation.csv", index=False)
+
+# %% [markdown]
+# ### Binding constraint (protocol §8.7)
+# Default CV targets are assumptions until the user sets them (U5):
+# - national totals: CV ≤ 5% for government grants, contributions and fundraising; ≤ 10% for volunteers;
+# - national proportions: absolute SE ≤ 1.0 pp.
+#
+# The take-some sample needed for each target is approximated as n_TS × (CV / target)², ignoring the fpc. The survey's n is set by the **largest** requirement.
+
+# %%
+n_ts = int(json.load(open(f"{OUT}/design.json"))["design"]["take_all_n"])
+n_ts = 1000 - n_ts
+N = 20626
+targets = {"y_gov_grants": ("cv", 5.0), "y_contrib": ("cv", 5.0), "y_fundraising_exp": ("cv", 5.0), "y_volunteers_cap10k": ("cv", 10.0),
+           **{y: ("se_pp", 1.0) for y in H_SET if y.startswith("y_bin_")}}
+req = []
+for y, (kind, tgt) in targets.items():
+    for sysname, est in [("B0 (production GREG)", "GREG_size_cat@F1p"), ("P2 (frozen text system)", "FROZEN_calm_bmfmax@F1p+Estar")]:
+        cv = cm[(cm.estimator == est) & (cm.y == y)].rrmse_pct.iat[0]
+        crit = cv if kind == "cv" else cv * truth[y] / N          # SE in pp of a proportion = CV% x p
+        req.append({"variable": Y_LABEL.get(y, y), "system": sysname, "achieved": crit, "target": tgt, "n_TS needed": n_ts * (crit / tgt) ** 2})
+req = pd.DataFrame(req)
+w = req.pivot(index="variable", columns="system", values="n_TS needed").round(0); display(w)
+bind = req.groupby("system").apply(lambda g: g.loc[g["n_TS needed"].idxmax(), ["variable", "n_TS needed"]])
+display(bind)
+b0, p2n = bind["n_TS needed"].iloc[0], bind["n_TS needed"].iloc[1]
+print(f"binding-constraint take-some saving: {100 * (1 - p2n / b0):.1f}% (B0 needs {b0:.0f}, P2 needs {p2n:.0f}; current n_TS = {n_ts})")
+req.to_csv(f"{RES}/binding_constraint.csv", index=False)
+
+# %% [markdown]
+# ## 7. Verdict (protocol §9.6)
+# §9.6 reads: "HARNESS NOT VALIDATED: any of G1–G9 fails in more than one division after diagnosis, or fails in the
+# NE proof-of-concept cell."
+#
+# Under that letter, any failed gate makes the NE verdict **HARNESS NOT VALIDATED**. The diagnosed reading, which
+# names each failure's cause and the claims it quarantines, is printed below. FINDINGS.md uses both.
+
+# %%
+failed = sorted(G.loc[~G["pass"], "gate"].unique())
+print("gates with any failed item:", failed)
+print("strict §9.6 verdict:", "HARNESS NOT VALIDATED" if failed else "gates clean")
+p1 = P[(P.pair == "P1 efficacy") & (P.set == "H")].iloc[0]; p2 = P[(P.pair == "P2 production") & (P.set == "H")].iloc[0]
+print(f"P1 efficacy  GM-RE {p1.gm_re:.3f} ({p1.lo95:.3f}-{p1.hi95:.3f}): production bar {p1.production_bar}, any gain {p1.any_gain}")
+print(f"P2 production GM-RE {p2.gm_re:.3f} ({p2.lo95:.3f}-{p2.hi95:.3f}): production bar {p2.production_bar}, any gain {p2.any_gain}; no-harm {ok}; "
+      f"G4 for the P2 text arm on every y: {bool(G[(G.gate == 'G4') & G.item.str.startswith('FROZEN_calm_bmfmax+Estar')]['pass'].all())}")

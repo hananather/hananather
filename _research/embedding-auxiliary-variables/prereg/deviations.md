@@ -74,3 +74,9 @@ Rejected review findings (11) and their refutations are in `notes/review/adversa
 | ID | Protocol | Done instead | Why | Expected effect |
 |---|---|---|---|---|
 | D-31 | 2F: D1-H44, D1-imp, D2a, D2b, D2b-twin, D2c × 3 estimators, R = 1,000 (previously under D-12 as not run) | `src/stage2f_ne.py`: D1, D1-imp, D1-H44 and D2a only. HT and GREG_size_cat@F1p at R = 2,000; MCAL_bmfmax@F1p at R = 500 (first 500 replicates of the same stream). D1-imp codes MISSING NTEE10 by multinomial logit on Z_16(E*), trained on frame units with a known code. D2a's score = the mean of the 20 frozen previous-wave text heads' predicted gov grants ÷ (lag_expenses + 1). D2b, D2b-twin and D2c are not run. | One core free before Stage 2B | S4: GM over all 15 real y of RE(D1-imp ∣ D1) for HT and for GREG, threshold ≥ 1.05. S5: GM over H of RE(D2a ∣ D1-H44), production bar. M8 is read from the MCAL rows. |
+
+## Stage 2A gate diagnosis and repair, logged 2026-10-23 after the R = 2,000 results were read
+
+| ID | Finding | Action | Effect on claims |
+|---|---|---|---|
+| D-32 (*post hoc*, gate-triggered) | Gates G3/G4 fail for `RIDGECAL@F1p+C` and `RIDGECAL@F1p+C+Estar`: RRMSE 200–700% (GREG 3–8%), RB −16% to −23% on has_gov_grants, varRB ≈ −100%. Cause: ridge-GREG on 419 sparse code dummies with in-sample coefficients. CV on residual variance ignores the calibration term (T_X − X̂_HT)·B and picks a small penalty. `RIDGECAL@F1p+Estar` (no codes) is unaffected. | The three linear factorial cells are rerun as **LINCAL** on the same samples and folds (`src/stage2a_lincal.py`, R = 2,000): the MCAL pipeline (cross-fitted, fold-averaged population predictions, model calibration on [size_cat, m]) with a linear raw-scale learner on the same RC@ matrices. The factorial and the G3/G4 rows use LINCAL. RIDGECAL rows are kept in the data and marked defective. | Only the attribution factorial (M1/M1b) and the G3/G4 rows for those arms. P1, P2 and every other gate are unaffected. |

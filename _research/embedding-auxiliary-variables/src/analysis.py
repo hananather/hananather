@@ -38,7 +38,10 @@ def cell_metrics(df, truth, z=1.959964):
 
 
 TXT_ARMS = lambda T, E: [f"MCAL_bmfmax@{T}+{E}", f"MCAL_frame@{T}+{E}", f"FROZEN_calm_bmfmax@{T}+{E}",
-                         f"MCALm_bmfmax@{T}+{E}", f"RIDGECAL@{T}+{E}", f"RIDGECAL@{T}+C+{E}"]
+                         f"MCALm_bmfmax@{T}+{E}", f"LINCAL@{T}+{E}", f"LINCAL@{T}+C+{E}"]
+# linear factorial cells: LINCAL (cross-fitted, model-calibrated linear learner) replaces the defective
+# RIDGECAL arms when present (deviation D-32)
+_LIN = lambda ests: "LINCAL" if any(e.startswith("LINCAL") for e in ests) else "RIDGECAL"
 
 
 def gates(df, truth, T="F1p", E="Estar", controls=("N1random", "N2perm", "N3permh"), const="N4const",
@@ -66,14 +69,15 @@ def gates(df, truth, T="F1p", E="Estar", controls=("N1random", "N2perm", "N3perm
     rows.append(("G2", "N4 constant = twin (max rel diff)", rel, rel <= 1e-8))
     # G3 placebo: EVERY text arm vs its own comparator, and every arm vs B0, upper bound <= 1.03
     plc = [y for y in truth if y.startswith(("y_plc", "y_bin_plc"))]
+    L = _LIN(ests)
     comp_of = {f"MCAL_bmfmax@{T}+{E}": twin, f"MCAL_frame@{T}+{E}": f"MCAL_frame@{T}",
                f"FROZEN_calm_bmfmax@{T}+{E}": f"FROZEN_calm_bmfmax@{T}", f"MCALm_bmfmax@{T}+{E}": f"MCALm_bmfmax@{T}",
-               f"RIDGECAL@{T}+{E}": f"GREG_size_cat@{T}", f"RIDGECAL@{T}+C+{E}": f"RIDGECAL@{T}+C"}
+               f"{L}@{T}+{E}": f"GREG_size_cat@{T}", f"{L}@{T}+C+{E}": f"{L}@{T}+C"}
     for y in plc:
         for arm, comp in comp_of.items():
             if arm in ests and comp in ests:
                 re, lo, hi = paired_re(df, truth, arm, comp, y, B=500)
-                rows.append(("G3", f"{arm.split('@')[0]} vs comparator | {y}", round(re, 3), hi <= 1.03))
+                rows.append(("G3", f"{arm.replace('@' + T, '')} vs {comp.replace('@' + T, '')} | {y}", round(re, 3), hi <= 1.03))
     # G4 validity for every cross-fitted or frozen text arm on every real y
     for arm, comp in comp_of.items():
         if arm not in ests or comp not in ests or "coverage_pct" not in cm.columns:
@@ -82,7 +86,7 @@ def gates(df, truth, T="F1p", E="Estar", controls=("N1random", "N2perm", "N3perm
             a, c, h = cm.loc[(arm, y)], cm.loc[(comp, y)], cm.loc[("HT", y)]
             rb_ok = (abs(a.rb_pct) <= 0.1 * a.rrmse_pct) or (abs(a.rb_pct) <= 2 * a.rb_mcse_pct)
             ok = (a.coverage_pct - c.coverage_pct >= -2) and (a.coverage_pct - h.coverage_pct >= -5) and abs(a.var_rb_pct) <= 15 and rb_ok
-            rows.append(("G4", f"{arm.split('@')[0]}{'+txt' if E in arm else ''} | {y}",
+            rows.append(("G4", f"{arm.replace('@' + T, '')} | {y}",
                          f"cov {a.coverage_pct:.1f} (comp {c.coverage_pct:.1f}, HT {h.coverage_pct:.1f}); varRB {a.var_rb_pct:.0f}%; RB {a.rb_pct:.2f}%", ok))
     # G5 ceiling consistency: MC RE <= ceiling x 1.05 + 2 MC SE, every text arm (P1 pair) and y in H
     if ceilings is not None:
@@ -150,8 +154,9 @@ def no_harm(df, truth, arm, comp):
 
 
 def factorial(df, truth, T="F1p", E="Estar", ys=H_SET):
-    cells = {frozenset(): f"GREG_size_cat@{T}", frozenset("C"): f"RIDGECAL@{T}+{E}", frozenset("B"): f"RIDGECAL@{T}+C",
-             frozenset("BC"): f"RIDGECAL@{T}+C+{E}", frozenset("A"): f"MCAL_frame@{T}", frozenset("AC"): f"MCAL_frame@{T}+{E}",
+    L = _LIN(set(df.estimator))
+    cells = {frozenset(): f"GREG_size_cat@{T}", frozenset("C"): f"{L}@{T}+{E}", frozenset("B"): f"{L}@{T}+C",
+             frozenset("BC"): f"{L}@{T}+C+{E}", frozenset("A"): f"MCAL_frame@{T}", frozenset("AC"): f"MCAL_frame@{T}+{E}",
              frozenset("AB"): f"MCAL_bmfmax@{T}", frozenset("ABC"): f"MCAL_bmfmax@{T}+{E}"}
     rows = []
     for y in ys:
