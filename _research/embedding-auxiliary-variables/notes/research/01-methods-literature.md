@@ -360,3 +360,88 @@ R ≥ 2000 replicates, giving a 95% coverage standard error of about 0.5 pp. Rep
 - Under SRSWOR and stratified designs, which cross-fitting fold construction (design-aware vs design-agnostic; An et al. 2026; "Lu et al. 2025") should the harness implement? Primary-source details were not retrieved.
 - Is the (1 + p/(n − p − 2)) inflation and (1 − p/n) variance-bias heuristic accurate enough for the pre-registered predictions? Or should it be replaced by the exact Eustache et al. (2025) and Bouhadra & Dagdoug (2026) bias formulas once full texts are read?
 - For a 990 population, is there any target with low frame R² but plausibly high text R²? Revenue itself is likely about 0.9+ from prior-year BMF amounts, so the incremental RE will be small by construction.
+
+---
+
+## Verification log
+
+Adversarial pass, 2026-10-23. **Tools:** WebFetch failed on DNS (`ENOTFOUND`) for every host tried, including arxiv.org and google.com. The shared WebSearch budget was exhausted before this pass. Shell curl was used only on reachable hosts: raw.githubusercontent.com (CRAN mirror `cran/*` and authors' repositories) and pypi.org. Software documentation is a secondary source, but it is written by the methods' own authors or maintainers. Rows marked CONFIRMED rest on it. Downloaded files are kept in the session scratchpad and are not part of the repository.
+
+**A. Environment claim**
+
+| # | Claim | Check | Outcome |
+|---|---|---|---|
+| A1 | "WebFetch failed on every host (DNS errors); shell egress blocks arXiv, Project Euclid, StatCan, PMC and the journal sites" | WebFetch on arxiv.org and google.com, and curl to arxiv.org, export.arxiv.org, api.crossref.org, doi.org, projecteuclid.org, www150.statcan.gc.ca, pmc.ncbi.nlm.nih.gov, www.ncbi.nlm.nih.gov, academic.oup.com, tandfonline.com and onlinelibrary.wiley.com | CONFIRMED: WebFetch returned `ENOTFOUND`, and curl got 403 from the proxy on all of them |
+
+**B. Derived numbers.** All were recomputed in Python.
+
+| # | Item | Outcome |
+|---|---|---|
+| B1 | RE vs HT = 1/(1 − R²) table | CONFIRMED (all 8 cells) |
+| B2 | Incremental RE (1 − R²_F)/(1 − R²_{F+E}) table, and the §0 examples 1.25 and 1.14 | CONFIRMED (all 5 cells) |
+| B3 | Break-even R² table | **CORRECTED** n = 1000, p = 384 from .39 to **.38** (384/998 = 0.385). The other 21 cells are confirmed. The expression simplifies to p/(n − 2), and a note was added. The heuristic itself stays **[UNVERIFIED]**, as before. |
+| B4 | Coverage under E[v̂]/V ≈ (1 − p/n)/(1 + p/(n − p − 2)), computed as 2Φ(1.96√c) − 1 | CONFIRMED: 88.2 / 66.8 / 92.2 / 85.8 / 92.2% |
+| B5 | MC SE of 95% coverage √(.95·.05/R) | CONFIRMED: 0.69 / 0.49 / 0.31 pp; R = 2000 gives about 0.5 pp |
+| B6 | V_st/V_srs ≈ 1 − ρ²(1 − 1/L²) and its RE table | CONFIRMED. The derivation holds for uniform x, equal-width strata, proportional allocation and a homoscedastic linear model, since the within-stratum variance of x is Var(x)/L². All 18 cells and the 1/(1 − ρ²) limit are confirmed. |
+
+**C. Citations and facts checked against package docs and READMEs**
+
+| # | Item | Source | Outcome |
+|---|---|---|---|
+| C1 | Cassel, Särndal & Wretman 1976, *Biometrika* 63:615–620, with title | `cran/mase` inst/REFERENCES.bib; `cran/sampling` man/calib.Rd | CONFIRMED (DOI not checked) |
+| C2 | Särndal, Swensson & Wretman 1992, Springer | `mase` DESCRIPTION and bib | CONFIRMED |
+| C3 | McConville, Breidt, Lee & Moisen 2017, *JSSAM* 5:131–158, doi:10.1093/jssam/smw041; `mase` has elastic net | `mase` DESCRIPTION, bib, man/gregElasticNet.Rd (`alpha` argument) | CONFIRMED |
+| C4 | McConville & Toth, *Scand. J. Statist.*, title | `mase` bib (2018 entry, volume and pages blank; arXiv:1712.05708) | PARTIAL: title and journal confirmed; 46(2):389–413 not checked |
+| C5 | Rivest 2002, *Survey Methodology* 28(2):207–214 | `cran/stratification` man/strata.LH.Rd and stratification-package.Rd (maintainer: Rivest) | **CORRECTED** to 28(2):**191–198** |
+| C6 | `stratification` package by Baillargeon & Rivest; Kozak's algorithm; models linking stratifier and survey variable | same files | CONFIRMED. The package has log-linear (with mortality), heteroscedastic linear and random-replacement models, and attributes the last two "as in Rivest (2002)". Kozak is the default algorithm. |
+| C7 | Lavallée & Hidiroglou 1988, title; convergence problems; Gunning & Horgan follow-ups | strata.LH.Rd | CONFIRMED. The pages *Survey Methodology* 14:33–43 were added. Follow-ups: Gunning & Horgan 2004 (SM 30(2):159–166) and 2007 (JSCS 77(4):277–291). The package docs note that Sethi's algorithm is numerically unstable. |
+| C8 | Dalenius & Hodges 1959, *JASA* 54:88–101 | strata.LH.Rd | CONFIRMED |
+| C9 | Ballin & Barcaroli 2013, title, *Survey Methodology* | `cran/SamplingStrata` vignettes/SamplingStrata.bib | CONFIRMED; **39:369–393** added |
+| C10 | SamplingStrata "Use of models in SamplingStrata" vignette: anticipated CVs; linear heteroscedastic Z = βY + ε with Var ∝ Y^γ; log-linear model; k-means categorization | vignettes/models.Rmd, build/vignette.rds, vignettes/SamplingStrata.Rmd (`var.bin`) | CONFIRMED |
+| C11 | Fay & Herriot 1979, *JASA* 74:269–277, doi:10.1080/01621459.1979.10482505 | `cran/sae` man/eblupFH.Rd; `cran/emdi` DESCRIPTION | CONFIRMED. The `sae` doc words the title "Estimation of income from small places"; the report's wording, "Estimates of income for small places", is unresolved. |
+| C12 | Battese, Harter & Fuller 1988, *JASA* 83:28–36, with title; satellite pixel auxiliaries | `sae` man/eblupBHF.Rd (cornsoybean data use `CornPix` and `SoyBeansPix`) | CONFIRMED (DOI not checked) |
+| C13 | Rao & Molina 2015, *Small Area Estimation*, Wiley | `mase` bib | CONFIRMED. The edition number is not shown, so the earlier [UNVERIFIED] flag was replaced. |
+| C14 | Deville & Särndal 1992, *JASA* 87:376–382 | `sampling` calib.Rd; `cran/icarus` man/calibration.Rd | CONFIRMED |
+| C15 | Deville, Särndal & Sautory 1993, *JASA* 88:1013–1020 | `cran/survey` man/calibrate.Rd; `sampling` calib.Rd | CONFIRMED |
+| C16 | Beaumont & Bocci 2008, "Another look at ridge calibration," *Metron* (previously [UNVERIFIED: not found]) | `icarus` man/calibration.Rd | RESOLVED: exists, *Metron* 66(1):5–20. `icarus` lists "Bocci, J., and C. Beaumont", so the author order is still [UNVERIFIED]. |
+| C17 | Kish deff = 1 + CV² | `cran/PracTools` man/deffK.Rd ("1 + relvar(w)") | CONFIRMED; flag replaced |
+| C18 | Ybarra & Lohr 2008, doi:10.1093/biomet/asn048; R `saeME` | `cran/saeME` DESCRIPTION | CONFIRMED |
+| C19 | Krennmair & Schmid 2022, *JRSS C*, title; R `SAEforest` | `cran/SAEforest` DESCRIPTION and man/SAEforest_model.Rd (listed as "forthcoming"; arXiv:2201.10933) | PARTIAL: title, journal and package confirmed; 71(5):1865–1894 and the DOI not checked |
+| C20 | Chernozhukov et al. 2018, *Econometrics Journal* 21:C1–C68, with all seven authors and title | PyPI `DoubleML` description; `cran/DoubleML` DESCRIPTION | CONFIRMED; **doi:10.1111/ectj.12097** added |
+| C21 | Yang, Kim & Song 2020, doi:10.1111/rssb.12354 | `cran/nonprobsvy` DESCRIPTION | CONFIRMED (DOI); volume and pages not checked |
+| C22 | PPI++: Angelopoulos, Duchi & Zrnic, arXiv:2311.01453, with title | `aangelopoulos/ppi_py` README and ppi.py docstrings | CONFIRMED |
+| C23 | PPI++ estimator ȳ_n + λ(f̄_N − f̄_n); λ = 1 gives PPI and λ = 0 gives the classical estimator | ppi.py `ppi_mean_pointestimate` (source and docstring) | CONFIRMED |
+| C24 | Plug-in λ̂ = Cov(Y, F)/((1 + n/N)Var(F)) ("check against the original") | ppi.py `_calc_lam_glm`: num = 2Cov, denom = 2(1 + n/N)Var, clipped to [0, 1] for the mean | CONFIRMED against the reference implementation; text updated |
+| C25 | PPI mean = mean_unlabeled(f) − mean_labeled(f − y) | same source, λ = 1 case | CONFIRMED |
+| C26 | Software name `ppi-py` | PyPI: `ppi-py` and `ppi_py` return 404, `ppi-python` returns 200; the import name is `ppi_py` | **CORRECTED** to `ppi_py` (PyPI `ppi-python`) |
+| C27 | Angelopoulos et al. 2023 PPI paper | ppi_py README (arXiv:2301.09633) | PARTIAL: paper exists; *Science* 382(6671):669–674 and the DOI not checked |
+| C28 | Zrnic & Candès cross-PPI | ppi_py README (arXiv:2309.16598) | PARTIAL: paper exists; PNAS volume and DOI not checked |
+| C29 | Rolf et al. 2021, MOSAIKS, *Nature Communications*, doi:10.1038/s41467-021-24638-z, with title and authors | `Global-Policy-Lab/mosaiks-paper` README | CONFIRMED; article number 12:4392 not checked |
+| C30 | Manvi et al., GeoLLM, ICLR 2024 | `rohinmanvi/GeoLLM` README (BibTeX) | CONFIRMED; the 70% r² figure not checked |
+| C31 | Jean et al. 2016, "Combining satellite imagery and machine learning to predict poverty" | `nealjean/predicting-poverty` README | PARTIAL: title confirmed; *Science* 353(6301), pages and DOI not checked |
+| C32 | PDFM, arXiv:2411.07207: first author (previously [UNVERIFIED]); input features; "released publicly"; 27 tasks | `google-research/population-dynamics` README (BibTeX and access section) | Title, arXiv ID and **first author Mohit Agarwal** confirmed. Inputs confirmed: search trends, busyness, maps, air quality and temperature. A 27-task `conus27` benchmark file exists. **CORRECTED:** the embeddings are not openly released. Access is by research application through a BigQuery listing, and there is a paid Early Access Program for commercial and public-sector use. The R² figures were not checked. |
+| C33 | Egami, Hinck, Stewart & Wei 2023 (DSL) | `naoki-egami/dsl` DESCRIPTION | PARTIAL: authorship confirmed; NeurIPS 36 and the 80–90% figure not checked |
+
+**D. New flags.** These are factual statements that came with no source.
+
+- D1 "Wesley Yung is at StatCan": **[UNVERIFIED]**.
+- D2 "stratum jumpers typically 5–10%": **[UNVERIFIED: no source given]**.
+- D3 "kNN donor imputation … common in StatCan business processing": reworded as a claim about nearest-neighbour donor imputation and marked **[UNVERIFIED]**.
+- D4 PMC3069059: added a memory-based identification (Lee, Lessler & Stuart 2011, *PLoS ONE*; a treatment-effect setting), marked **[UNVERIFIED]**.
+
+**E. Could not be re-checked.** Every route was blocked. These items are now tagged inline **[UNVERIFIED: not re-checked]**. None was found to be wrong; none was independently confirmed.
+
+- **Model-assisted estimation:** Breidt & Opsomer 2017; Breidt & Opsomer 2000; Breidt, Claeskens & Opsomer 2005; Ferreira (arXiv:2606.08289); Dagdoug, Goga & Haziza 2023 (*JASA*); Toth & McConville 2024; Montanari & Ranalli 2005; Parker & Holan (arXiv:2009.07934); Baffetta et al. 2009; Sanguiao-Sande & Zhang 2021; Zhang, Tam et al. (arXiv:2606.28795).
+- **High-dimensional settings and cross-fitting:** Dagdoug, Goga & Haziza 2023 (*J. Appl. Stat.*); Ta, Shao, Li & Wang 2020; Eustache, Dagdoug & Haziza 2025; Bouhadra & Dagdoug 2026; Dharamshi, Gao & Wakefield 2025; Lundy & Rao 2022; Dagdoug & Haziza 2026 (arXiv:2604.01160); An, Dagdoug, Haziza & Tillé 2026; arXiv:2609.04082.
+- **Calibration:** Särndal 2007; Devaud & Tillé 2019; Wu 2003; Bardsley & Chambers 1984; Chambers 1996; Rao & Singh 1997; Guggemos & Tillé 2010; Cardot, Goga & Shehzad 2017; Chauvet & Goga 2022; Goga 2025; Nascimento Silva & Skinner 1997; Haziza & Beaumont 2017.
+- **PPI:** Mozer 2026; Zrnic & Candès 2024 (ICML); Fisch et al. 2024; Ye & Yoganarasimhan 2026.
+- **Stratification:** Sweet & Sigman 1995, including the Cochran six-strata statement; Zimmer, Kim & Nusser 2012; Breidt & Opsomer 2008; Dahlke et al. 2013; Nedyalkova & Tillé 2008; Xu, Landsman & Graubard 2021.
+- **Nonresponse:** Little & Vartivarian 2005; Haziza & Beaumont 2007; Eltinge & Yansaneh 1997; Da Silva & Opsomer 2009; Kern, Klausch & Kreuter 2019; Buskirk & Kolenikov 2015; Larbi et al. 2025; Haziza vs Little 2026; Haziza & Lesage 2016; Kim & Haziza 2014; Dagdoug & Haziza 2025 (Symposium); Dagdoug, Goga & Haziza 2025 (*SJS*); arXiv:2007.06298; Kinne & Axenbeck 2020.
+- **Small area estimation:** Lahiri & Suntornchost 2015; arXiv:2609.21701; Parker 2024; Porter et al. 2014; Engstrom, Hersh & Newhouse; Merfeld & Newhouse 2023; Zheng et al. 2026; Zhang et al. 2026; Newhouse et al. 2025.
+- **Text precedents:** Waldetoft, Torgander & Magnusson 2025; Daas & van der Doef 2020; Hoberg & Phillips 2016; arXiv:2606.09351; Puts, Salgado & Daas 2024.
+
+Items that were already flagged before this pass are still flagged: Wu & Sitter 2001 volume and DOI, "Lu et al. 2025", the UNECE handbook content, the StatCan *Survey Methodology* 2015 article title, the PMC3069059 authors, the Istat authors, and the Cochran (1977) inflation heuristic.
+
+**Consistency note (not verification).** Sibling note 02 independently gives the same details for several items: Daas & van der Doef (36(4):1239–1251, doi:10.3233/SJI-200627), Hoberg & Phillips (124(5):1423–1465), Engstrom et al. (36(2):382–412; 49–61%), and PDFM (Agarwal et al.; access by request). It cites Kinne & Axenbeck as the 2018 ZEW Discussion Paper 18-033 version. Both notes were written in the same snippet-only search environment, so their agreement does not count as confirmation.
+
+**To finish verification:** re-run part E with a fresh WebSearch budget, or with WebFetch or Crossref access (api.crossref.org/works/{DOI}). The highest-risk items are the 2026 arXiv IDs and the *Survey Statistician* 94 and IASS webinar attributions, because they cannot be cross-checked from memory.

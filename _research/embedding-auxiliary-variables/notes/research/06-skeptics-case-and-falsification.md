@@ -51,7 +51,16 @@ This note argues the case against the claim as hard as it can be argued, and the
    - So the signal is genuinely semantic and finer than the code. It is simply redundant with the *lagged y*.
 5. **The negative controls behave.** Random vectors, globally permuted embeddings and stratum-permuted embeddings give RE 0.82–1.00, and two placebo y give 0.98–1.00, all against the strong frame. No spurious gain appears at the population level with cross-fitting. **But noise blocks cost up to 18% efficiency** (government grants with random vectors: 0.82). A text arm that adds nothing is not neutral; it is harmful.
 6. **Tuning on the population is a measurable optimism.** Choosing the ridge penalty per y on the population, rather than fixing it in advance, inflates the text RE by up to 0.09 (government grants 1.13 vs 1.05; contributions 1.19 vs 1.14). Every ceiling in sibling notes and diagnostics that uses a "best λ per y" is optimistic by about that much.
-7. **High-dimensional raw embeddings in OLS-GREG fail as theory predicts** (§4.5): a large loss of efficiency, under-covering intervals and negative weights. In-sample (not cross-fitted) model calibration drops coverage to 72–77% in the project's own smoke runs (R=60). Cross-fitting is not optional.
+7. **High-dimensional raw embeddings in OLS-GREG fail as theory predicts** (MC, n = 500, R = 500; §4.5). The figures are the same with random vectors, so the cause is p/n, not the text.
+
+   | Arm | RE vs base GREG | Coverage | Variance estimator | Negative weights |
+   |---|---|---|---|---|
+   | Raw 309–437 dimensions | 0.00–0.18 | 0–5% | ≈ −100% | 43–44% |
+   | 32 additive PCs | 0.60–0.86 | 73–82% | — | 10% |
+   | In-sample ridge | — | 2–4% | — | — |
+   | Cross-fitted ridge on raw additive dimensions | 0.15–0.84 | Restored (84–96%) | — | — |
+
+   Cross-fitting is necessary for valid inference, but it creates no efficiency gain on its own.
 8. **Leakage on this dataset is mainly about timing.** The text contains exact dollar values rarely (§4.3), so that is not where it comes from. The serious traps are:
    - a current BMF as the frame;
    - same-year text;
@@ -321,7 +330,54 @@ The lagged indicator comes from the TY2022 return, parsed into `/tmp/claude-0/da
 
 ### 4.5 Raw embedding dimensions in OLS-GREG at n = 500 (design-based MC)
 
-⟦MC⟧
+**Setup.**
+- R = 500 replicates, common random numbers across arms.
+- Production design at n = 500: 34 strata, 206 take-all units.
+- **Base** = stratum dummies + 4 lagged size variables + NTEE10 + state (p = 53).
+- **Text** = MiniLM mission embeddings (raw 384 dimensions, or the first 10/32 PCs) entered *additively*, or LSA-256 raw.
+- **Negative control** = 384 Gaussian columns.
+
+The ridge-difference arms put the raw 384 dimensions into a weighted ridge with the base unpenalized. They are either fitted in-sample (λ = 1e-3) or 5-fold cross-fitted, with λ picked by inner CV on the sample. Variance is the stratified residual linearization. Script: `pn_mc.py`. Results: `pn_mc_R500_n500.csv`.
+
+| Arm (p) | Metric | Revenue | Salaries | Contributions | Government grants | Has government grants | Grants to individuals |
+|---|---|---|---|---|---|---|---|
+| GREG base (53) | Coverage % / variance-estimator relative bias % | 87 / −19 | 93 / −5 | 80 / −25 | 84 / −5 | 93 / −11 | 92 / −12 |
+| GREG base + PC10 (63) | RE vs base | 0.88 | 0.90 | 0.93 | 0.84 | 0.99 | 0.92 |
+| | Coverage % | 85 | 91 | 81 | 82 | 89 | 88 |
+| GREG base + PC32 (85) | RE vs base | 0.64 | 0.62 | 0.70 | 0.60 | 0.86 | 0.81 |
+| | Coverage % / variance-estimator relative bias % | 78 / −50 | 82 / −49 | 74 / −50 | 73 / −52 | 78 / −58 | 79 / −56 |
+| GREG base + LSA-256 raw (309) | RE / coverage % | 0.00 / 4 | 0.01 / 5 | 0.00 / 4 | 0.01 / 4 | 0.18 / 5 | 0.15 / 4 |
+| GREG base + MiniLM-384 raw (437) | RE / coverage % | 0.00 / 1 | 0.00 / 0 | 0.00 / 1 | 0.00 / 0 | 0.10 / 0 | 0.08 / 1 |
+| GREG base + **RANDOM-384** (437) | RE / coverage % | 0.00 / 1 | 0.00 / 1 | 0.00 / 1 | 0.00 / 1 | 0.14 / 1 | 0.10 / 1 |
+| Ridge-difference raw 384, **in-sample** | RE / coverage % / RB % | 0.00 / 2 / −33 | 0.00 / 2 / −32 | 0.00 / 2 / −189 | 0.01 / 3 / +113 | 0.35 / 4 / +7 | 0.26 / 2 / +21 |
+| Ridge-difference raw 384, **cross-fitted** | RE / coverage % / RB % | 0.16 / 87 / +1.1 | 0.41 / 93 / −0.4 | 0.15 / 84 / +15.6 | 0.54 / 88 / +1.8 | 0.84 / 96 / +0.4 | 0.80 / 94 / −0.4 |
+| HT | RE vs base | 0.09 | 0.52 | 1.73 | 0.92 | 1.01 | 1.02 |
+
+**Share of negative calibration weights:**
+
+| Arm | Negative weights |
+|---|---|
+| Base | 0.3% |
+| + PC10 | 1.3% |
+| + PC32 | 10.2% |
+| + raw 309 / 384 dimensions | **43–44%** |
+| + random 384 dimensions | **43%** |
+
+How to read this:
+1. **Raw embedding dimensions in OLS-GREG are a disaster, and the disaster is caused by p, not by the text.**
+   - The text arms and the random-vector arm are indistinguishable: RE ≈ 0, coverage 0–5%, the variance estimator underestimates by about 100%, and 43–44% of the weights are negative.
+   - This is exactly the (1 − p/n)/(1 + p/(n − p − 2)) prediction of §3.3.
+2. **Even 32 additive PCs cost 14–40% efficiency and 10–20 points of coverage at n = 500.** Ten additive PCs cost 1–16%. Additive embedding terms on the raw dollar scale are the wrong functional form for skewed populations. The ratio form of §4.1 is needed (the project's working log reached the same conclusion).
+3. **In-sample fitting reproduces the overfitting trap:**
+   - coverage 2–4%;
+   - variance estimator −100%;
+   - relative bias up to ±190% for heavy-tailed y.
+4. **Cross-fitting restores near-nominal coverage for the binary y (94–96%), but not efficiency.** On raw additive dimensions the cross-fitted ridge is still 16–84% as efficient as the base GREG. For contributions, a heavy-tailed total, the relative bias is +15.6% because of extrapolation on outliers.
+
+   *Cross-fitting is necessary for validity, but it does not create a gain.*
+5. **The base itself under-covers heavy-tailed totals** (contributions 80%, government grants 84%) at n = 500. Text does not fix this. The benchmark must report it, so that an embedding arm is not credited with "improving coverage" merely by changing the residual tails.
+
+These arms are the **positive controls for the harness (PC3, NC10)**. Every confirmatory run must reproduce them.
 
 ### 4.6 Status of the skeptic's claims after the first pass
 

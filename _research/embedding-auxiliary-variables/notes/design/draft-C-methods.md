@@ -18,7 +18,7 @@
   - `mc._ridge_fit` adds λ·n to a cross-product matrix whose diagonal is Σw.
   - For ratio-scale learners the weights are d·x̃, so Σw ≈ 7.7 × 10¹⁰ on a real n = 794 take-some sample. On that sample the coefficient norm was **identical for every λ in the grid {0.001, …, 10}** (Appendix B.1).
   - The pilot's best text estimators (`MCAL_ratio+…`), the frozen models and the SAE models were therefore *unpenalized* cross-fitted weighted least squares on about 60 columns.
-  - With weights d the penalty is about 25 times weaker than intended. With weights normalized to mean 1 it behaves as intended.
+  - With weights d the penalty is about Σd/n ≈ 26 times weaker than intended. With weights normalized to mean 1 it behaves as intended.
 - **(b) The ridge-calibration estimator's λ is chosen on a different scale from the one it is applied on.** `RIDGE_…` tunes with `_ridge_fit` (penalty relative to Σd) but estimates with a penalty relative to the column variance. The applied penalty is about Σd/n ≈ 26 times stronger than the one the cross-validation (CV) scored. Found by inspection; a unit test is in Appendix A.
 - **(c) Binary targets go through the ratio-scale learner.** The `MCAL_ratio` specs in `experiments.py` model y/x̃ for binary y as well. `frozen.py` handles binaries correctly.
 
@@ -31,13 +31,24 @@ The pilot's *direction* survives these defects: negative controls are ≈ 1 and 
 
 The core experiment is therefore a 2 × 2 × 2 factorial on common random numbers: {linear ridge calibration, ratio-scale model calibration} × {NTEE10 only, fine register codes} × {no text, text}. It is reported as main effects on log MSE, with Shapley shares (§4.7, §6).
 
-**3. The fair comparator for "text" is the text-free twin that uses the register's fine codes [differs from A].** A Stage-1 pre-check ran for this draft (Appendix B.2): REG-S+ population, n = 1,000, same-class ridge ceilings with LSA full text. It measured how much of the text ceiling a fine-code twin already captures. **[RESULT: see B.2.]**
+**3. The fair comparator for "text" is the text-free twin that uses the register's fine codes [differs from A].** A Stage-1 pre-check ran for this draft (Appendix B.2).
+
+- **Setup:** REG-S+, D1, n = 1,000; population ridge ceilings with LSA full text.
+- **Fine codes alone** (206-level NTEE code, NTEE letter, subsection, ruling decade, asset code): GM ceiling over the headline set **1.035**.
+- **Text alone:** **1.122**.
+- **Both:** **1.130**.
+- **Text given codes:** **1.092**.
+
+So codes explain only about **20%** of the text ceiling's log-gain: about half for has_gov_grants, and 11–27% for the amounts. Text is mostly *not* finer codes. Two caveats:
+- the ceiling is optimistic;
+- a first run with badly penalized code dummies made the codes *look harmful* (GM 0.84). That failure is why rule T2 fixes how categorical blocks are penalized.
 
 **4. The skeptic's arithmetic.** Expected Monte Carlo (MC) gain ≈ ceiling × fitting efficiency.
-- The REG-S+ ceiling for the headline set is a geometric mean (GM) of 1.12 with LSA full text (draft A, Appendix B).
-- Fitting about 60 free columns on n = 794 inflates residual variance by about p/n. The text-free twin fits about 28.
-- The expected MC gain is therefore 1.12 × (1 + 28/794)/(1 + 60/794) ≈ **1.08**. That is under the 1.10 "material" threshold before any other loss.
-- Primary endpoint P1 is therefore expected to be *inconclusive or fail* under a good register. The benchmark is powered to show that cleanly (R = 2,000 gives an MC SE of about 0.026 on RE).
+- Fitting about 60 free columns on n = 794 inflates residual variance by about p/n. The text-free twin fits about 28, so the fitting factor is (1 + 28/794)/(1 + 60/794) ≈ 0.96 (§8.5).
+- **P1** (vs the codes twin) is expected at about 1.09 × 0.96 ≈ **1.05**.
+- **P1′** (vs the NTEE10 twin; draft A's P1) is expected at about 1.12 × 0.96 ≈ **1.08**.
+- Both are under the 1.10 "material" threshold before any other loss. The primary efficacy endpoint is therefore expected to be *inconclusive or fail* under a good register.
+- The benchmark is powered to show that cleanly. R = 2,000 gives an MC SE of about 0.026 on RE, and the planted control (item 5) certifies what could have been detected.
 
 **5. A planted-signal positive control calibrates the whole pipeline.**
 - Semi-synthetic targets carry a text component with known population partial R² ∈ {0, 0.02, 0.05, 0.10, 0.20, 0.40}. The component is linear in the PCs, nonlinear (clusters), or planted in a *different* embedding from the one used to estimate.
@@ -394,6 +405,10 @@ using the same-class population fit (§8.4). This gives a predicted RE for each 
   - Columns are standardized with the weighted SD, weights are normalized to mean 1, and the penalty is λ·n_train on the standardized coefficients.
   - The same function is used for CV and for the final fit.
   - Unit tests: predictions are invariant to w → c·w; ‖B̂_λ‖ strictly decreases in λ for every weight vector seen in the harness.
+  - **Categorical blocks (codes C, NTEE, state) are penalized on the unstandardized 0/1 scale, with their own λ_C.**
+    - Standardizing a dummy held by 20 of 16,000 units multiplies it by about 28. Its raw-scale coefficient is then barely penalized.
+    - An unstandardized ridge on dummies is the shrinkage estimator of code-level means, the random-effects analogue.
+    - The Appendix B.2 pre-check shows the failure: with standardized dummies and λ ≤ 0.1, adding 206 codes *lowered* the population ceiling below the base model.
 - **T3. The CV loss is the cross-validated anticipated variance on the y scale [differs from the pilot]:**
 
   L(λ) = Σ_h N_h² (1 − f_h)/n_h · s²_h(e^{oof}), where e^{oof}_k = y_k − m̂^{(−f(k))}_{λ,k} after back-transforming from the ratio scale.
@@ -463,9 +478,9 @@ P2 uses the frozen system because it is the deployable one. It is design-unbiase
 | ratio-scale | fine | no | `MCAL_frame_codes[S+]` |
 | ratio-scale | fine | yes | `MCAL_codes_ratio[S+]+E*` |
 
-- **Fit, per y:** log MSE_{abc} = μ + α_a + β_b + γ_c + (αβ) + (αγ) + (βγ) + (αβγ), estimated from the eight MC MSEs.
+- **Decomposition, per y:** log MSE_{abc} = μ + α_a + β_b + γ_c + (αβ) + (αγ) + (βγ) + (αβγ). This is a saturated decomposition of the eight MC MSEs, so the effects are contrasts, not fitted parameters.
 - **MC uncertainty:** a replicate bootstrap (§8.3).
-- **Shapley shares:** each factor's share of log RE(best | production) is its Shapley value, the average of its marginal contribution over the 3! = 6 orderings. This removes the order dependence of a telescoping split.
+- **Shapley shares:** split the total log RE(ratio, fine, text | linear, NTEE10, no text) = log MSE_000 − log MSE_111 into one share per factor. Each factor's share is its Shapley value: its marginal contribution averaged over the 3! = 6 orderings. This removes the order dependence of a telescoping split. GM over H uses the mean of the per-y shares.
 - **Reading:**
   - a large α (learner and scale) with small γ (text) means "ML, not text";
   - a large γ that disappears once β is present means "text re-expresses the codes";
@@ -505,14 +520,15 @@ A second factorial on the ladder (L2 vs L4, T1 vs T2) is in §6.
 
 ### 5.2 Planted-signal family (positive control and power calibration)
 
-**Construction.** On the real population, take a real headline amount y⁰ (gov_grants) and a real binary b⁰ (has_gov_grants). Build:
+**Construction.** Start from a real headline amount (gov_grants) and a real binary (has_gov_grants). First remove their real within-cell text signal, so that ρ² = 0 is a true null. Then plant a known one.
 
-- **Amount:** y_plant = y⁰ · exp(a·u_k − a²σ²_u/2).
-  - u_k is a standardized text index and a is a scalar.
-  - The multiplicative form keeps the zeros, the skew and the real frame relationships. Only within-cell variation tied to text is added.
-- **Binary:** b_plant = 1{logit⁻¹(logit(p⁰_k) + a·u_k) > U_k}.
-  - p⁰_k is a frame-only population logit fit of b⁰.
-  - U_k ~ Uniform(0, 1), drawn once with a fixed seed.
+- **Null base for the amount:** y⁰_k = x̃_k · (y/x̃)_{π(k)}.
+  - π is a random permutation within NTEE10 × size class × state cells.
+  - This keeps the zeros, the skew, the cell means of the ratio and the ratio-scale link to size.
+  - It destroys any within-cell link between y and the unit's text.
+- **Planted amount:** y_plant = y⁰ · exp(a·u_k − a²σ²_u/2), where u_k is a standardized text index and a is a scalar.
+- **Null base for the binary:** p⁰_k is a frame-only population logit fit of has_gov_grants.
+- **Planted binary:** b_plant = 1{U_k < logit⁻¹(logit(p⁰_k) + a·u_k)}, with U_k ~ Uniform(0, 1) drawn once with a fixed seed.
 
 **Forms of u (each answers a different question).**
 
@@ -685,7 +701,7 @@ Each TXT method has a text-free twin: the same method with (z) only. Propensitie
 
 This ranks the methods by achievable bias before any MC, and pre-registers the bias each one should show. The MC then adds variance, coverage and finite-sample behaviour.
 
-The pilot found that calibrating to lagged size *increases* bias for survey-only y. That finding becomes a testable statement: B(NR_rhg + GREG_size_cat) > B(NR_rhg) for gov_grants, contrib and fundraising.
+The pilot found that calibrating to lagged size *increases* bias for survey-only y. That finding becomes a testable statement: |B(NR_rhg + GREG_size_cat)| > |B(NR_rhg)| for gov_grants, contrib and fundraising. The mechanism to check is that respondents and nonrespondents of the same size differ in y/x̃, so calibrating to size totals amplifies the respondents' ratio.
 
 **Metrics.**
 - Relative bias.
@@ -716,6 +732,14 @@ The pilot found that calibrating to lagged size *increases* bias for survey-only
 | FH_text | FH_frame + the domain mean of a frozen *text* prediction m̂_{F+E} (p = 3 ≪ m) | TXT |
 | FH_textPC | FH_frame + domain means of the first 3 PCs of E\* | TXT (stress: unsupervised area covariates) |
 | NER_text (optional) | unit-level nested-error EBLUP on the ratio scale y/x̃ with F + Z_8 | TXT (model-based unit level) |
+
+**Unit-level model (NER_text, optional, amounts only).**
+- Model: y_k/x̃_k = f_k′β + v_d + ε_k, with Var(ε_k) = σ²_e/x̃_k, v_d ~ N(0, σ²_v), and f = F + Z_8 (text-free twin: F only).
+- Fitting: REML on the take-some sample, ignoring the design weights (the usual EBLUP), with a pseudo-EBLUP using design weights as a sensitivity.
+- Domain total: Σ_{TA ∩ d} y + Σ_{s_d} y + Σ_{U_d \ s_d} x̃_k(f_k′β̂ + v̂_d).
+- MSE: parametric bootstrap, B = 100, on 200 replicates only.
+- Zero-inflated amounts are fitted as a linear working model. The BLUP needs no normality, but the parametric-bootstrap MSE does, so its coverage is read with care.
+- Binaries would need a logistic-mixed EBP, which is out of scope for the first pass.
 
 **Fay–Herriot specification** (replaces the current `sae._fh`, which has one covariate, no intercept and raw ψ):
 - θ̂_d = direct mean; ψ_d smoothed by a generalized variance function, log ψ̂_d = a + b log n_d + c log N_d, fitted per replicate over domains with n_d ≥ 2;
@@ -900,4 +924,392 @@ Each table carries the cell manifest: population hash, design, register, n, R, s
 
 ---
 
-<!-- PART4 -->
+## 9. Pre-registered hypotheses, thresholds and decisions
+
+### 9.1 Decision vocabulary
+
+The vocabulary is the same as draft A §9.1. Decisions use effect sizes with MC 95% bounds, not p-values: with common random numbers and R = 2,000, trivial differences would be "significant".
+
+- **Material:** lower bound of RE ≥ 1.10.
+- **Production-worthy:** point estimate ≥ 1.20 and lower bound ≥ 1.10.
+- **Negligible:** CI inside [0.95, 1.05].
+- **Harm:** upper bound < 0.95.
+- **Inconclusive:** anything else. Raise R to 5,000 once; if still inconclusive, report it as inconclusive.
+
+### 9.2 Primary endpoints
+
+There are two, with Holm at α = 0.05 on their one-sided "material" tests. For the first test this means a 97.5% lower bound.
+
+| ID | Cell | Statistic | Pass | Skeptic predicts | Pre-registered prediction (ceiling × fitting) |
+|---|---|---|---|---|---|
+| **P1 efficacy** | REG-S+, D1, n = 1,000, R = 2,000 | GM-RE over H: `MCAL_codes_ratio[S+]+E*` vs `MCAL_frame_codes[S+]` | Material | 1.00–1.05 | Ceiling of text given codes 1.09 (B.2) × 0.96 → **about 1.05: expected fail or inconclusive**. P1′ is expected at about 1.08. |
+| **P2 production** | same | GM-RE over H: `FROZEN_calm[S+]+E*` vs `GREG_size_cat[S+]`; **and** worst case over A ≥ 0.95; **and** coverage ≥ 93% for every y in A where HT itself reaches 93% | Material + no harm + valid | 1.0–1.15. If it passes, the factorial will attribute most of it to learner and scale, not text. | **1.05–1.15** |
+
+P1′ and P2′ (draft A's versions, §4.7) are reported next to them as secondaries.
+
+### 9.3 Methods hypotheses (secondary; 95% bounds; labelled secondary)
+
+| ID | Hypothesis | Statistic | Pass threshold | Skeptic predicts |
+|---|---|---|---|---|
+| M1 | Text is the main source of the best gain over production | Shapley share of factor C (text) in log RE(best \| GREG_size_cat), 2³ factorial | Share ≥ 0.5 with bootstrap lower bound ≥ 0.25 | Share < 0.4; learner and scale dominate for amounts |
+| M2 | Text information is within-cell (new) | RE(E\*)/RE(N2w) on H (GM) | Material | ≤ 1.05 |
+| M3 | Validity | coverage of every cross-fitted or frozen TXT arm, on every y in A | ≥ 93.0% (or gap to HT ≥ −2 pp); variance relative bias ∈ [−10%, +10%]; bootstrap coverage within ±3 pp of 95% | holds with cross-fitting |
+| M4 | p/n behaves as predicted | OLS-GREG coverage vs K at n = 1,000; ridge and MCAL coverage at K ≤ 64 | OLS-GREG coverage monotone non-increasing in K; ridge and MCAL ≥ 93% | holds |
+| M5 | Planted-signal recovery | (i) RE at ρ² = 0; (ii) φ at ρ² = 0.2 (lin-same, ridge-ratio MCAL, n = 1,000); (iii) ρ²_min(1,000) | (i) ∈ [0.97, 1.03]; (ii) ≥ 0.8; (iii) reported | ρ²_min ≈ 0.08–0.12 |
+| M6 | Frozen deployment works | RE(FROZEN_cal+E\*) / RE(MCAL_codes_ratio+E\*), on H | ≥ 0.90, coverage ≥ 94% | ≥ 0.9 |
+| M7 | Ceilings are honest (gate) | MC RE / same-class ceiling | ≤ 1.05 for every arm | — |
+| M8 | Design and estimation uses are substitutive | log-MSE interaction, D2 × text estimator: (log MSE_11 − log MSE_10) − (log MSE_01 − log MSE_00) | interaction > 0 (the gains do not add), with CI excluding 0 | substitutive |
+| M9 | Stage 1 predicts the MC ranking | Spearman (ceiling, MC RE) across rungs × fields | ≥ 0.8 | yes |
+| M10 | Learner matters more than representation | Δ log RE between learner families (ridge, kNN, two-part) vs between rungs (L2, L4) | reported | learner > rung |
+
+### 9.4 Application hypotheses (secondary)
+
+These mirror draft A §9.2.
+
+| ID | Hypothesis | Statistic | Pass | Skeptic predicts |
+|---|---|---|---|---|
+| S1 | No gain on register-type y | RE on expenses and revenue (S+) | Negligible | 1.00 |
+| S2 | Text helps a weak register | RE of `MCAL_ratio[W]+E*` vs `MCAL_frame_ratio[W]`, on expenses and salaries | Production-worthy | yes (about 2×), but irrelevant where admin data exist |
+| S2b | Text substitutes for admin data | share of the log-efficiency gap REG-W → REG-S+ closed by text | report; ≥ 0.5 means "substitutes" | ≤ 0.5 |
+| S4 | Text-coded NTEE helps the design | GM-RE over A: D1-imp vs D1 | ≥ 1.05 | ≤ 1.03 nationally; larger for NTEE10 domains |
+| S5 | Prediction strata help | GM-RE over H: D2a vs D1-H44 | Material | ≤ 1.05 |
+| S5b | Text-informed allocation helps | GM-RE over H: D2b vs D2b-twin | ≥ 1.05 | ≤ 1.03 |
+| S6 | Text reduces nonresponse bias (NR-LATE) | share of bias removed vs `NR_rhg+GREG_size_cat[S+]`, for gov_grants, fundraising, contrib, volunteers_cap10k, lobbying | ≥ 30% on ≥ 3 of 5 y, with RRMSE not worse | < 30% |
+| S6b | Response-only text adds variance | NR2′: variance ratio of text vs twin adjustment | > 1 (expected) | yes |
+| S7 | SAE | ARRMSE reduction of FH_text vs FH_frame on state × NTEE10 (gov_grants, has_gov_grants) | ≥ 10%; publishable-domain share + 5 pp | < 10% |
+| S9 | A modern embedding is needed | GM-RE(best of L4, L6) − GM-RE(L2), log scale | ≥ log 1.05 | < log 1.05 |
+| S10 | On-prem suffices | GM-RE(L6) − GM-RE(best of L2, L4, L5), log scale | ≤ log 1.05 | yes |
+| S11 | Multimodal adds (R2 only) | L7 fused vs L6 text on the same units; L7 vs L7-ext | ≥ 1.05 over text; L7 ≥ L7-ext | L7-ext ≫ L7 |
+| S12 | The verdict replicates | meta-analytic pooled RE and its prediction interval (§8.6) for P1 and P2 | same verdict category; PI lower bound > 1.0 for any production claim | weaker or null |
+
+### 9.5 Multiplicity
+
+- Holm applies to P1 and P2 only.
+- M- and S-hypotheses carry 95% bounds and are labelled secondary. **No secondary result can rescue a failed primary.**
+- Everything else is exploratory: other estimators, y, n, K, arms and learners. "Best of about 40 estimators per y" is never reported as a finding. A table of all estimators is shown with the pre-registered ones highlighted.
+- Controls are gates, not hypotheses.
+
+### 9.6 What falsifies the idea, and what would justify production
+
+**Falsified for annual non-profit surveys with a tax-linked register** if all of the following hold:
+1. P1's upper bound is < 1.10;
+2. the planted control shows ρ²_min(1,000) ≤ 0.10, so the pipeline could have seen a 10% partial R²;
+3. the controls are clean;
+4. the meta-analytic pooled RE for P1 has an upper bound < 1.10.
+
+The statement is then: "under a register with lagged size and composition, t−1 text carries < 10% of the residual variance of survey-only y, and an estimator that could exploit it does not pay".
+
+**Reduced to "finer codes"** if factor C's main effect given B is negligible (M1 share < 0.25, M2 fails). The production action is then to use the full NTEE code (and, where it is missing, text-coded NTEE) in strata and calibration. That is a register-coding change, not an embedding system.
+
+**Reduced to "ML, not text"** if factor A's Shapley share is ≥ 0.5 and C's is < 0.25. The production action is then a ratio-scale model calibration on register variables, with no text.
+
+**Production pilot justified** if all of the following hold:
+- P1 and P2 pass;
+- M3, M6 and M7 pass;
+- the meta-analytic prediction-interval lower bound for P2 is > 1.0;
+- the binding-constraint saving is ≥ 10% of the take-some sample;
+- an on-prem rung (L2, L4 or L5) is within 0.05 (log scale) of the best;
+- the cost balance is positive.
+
+**Niche use justified** without P1 if S2 (weak register), S6 (nonresponse), S7 (SAE) or S4 (coding) pass in a scenario that maps to a real programme. Examples: non-charity NPOs on a BR-only frame; births; NTEE10 domain tables. The recommendation is then scoped to that use.
+
+### 9.7 Why these thresholds
+
+- 1.10 is about the smallest variance reduction that justifies re-specifying a production estimation system.
+- At n = 1,000 (794 take-some units) it saves about 70 questionnaires a year: about CAD 14k at the default unit cost, close to the cost of maintaining a pipeline.
+- The GM over H is used because a survey is multipurpose.
+- The meta-analytic condition guards against a single lucky population.
+
+---
+
+## 10. Dataset red-team checklist and replication datasets
+
+### 10.1 Data tests (notebook 01)
+
+Draft A §10.1 has the full numbered list (T01–T32), which comes from note 03 §5. This draft adopts it unchanged. Key tests and their observed values:
+
+| # | Test | Rule | Observed (NE) |
+|---|---|---|---|
+| T06/T12 | Frame snapshot leakage: share with BMF REVENUE_AMT = y_t | blocking if > 1% | 0.48% (2023-08 BMF) vs 22.8% (2026 BMF) |
+| T10/T11 | Text and lags only from TY ≤ t−1 returns submitted ≤ D | blocking | TY2022 only |
+| T13 | Previous-wave BMF codes recomputed from TY2021 amounts | **blocking for frozen and selection** | new |
+| T14/L2 | Numbers in text: exact y_t; digits; "$" | report + L2 | exact y_t 0.000–0.005%; digits 44%; "$" 3.8% |
+| T16 | Text staleness | report | 84.5% of missions identical t−1 vs t |
+| T19 | Near-duplicate clusters, kept together in folds | blocking | 4.8% exact duplicates |
+| T23 | Text and website missingness by size; correlation with y | report | URL 93% overall |
+| T25 | Allocation feasibility for every n in the grid | blocking | n = 500 fails under D1 |
+| T26 | Single take-some unit share of a take-some total | FLAG > 5% | volunteers 16.4% |
+| T27 | Volunteers: blank vs 0, heaping | defines the estimand | 19.7% blank; 32% on multiples of 10 |
+| T28 | NTEE MISSING by size and age | report | 31.1% overall |
+| T29 | Late-filer response by stratum | report | 61% take-some, 12% take-all |
+
+### 10.2 Harness and methods tests (new; must pass before Stage 2)
+
+| # | Test | Rule | Current status |
+|---|---|---|---|
+| T-M1 | Penalty invariance: predictions unchanged under w → c·w; ‖B̂_λ‖ strictly decreasing in λ | blocking | **FAIL**: identical ‖B̂‖ for every λ with weights d·x̃ (B.1) |
+| T-M2 | `ridge` kind: CV-scored λ equals applied λ (same function) | blocking | **FAIL by inspection** (defect b) |
+| T-M3 | y outside the sample never used: permute y over U \ s; every estimate unchanged | blocking | to write |
+| T-M4 | Folds: no near-duplicate group split; per-stratum balance ±1 | blocking | groups yes, balance no |
+| T-M5 | Common-random-number invariance: adding an estimator leaves others bit-identical | blocking | **FAIL**: shared rng (draft A §8.3) |
+| T-M6 | HT and GREG unbiased, coverage ≈ 95% on a synthetic population | blocking | pass (working log) |
+| T-M7 | FROZEN_diff: \|RB\| < 2 MC SE; v_frozen relative bias within MC error | blocking | to run |
+| T-M8 | No binary y reaches a ratio-scale learner | blocking | **FAIL** (defect c) |
+| T-M9 | Calibration convergence; g-bounds respected; failure rate < 0.5% | blocking | to add |
+| T-M10 | A same-class ceiling exists for every MC estimator | blocking (C1) | ratio-scale ceiling missing |
+| T-M11 | PCA uses no y; the frozen rotation is the previous wave's | blocking | `frozen.py` correct; add an assertion |
+| T-M12 | Units with lag_expenses ≤ 0 (ratio model predicts ≈ 0): share and their share of each y total | report | 0.67% of units; 0.02% have gov grants: negligible |
+| T-M13 | Embedding cache: manifest hash = hash of the input texts actually used | blocking | exists (`embed.build`) |
+| T-M14 | Regression test: rerun the pilot primary cell after the fixes; log the changes | report | after the fixes |
+
+### 10.3 Replication datasets
+
+| ID | Dataset | Why | User action |
+|---|---|---|---|
+| R0 | National 990: TY2022 done, TY2023 downloading; TY2021 for the previous wave | Nine Census divisions as replicate populations (§8.6); about 560 SAE domains; n up to 20k for φ(n) | none (compute) |
+| R1 | **CRA T3010** (Canada): two consecutive fiscal periods; IDENT, NEW_ONGOING_PROGRAMS, FINANCIAL_SECTION_*, SCHEDULE_3 | Canadian register, bilingual text, government revenue by level (shows that charities are REG-P for gov_grants) | allowlist `open.canada.ca` or upload the CSVs; multilingual weights (L5) for French text |
+| R2 | **UK Charity Commission**: register extract plus t−1 accounts PDFs for a stratified sample of about 5–10k Part B charities | The only realistic PDF-native population: the L7 vs L6 vs L7-ext test | allowlist the CCEW hosts or upload; production Cohere key (images at 400/min) |
+| R2-alt | ACNC (Australia) AIS + financial reports | fallback for R2; licence ambiguity to resolve | data.gov.au access |
+| W | Website screenshots or HTML for 990 units with a URL | Multimodal on a realistic, size-graded est-time source | network access for crawling; robots.txt/terms-of-service review |
+
+Red team for the replications (from note 03):
+- **T3010:** names are backfilled, so name embeddings are not frame-time; 12.8% of BN-years have arithmetic violations; the form version changed.
+- **CCEW:** `charity_activities` is a current snapshot and therefore leaky; use `charitable_objects` or an archived extract. Use only the t−1 PDF, because the t PDF *is* y. Trustee names are personal data.
+
+---
+
+## 11. Notebook and results layout, and staged execution
+
+### 11.1 Layout
+
+The layout matches draft A §11.1, so the drafts merge.
+
+```
+embedding-auxiliary-variables/
+  config/protocol_v1.yaml     # frozen pre-registration (E*, K, learners, cells); hash logged before Stage 2
+  config/cells.yaml           # every MC cell: population, register, design, n, R, seed, estimator list
+  src/                        # library (+ Appendix A fixes); tests/ for T-M1..T-M14 (pytest)
+  scripts/run_cell.py         # one cell id -> results/<stage>/<cell>/{reps.parquet, metrics.csv, manifest.json}
+  scripts/build_embeddings.py # all model/API calls; never called from notebooks
+  notebooks/
+    00_protocol_and_config.ipynb   # renders config, checks hash, cell status
+    01_data_qa_redteam.ipynb       # Stage 0: T01-T32 + T-M tests summary, population card
+    02_stage1_ceilings.ipynb       # Stage 1: prev-wave selection; same-class + learning-curve ceilings;
+                                   #          NR exact-bias table; design AVs; planted-signal calibration
+    03_mc_calibration.ipynb        # Stage 2: P1, P2, factorial, M3-M7, S1-S2, cost curve
+    04_designs_stratification.ipynb# Stage 2D: S4, S5, S5b, M8
+    05_nonresponse.ipynb           # Stage 3: S6, S6b, L-V table
+    06_sae.ipynb                   # Stage 4: S7
+    07_embedding_ladder.ipynb      # Stage 5: S9-S11, M9, M10 (Cohere when available)
+    08_replication_meta.ipynb      # Stage 6: S12, meta-analysis
+    09_decision_report.ipynb       # pass/fail table, attribution, cost translation, recommendation
+```
+
+**Rules.**
+- Notebooks only read `results/`, so each re-runs in under 2 minutes.
+- Heavy runs go through `run_cell.py` in the background, with logs.
+- Every table prints its manifest hashes.
+- Each gate ends with a `working-log.md` entry: the decision and why.
+
+### 11.2 Staged plan and compute
+
+**Compute basis, measured:**
+- The running v1 cell (40 estimators, R = 500, New England, n = 1,000) logged 200 replicates in 400 s on the shared 4-core CPU at load average 14–19. That is about 2 s per replicate, or about 0.05 s per estimator-replicate.
+- The new learners (two-part, logit, kNN, dual ridge) are budgeted at 1.5× that.
+- Assume two cells in parallel.
+
+| Stage | Content | Cells × R | CPU estimate | Gate |
+|---|---|---|---|---|
+| **0 Fixes + data QA** | Appendix A fixes with unit tests T-M1–T-M14; add T0 names and fine codes C to the population; recompute previous-wave BMF codes (T13); notebook 01 tests | — | about 1 h CPU (plus coding) | **G0:** blocking tests pass; volunteers estimand fixed; pilot regression test logged |
+| **1 Diagnostics** | Previous wave: same-class ceilings for L1–L4 × T1/T2 × K × {twin, codes twin} (about 64 feature sets), then select E\*, K, learner. Current wave: ceilings for every MC estimator; learning-curve ceilings (B = 50, n ∈ {500, 1,000, 2,000}); NR exact-bias table; design AVs; planted-signal calibration of a. | — | 3–4 h (at about 8 min per 4 feature sets under load) | **G1:** `protocol_v1.yaml` frozen and hashed |
+| **2A Primary** | REG-S+, D1, n = 1,000: factorial (8) + P1/P2 arms + frozen variants + controls (N1, N2, N2w, N2c, N3, O1, O3, S1), about 45 estimators | 1 × 2,000 | about 2 h | — |
+| 2B Registers | W, S, P with the primary arms (about 20 estimators) | 3 × 1,000 | about 1.5 h | — |
+| 2C Planted | 120 planted columns, 10 estimators, n = 1,000; plus D0 at n = 500 and 2,000 | 3 × 1,000 | about 2.5 h | — |
+| 2D Scaling | D0 n ∈ {250, 500, 1,000, 2,000}; K ∈ {2, …, 128, full} at n = 1,000 (12 estimators) | 8 × 500 | about 2 h | — |
+| 2E Bootstrap | 200 replicates × B = 300 on 4 estimators | 1 | about 2 h | — |
+| 2F Design × estimator | D1-H44, D1-imp, D2a, D2b, D2b-twin, D2c × 4 estimators | 6 × 1,000 | about 1 h | — |
+| 2G Cost curve | baseline at 6 n; text arms at 750 and 2,000 | 6 × 1,000 | about 1 h | **G2:** gates C1, M3 and M7 pass; P1/P2 drafted; review before Stage 3 |
+| **3 Nonresponse** | 7 mechanisms × about 22 estimators; TA-follow-up / TA-late | 8 × 1,000 | about 3.5 h | **G3** |
+| **4 SAE** | reuses the Stage-2A seeds; FH by REML per replicate (66 domains) | 2 × 1,000 | about 1 h | **G4** |
+| **5 Ladder / Cohere** | L5/L6/L6b on T1/T2; rerun the 2A ladder arms (common random numbers) and Stage-1 ceilings | 2 × 1,000 | about 1 h + API (< $1 for New England) | **G5** (U1) |
+| **6 Replication** | National build (MiniLM about 4 h CPU on 330k texts); 9 divisions × primary arms, R = 500; national n = 10,000 at about 10–20 s per replicate; T3010 (U2); CCEW (U3) | about 12 cells | 15–20 h | **G6:** S12; decision report |
+
+**Total before replication:** about 20 h CPU, about 10–12 h wall with two parallel cells. The MC never calls an embedding model; it reads cached matrices only.
+
+### 11.3 User actions
+
+| ID | Action | Unblocks |
+|---|---|---|
+| U1 | Allowlist `api.cohere.com`; add a **production** `COHERE_API_KEY` as an environment secret. A trial key's 1,000 calls/month cannot embed the national file. | Stage 5 (L6, L6b, L7) |
+| U2 | Allowlist `open.canada.ca`, or upload two years of T3010 CSVs | R1 |
+| U3 | Allowlist the CCEW hosts, or upload the extracts plus a PDF sample | R2, L7 |
+| U4 | Allowlist `huggingface.co`, or provide Qwen3-Embedding-0.6B / BGE-M3 weights | L5; French text |
+| U5 | Decide: unit cost c_u; CV targets; volunteers estimand; New England vs national as the primary population | §8.7, G0 |
+| U6 | Review this draft's two departures from A: (i) the P1 comparator is the codes twin; (ii) P2 is the frozen system | G1 (pre-registration) |
+
+---
+
+## 12. Real-world translation and governance
+
+### 12.1 How a result would be used
+
+| Result pattern | Production action | What it buys |
+|---|---|---|
+| P1 and P2 pass | Add one frozen text-score column per key variable to the existing calibration (`FROZEN_calm`). Retrain the head each cycle on last cycle's respondents. Run in parallel for one cycle, then reduce the take-some sample. | σ ≈ 1 − 1/RE_binding of the take-some sample (RE 1.2 → 17%), or tighter domain CVs at the same n. Variance software is unchanged: m is just another auxiliary with known total. |
+| P2 passes, P1 fails, factor A dominates | **Ratio-scale model calibration on register variables, no text** | The gain without any text pipeline or governance cost |
+| Factor B dominates (codes) | Use the full NTEE code, plus text-coded NTEE where it is missing, in strata and calibration | A register-coding change. StatCan already codes BN text, so this is the cheapest to govern. |
+| Only S2 passes (weak register) | Use text only for frame segments without admin data: non-charity NPOs, births, stale-lag units | Precision where the register is thin. Check that segment's share of output first. |
+| S6 passes | Predictive-mean classes or donor matching on text in the nonresponse step | Lower nonresponse bias for survey-only y. Unlike variance, bias is not fixed by a larger n. |
+| S7 passes | One text-derived covariate (domain mean of the frozen text score) in Fay–Herriot | More publishable domain cells |
+| Nothing passes | Stop, and publish the null with ρ²_min | Settles a recurring proposal; avoids system cost |
+
+**Methods caveat for deployment.** In production the head is trained on last cycle's *respondents*, which are a nonrandom subset under late filing. The difference and calibration estimators stay design-consistent whatever the head's quality, but the head is weaker. The frozen-head simulation therefore trains on previous-wave respondents with nonresponse-adjusted weights, as a sensitivity (Stage 3).
+
+### 12.2 Which NSO data sources would play the role of text
+
+| Source | At design time? | Coverage | Confidentiality | Modality | Best role |
+|---|---|---|---|---|---|
+| BN registration "major business activity" + main products (CRA RC1); SS-4 lines 16–17 (US) | yes | near-universal for BN holders; stale for old units | confidential (Statistics Act access) | short text | Frame coding; calibration score. **The analogue of T1.** |
+| T3010 program descriptions (charities) | yes (t−1) | about 84k registered charities | public | text, EN/FR | The analogue of T2; replication R1 |
+| BR legal and operating names | yes | universal, births included | confidential | very short text | Births and stale units (T0) |
+| Organization websites | crawl at D, or est-time | size-graded (about 45% of small NPOs → 88% of large) | public, under the NSO's web-scraping policy | text + layout | Est-time auxiliary; nonresponse covariate; L7 |
+| Annual reports and financial-statement PDFs (UK CCEW, ACNC; T3010 attachments **[verify publication]**) | t−1 | mostly larger units | public (UK/AU) | PDF pages | Extract the lagged numbers first (L7-ext); embed the narrative only if residual signal remains |
+| Admin tax and payroll (T2/GIFI, T3010 lines, PD7A) | yes | near-universal | confidential | numeric | The baseline text must beat (REG-S+/P) |
+
+### 12.3 Governance
+
+**Confidentiality.** BN text and register data cannot go to an external API. Production routes:
+- open-weight models on-prem (L2, L4, L5). This is why S10 is a decision criterion.
+- a vendor private deployment inside the NSO enclave, or a single-tenant deployment with a written Canadian-residency guarantee (note 04 §2.4).
+
+Public-data experiments (990, T3010, CCEW) may use the Cohere API.
+
+**Reproducibility and revisions.**
+- Embeddings are computed once per cycle, content-addressed (`embed.py` manifests) and frozen with the cycle's estimates.
+- Published estimates are never revised because a model changed.
+- When a model is deprecated (Cohere Embed v2 was shut down on 2026-04-04), run a **bridging study**: re-embed the last cycle, re-estimate, and publish the shift in the quality report.
+- A canary set is re-embedded each cycle (alarm if cosine < 0.999).
+
+**Documentation.** The frozen head is a documented auxiliary model, recorded in a model card with:
+- training data (last cycle's respondents);
+- features;
+- the λ policy;
+- population R²;
+- an ageing check;
+- weight diagnostics.
+
+Design consistency does not depend on the head's quality, which is the key governance argument. A bad head costs efficiency, not bias.
+
+**Fairness across domains.** Domain-level model error is the main way text could *introduce* bias into small-area tables. Report per-domain RB for FH_text vs FH_frame, and gains by size class and by language (French text in R1).
+
+**Responsible-ML review.** Apply the NSO's framework (StatCan's *Framework for Responsible Machine Learning Processes*, **[confirm current title and version]**) and record purpose, data, model card, validation (this benchmark) and monitoring.
+
+---
+
+## Appendix A: code changes required before Stage 2
+
+| # | File / function | Change | Test |
+|---|---|---|---|
+| A1 | `mc._ridge_fit` (also used by `frozen.py`, `sae.py`) | Normalize w to mean 1 before the weighted standardization; keep penalty λ·n on standardized columns; widen `LAMS` to 10^{−4..2} (13 values) | T-M1 |
+| A2 | `mc._estimate` kind `ridge` | Tune λ by CV of the penalized-calibration estimator itself (fold-wise B̂_λ from `greg_total` with the same `pen` formula), scored by the T3 loss | T-M2 |
+| A3 | `mc._ridge_cv_lambda` | Replace the w-weighted ratio-scale SSE with the cross-validated anticipated variance on the y scale (T3); accept a `back_transform` (× x̃) | unit test on a synthetic population |
+| A4 | `mc._folds` | Groups dealt round-robin within design strata; fold seed from (cell_seed, r), shared by all arms | T-M4 |
+| A5 | `mc.run_cell` | Per-replicate and per-estimator RNG streams (§8.3); store a weight summary per replicate | T-M5 |
+| A6 | `experiments.embedding_specs` / `mc._estimate` | y-type-specific learners: `ratio` for amounts, `logit` for binaries (ridge-logistic, cross-fitted), `2part` for zero-inflated amounts | T-M8 |
+| A7 | `experiments.build_mats` | Fine-code matrix C (§4.4); `@reg` variants (S+, P); within-cell and within-code permuted embeddings (N2w, N2c); full-dimension features for the dual ridge | — |
+| A8 | `mc._estimate` | New kinds: `diff_cf`, `knn`, `mcal_multi` (bounded), `pccal_pos`, `ridge1w`; `frozen` variants `ppi`, `calm`, `update` | unit tests vs closed forms |
+| A9 | `survey.py` | v_g, v_df (trace of the hat matrix), Rao–Wu–Yue bootstrap wrapper that re-runs `_estimate` with refitting | T-M6 extended |
+| A10 | `diagnostics.py` | Same-class ceilings: ratio-scale target, d·x̃ weights, the same learner families, per-estimator; learning-curve ceilings (§8.4) | C1 |
+| A11 | `sae.py` | FH with intercept, multiple covariates, GVF-smoothed ψ, REML σ²_u, Prasad–Rao MSE; frozen covariates | synthetic FH check |
+| A12 | `mc._nr_weights` | Propensity-score classes, predictive-mean classes, joint classes, DR (AIPW) with cross-fitted nuisances, kNN donor imputation; take-all imputation; Stage-1 exact-bias functions | — |
+| A13 | `frame.py` | D1-W, D1-H44, D1-imp, D2a, D2b (residual-scale allocation), D2c; equal-H assertion | T25 |
+| A14 | `build_population.py` | Keep the BMF name (T0) and the codes needed for C; previous-wave BMF codes from TY2021 amounts (T13); volunteers blank flag | T13, T27 |
+| A15 | new `metrics` helpers | Replicate bootstrap for GM-RE and Shapley shares; studentized-error moments; meta-analysis (REML random effects) | — |
+
+---
+
+## Appendix B: computations run for this draft (2026-10-23)
+
+Scripts and outputs are copied to `notes/design/draftC_checks/` (`pen.py`, `codes_vs_text.py`, `codes_vs_text_v2.py`, `facts.py`, plus both CSVs). They read `/tmp/claude-0/data/pop/ne_pop.parquet` and the cached embeddings in `/tmp/claude-0/data/emb/ne/`. Run them with `src/` on the path.
+
+### B.1 Penalty scale (defect a)
+
+**Setup:** one D1 sample (n = 1,000; 794 take-some units), y = gov_grants, 60 pure-noise features. The table gives ‖B̂_λ‖/‖B̂_{0.001}‖ from `mc._ridge_fit`, for λ over the `LAMS` grid.
+
+| Weights | Σw | λ = 0.001 | 0.01 | 0.1 | 1 | 10 |
+|---|---|---|---|---|---|---|
+| d (raw-scale learners) | 2.0 × 10⁴ | 1 | 0.9995 | 0.994 | 0.945 | 0.646 |
+| d·x̃ (ratio-scale learners) | 7.7 × 10¹⁰ | 1 | 1 | 1 | 1 | 1 |
+| d·x̃ normalized to mean 1 | 794 | 1 | 0.987 | 0.877 | 0.440 | 0.080 |
+
+**Conclusion.** The ratio-scale learners (pilot MCAL_ratio, frozen heads, SAE models) were unpenalized whatever λ the CV chose. The raw-scale learners were penalized about Σw/n ≈ 26 times less than the grid suggests.
+
+### B.2 Pre-check: do fine register codes capture the text gain? (Stage-1 ceilings, REG-S+)
+
+**Setup.**
+- Design D1, n = 1,000.
+- Ceilings from `diagnostics.evaluate_feature_sets`: population 5-fold cross-fitted weighted ridge, best λ per y, so optimistic.
+- **base** = `frame_matrix(strong)` + lag_salaries, lag_contrib, lag_prog_rev (REG-S+), unpenalized.
+- **codes** = base + C: NTEE letter, NTEE code (206 levels after pooling codes with fewer than 20 units), subsection, ruling decade, BMF asset code.
+- **text** = base + 32 LSA-T2 PCs + PC × lag_expenses + PC × lag_employees (draft A's Appendix B features).
+
+Values are AV(base)/AV(set).
+
+**Run 1 (codes also × lag_expenses: 646 columns; λ grid 10⁻⁴–10⁻¹).**
+
+| y | codes | text | codes + text |
+|---|---|---|---|
+| gov_grants | 1.26 | 1.20 | 1.31 |
+| fundraising_exp | 0.87 | 1.16 | 0.91 |
+| officer_comp | 0.92 | 1.04 | 0.94 |
+| volunteers_cap10k | 0.94 | 1.03 | 0.95 |
+| has_gov_grants | 1.06 | 1.14 | 1.13 |
+| grants_to_indiv_us | **0.35** | 1.17 | 0.37 |
+| grants_paid | 0.95 | 1.16 | 0.99 |
+| expenses | 1.00 | 0.99 | 1.01 |
+| **GM over H** | **0.84** | **1.12** | 0.87 |
+
+**Reading of run 1.** A cross-fitted population ceiling with oracle λ should not fall far below the base model. Values of 0.35 and 0.84 are therefore a *tooling* failure, not evidence that codes hurt. Two causes:
+- the λ grid stops at 0.1;
+- rare dummies are standardized, so their raw-scale coefficients are barely penalized (rule T2, categorical blocks).
+
+The run still shows two things.
+- The text ceiling (GM 1.12) reproduces draft A.
+- How much text adds over codes depends on penalizing a few hundred sparse columns correctly. The codes twin needs the same care as the text arm, or the comparison favours text.
+
+**Run 2 (codes as dummies only: 373 columns; λ grid 10⁻³–10², about 10 min under load).** This is the run to use.
+
+| y | codes | text | codes + text | text given codes | share of the text log-gain explained by codes |
+|---|---|---|---|---|---|
+| gov_grants | 1.029 | 1.203 | 1.207 | 1.173 | 0.14 |
+| fundraising_exp | 1.036 | 1.155 | 1.175 | 1.134 | 0.13 |
+| officer_comp | 1.007 | 1.045 | 1.048 | 1.040 | 0.11 |
+| volunteers_cap10k | 1.002 | 1.029 | 1.023 | 1.021 | 0.27 |
+| has_gov_grants | 1.096 | 1.144 | 1.171 | 1.069 | 0.51 |
+| grants_to_indiv_us | 1.044 | 1.167 | 1.172 | 1.123 | 0.25 |
+| grants_paid (stress) | 1.014 | 1.158 | 1.154 | 1.138 | 0.12 |
+| expenses (negative control) | 1.001 | 1.006 | 1.006 | 1.005 | — |
+| **GM over H** | **1.035** | **1.122** | **1.130** | **1.092** | **0.20** |
+
+**Reading.**
+1. **Text is mostly not "finer codes".** Codes explain about 20% of the text ceiling's log-gain for the headline set. The share is about half for has_gov_grants and about a quarter for grants to individuals. So the binaries' text signal is partly sector detail, and the amounts' text signal is mostly not.
+2. **The P1 ceiling (text given codes) is 1.09.** Under the p/n factor of §8.5 (≈ 0.96), the pre-registered P1 prediction is about **1.05**. That is below "material" (1.10). P1 is expected to be inconclusive or to fail, while the planted control certifies that the pipeline could have detected about 10% partial R².
+3. **The codes-twin estimate is probably optimistic for text.** In run 1, code × size interactions gave gov_grants 1.26 (against 1.03 here). Code-specific ratio slopes therefore carry real signal for gov_grants, even though they were unregularized there.
+   - The MC codes twin is a ratio-scale learner, which builds code × size interactions in.
+   - It may close more of the gap than run 2 suggests.
+   - Stage 1 must recompute this pre-check **same-class**: ratio scale, d·x̃ weights, unstandardized dummy penalty.
+4. **The negative control behaves.** Expenses: 1.00–1.01 under every set.
+
+Output: `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/drC/codes_vs_text_v2.csv`.
+
+### B.3 Population facts used in this draft (New England U-cont, N = 20,626)
+
+- **Zero shares:** gov_grants 68.9%, fundraising_exp 61.5%, officer_comp 50.7%, grants_paid 70.0%, volunteers 41.3%, employees 36.9%.
+- **Top-1% shares:** expenses 67.5%, gov_grants 65.2%, volunteers 81.9%, grants_paid 89.2%.
+- **Binary prevalences:** has_gov_grants 0.311, grants_to_indiv 0.121, lobbying 0.058, foreign 0.043, gaming 0.027, has_volunteers 0.587.
+- **Correlation of each lag with y (raw / log1p):** salaries 0.998 / 0.970; contrib 0.998 / 0.916; gov_grants (oracle lag) 0.988 / 0.827; fundraising 0.996 / 0.935; volunteers 0.996 / 0.885.
+- **lag_expenses ≤ 0:** 0.67% of units; 0.02% also have gov grants.
+- **Codes:** NTEE letter known for 68.9%; 1,571 distinct full NTEE codes, 206 levels after pooling codes with fewer than 20 units.
+- **Domains (state × NTEE10):** 66; median N_d = 145; 17 with N_d < 30.
+- **Previous wave:** N = 20,317; 19,478 units in both waves.
+- **Response (≤ 300 days):** 60.1%. Website URL present: 92.8%.
