@@ -79,20 +79,20 @@ G3,MCAL_bmfmax+Estar vs MCAL_bmfmax | y_plc_perm,0.995,True
 G3,MCAL_frame+Estar vs MCAL_frame | y_plc_perm,0.997,True
 G3,FROZEN_calm_bmfmax+Estar vs FROZEN_calm_bmfmax | y_plc_perm,1.004,True
 G3,MCALm_bmfmax+Estar vs MCALm_bmfmax | y_plc_perm,1.009,True
-G3,RIDGECAL+Estar vs GREG_size_cat | y_plc_perm,0.987,True
-G3,RIDGECAL+C+Estar vs RIDGECAL+C | y_plc_perm,9.167,False
+G3,LINCAL+Estar vs GREG_size_cat | y_plc_perm,0.788,True
+G3,LINCAL+C+Estar vs LINCAL+C | y_plc_perm,9.352,False
 G3,MCAL_bmfmax+Estar vs MCAL_bmfmax | y_plc_noise,0.984,True
 G3,MCAL_frame+Estar vs MCAL_frame | y_plc_noise,0.991,True
 G3,FROZEN_calm_bmfmax+Estar vs FROZEN_calm_bmfmax | y_plc_noise,1.064,False
 G3,MCALm_bmfmax+Estar vs MCALm_bmfmax | y_plc_noise,0.977,True
-G3,RIDGECAL+Estar vs GREG_size_cat | y_plc_noise,1.271,False
-G3,RIDGECAL+C+Estar vs RIDGECAL+C | y_plc_noise,0.629,False
+G3,LINCAL+Estar vs GREG_size_cat | y_plc_noise,0.872,True
+G3,LINCAL+C+Estar vs LINCAL+C | y_plc_noise,0.955,False
 G3,MCAL_bmfmax+Estar vs MCAL_bmfmax | y_bin_plc_bern,1.003,True
 G3,MCAL_frame+Estar vs MCAL_frame | y_bin_plc_bern,1.002,True
 G3,FROZEN_calm_bmfmax+Estar vs FROZEN_calm_bmfmax | y_bin_plc_bern,0.999,True
 G3,MCALm_bmfmax+Estar vs MCALm_bmfmax | y_bin_plc_bern,1.0,True
-G3,RIDGECAL+Estar vs GREG_size_cat | y_bin_plc_bern,1.0,True
-G3,RIDGECAL+C+Estar vs RIDGECAL+C | y_bin_plc_bern,1.142,False
+G3,LINCAL+Estar vs GREG_size_cat | y_bin_plc_bern,0.934,True
+G3,LINCAL+C+Estar vs LINCAL+C | y_bin_plc_bern,1.091,False
 G4,MCAL_bmfmax+Estar | y_gov_grants,"cov 88.6 (comp 88.3, HT 91.2); varRB -26%; RB 0.33%",False
 G4,MCAL_bmfmax+Estar | y_contrib,"cov 89.3 (comp 89.8, HT 93.8); varRB -21%; RB 0.26%",False
 G4,MCAL_bmfmax+Estar | y_prog_rev,"cov 90.0 (comp 90.1, HT 94.8); varRB -23%; RB 0.22%",False
@@ -153,36 +153,36 @@ G4,MCALm_bmfmax+Estar | y_expenses,"cov 89.8 (comp 89.2, HT 95.2); varRB -15%; R
 G4,MCALm_bmfmax+Estar | y_employees,"cov 90.5 (comp 90.1, HT 94.5); varRB -21%; RB 0.00%",False
 G4,MCALm_bmfmax+Estar | y_salaries,"cov 89.9 (comp 90.5, HT 94.5); varRB -16%; RB 0.02%",False
 G4,MCALm_bmfmax+Estar | y_bin_has_gov_grants,"cov 93.5 (comp 93.7, HT 94.7); varRB -6%; RB -0.02%",True
-G4,RIDGECAL+Estar | y_gov_grants,"cov 85.0 (comp 90.3, HT 91.2); varRB -38%; RB 0.05%",False
-G4,RIDGECAL+Estar | y_contrib,"cov 86.5 (comp 91.0, HT 93.8); varRB -35%; RB 0.26%",False
-G4,RIDGECAL+Estar | y_prog_rev,"cov 86.4 (comp 90.2, HT 94.8); varRB -33%; RB 0.31%",False
-G4,RIDGECAL+Estar | y_fundraising_exp,"cov 84.0 (comp 87.6, HT 92.5); varRB -47%; RB 0.59%",False
-G4,RIDGECAL+Estar | y_officer_comp,"cov 87.9 (comp 89.2, HT 91.7); varRB -12%; RB 0.60%",True
-G4,RIDGECAL+Estar | y_volunteers_cap10k,"cov 87.1 (comp 88.5, HT 88.8); varRB -8%; RB 0.10%",True
-G4,RIDGECAL+Estar | y_bin_has_volunteers,"cov 93.8 (comp 94.2, HT 94.5); varRB -6%; RB 0.05%",True
-G4,RIDGECAL+Estar | y_bin_grants_to_indiv_us,"cov 93.0 (comp 93.5, HT 94.2); varRB -7%; RB 0.55%",True
-G4,RIDGECAL+Estar | y_bin_foreign_activities,"cov 92.1 (comp 92.4, HT 92.6); varRB -0%; RB 0.65%",True
-G4,RIDGECAL+Estar | y_bin_lobbying,"cov 93.0 (comp 93.3, HT 93.6); varRB 0%; RB 0.69%",True
-G4,RIDGECAL+Estar | y_revenue,"cov 90.3 (comp 91.9, HT 95.7); varRB -20%; RB 0.22%",False
-G4,RIDGECAL+Estar | y_expenses,"cov 88.8 (comp 90.5, HT 95.2); varRB -15%; RB 0.05%",False
-G4,RIDGECAL+Estar | y_employees,"cov 87.8 (comp 91.1, HT 94.5); varRB -26%; RB -0.06%",False
-G4,RIDGECAL+Estar | y_salaries,"cov 87.9 (comp 90.1, HT 94.5); varRB -20%; RB 0.02%",False
-G4,RIDGECAL+Estar | y_bin_has_gov_grants,"cov 93.5 (comp 93.6, HT 94.7); varRB -7%; RB 0.15%",True
-G4,RIDGECAL+C+Estar | y_gov_grants,"cov 82.2 (comp 87.8, HT 91.2); varRB -100%; RB -3.20%",False
-G4,RIDGECAL+C+Estar | y_contrib,"cov 83.5 (comp 88.7, HT 93.8); varRB -100%; RB -6.47%",False
-G4,RIDGECAL+C+Estar | y_prog_rev,"cov 82.8 (comp 86.4, HT 94.8); varRB -100%; RB 2.28%",False
-G4,RIDGECAL+C+Estar | y_fundraising_exp,"cov 76.7 (comp 80.8, HT 92.5); varRB -100%; RB -0.36%",False
-G4,RIDGECAL+C+Estar | y_officer_comp,"cov 86.4 (comp 88.2, HT 91.7); varRB -100%; RB -4.47%",False
-G4,RIDGECAL+C+Estar | y_volunteers_cap10k,"cov 84.0 (comp 86.3, HT 88.8); varRB -100%; RB 16.89%",False
-G4,RIDGECAL+C+Estar | y_bin_has_volunteers,"cov 81.6 (comp 81.5, HT 94.5); varRB -100%; RB -17.39%",False
-G4,RIDGECAL+C+Estar | y_bin_grants_to_indiv_us,"cov 83.6 (comp 84.4, HT 94.2); varRB -100%; RB 0.50%",False
-G4,RIDGECAL+C+Estar | y_bin_foreign_activities,"cov 86.9 (comp 87.6, HT 92.6); varRB -100%; RB 48.37%",False
-G4,RIDGECAL+C+Estar | y_bin_lobbying,"cov 91.1 (comp 91.4, HT 93.6); varRB -100%; RB -2.24%",False
-G4,RIDGECAL+C+Estar | y_revenue,"cov 86.9 (comp 88.8, HT 95.7); varRB -100%; RB -1.33%",False
-G4,RIDGECAL+C+Estar | y_expenses,"cov 85.9 (comp 88.2, HT 95.2); varRB -100%; RB -0.21%",False
-G4,RIDGECAL+C+Estar | y_employees,"cov 86.5 (comp 89.0, HT 94.5); varRB -100%; RB -1.34%",False
-G4,RIDGECAL+C+Estar | y_salaries,"cov 87.2 (comp 88.8, HT 94.5); varRB -99%; RB 0.25%",False
-G4,RIDGECAL+C+Estar | y_bin_has_gov_grants,"cov 83.5 (comp 83.5, HT 94.7); varRB -100%; RB -23.21%",False
+G4,LINCAL+Estar | y_gov_grants,"cov 87.9 (comp 90.3, HT 91.2); varRB -26%; RB 0.72%",False
+G4,LINCAL+Estar | y_contrib,"cov 90.1 (comp 91.0, HT 93.8); varRB -24%; RB 0.48%",False
+G4,LINCAL+Estar | y_prog_rev,"cov 89.1 (comp 90.2, HT 94.8); varRB -28%; RB 0.18%",False
+G4,LINCAL+Estar | y_fundraising_exp,"cov 87.5 (comp 87.6, HT 92.5); varRB -37%; RB 0.84%",False
+G4,LINCAL+Estar | y_officer_comp,"cov 85.7 (comp 89.2, HT 91.7); varRB -38%; RB 1.03%",False
+G4,LINCAL+Estar | y_volunteers_cap10k,"cov 87.2 (comp 88.5, HT 88.8); varRB -22%; RB 0.80%",False
+G4,LINCAL+Estar | y_bin_has_volunteers,"cov 88.8 (comp 94.2, HT 94.5); varRB -33%; RB 0.21%",False
+G4,LINCAL+Estar | y_bin_grants_to_indiv_us,"cov 90.3 (comp 93.5, HT 94.2); varRB -25%; RB 1.03%",False
+G4,LINCAL+Estar | y_bin_foreign_activities,"cov 89.5 (comp 92.4, HT 92.6); varRB -19%; RB 1.56%",False
+G4,LINCAL+Estar | y_bin_lobbying,"cov 91.5 (comp 93.3, HT 93.6); varRB -19%; RB 1.16%",False
+G4,LINCAL+Estar | y_revenue,"cov 86.4 (comp 91.9, HT 95.7); varRB -43%; RB 0.23%",False
+G4,LINCAL+Estar | y_expenses,"cov 84.5 (comp 90.5, HT 95.2); varRB -41%; RB -0.01%",False
+G4,LINCAL+Estar | y_employees,"cov 86.6 (comp 91.1, HT 94.5); varRB -34%; RB -0.04%",False
+G4,LINCAL+Estar | y_salaries,"cov 84.5 (comp 90.1, HT 94.5); varRB -34%; RB -0.11%",False
+G4,LINCAL+Estar | y_bin_has_gov_grants,"cov 90.6 (comp 93.6, HT 94.7); varRB -24%; RB -0.02%",False
+G4,LINCAL+C+Estar | y_gov_grants,"cov 87.8 (comp 85.5, HT 91.2); varRB -99%; RB 0.43%",False
+G4,LINCAL+C+Estar | y_contrib,"cov 88.2 (comp 85.5, HT 93.8); varRB -100%; RB -3.23%",False
+G4,LINCAL+C+Estar | y_prog_rev,"cov 88.0 (comp 85.8, HT 94.8); varRB -100%; RB 1.12%",False
+G4,LINCAL+C+Estar | y_fundraising_exp,"cov 86.4 (comp 84.1, HT 92.5); varRB -100%; RB 1.39%",False
+G4,LINCAL+C+Estar | y_officer_comp,"cov 85.0 (comp 84.0, HT 91.7); varRB -99%; RB 0.05%",False
+G4,LINCAL+C+Estar | y_volunteers_cap10k,"cov 86.5 (comp 85.2, HT 88.8); varRB -97%; RB 3.78%",False
+G4,LINCAL+C+Estar | y_bin_has_volunteers,"cov 91.0 (comp 90.8, HT 94.5); varRB -100%; RB 15.40%",False
+G4,LINCAL+C+Estar | y_bin_grants_to_indiv_us,"cov 90.1 (comp 90.0, HT 94.2); varRB -99%; RB -0.39%",False
+G4,LINCAL+C+Estar | y_bin_foreign_activities,"cov 88.4 (comp 87.6, HT 92.6); varRB -100%; RB -16.97%",False
+G4,LINCAL+C+Estar | y_bin_lobbying,"cov 90.6 (comp 91.1, HT 93.6); varRB -100%; RB 4.74%",False
+G4,LINCAL+C+Estar | y_revenue,"cov 86.5 (comp 85.5, HT 95.7); varRB -100%; RB -0.45%",False
+G4,LINCAL+C+Estar | y_expenses,"cov 83.7 (comp 82.0, HT 95.2); varRB -99%; RB -0.04%",False
+G4,LINCAL+C+Estar | y_employees,"cov 86.5 (comp 84.4, HT 94.5); varRB -100%; RB 0.46%",False
+G4,LINCAL+C+Estar | y_salaries,"cov 84.5 (comp 82.8, HT 94.5); varRB -100%; RB -0.56%",False
+G4,LINCAL+C+Estar | y_bin_has_gov_grants,"cov 92.1 (comp 92.0, HT 94.7); varRB -100%; RB 10.14%",False
 G5,P1 text vs twin | y_gov_grants,MC 1.084 vs ceiling 1.071,True
 G5,P1 text vs twin | y_contrib,MC 1.078 vs ceiling 1.083,True
 G5,P1 text vs twin | y_prog_rev,MC 1.026 vs ceiling 1.005,True

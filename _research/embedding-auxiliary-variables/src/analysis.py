@@ -193,3 +193,26 @@ def rho2_min(pl):
     strict = next((r for r in met.index if met[r] >= need[r]), None)
     lenient = next((r for r in met.index if met[r] >= 2), None)
     return strict, lenient, met.to_dict()
+
+
+def attribution_2x2(df, truth, T="F1p", E="Estar", ys=H_SET, B=1000, seed=0):
+    """Codes (B) x text (C) Shapley shares within the ratio-scale ML learner, with a paired replicate bootstrap.
+    Cells: MCAL_frame (NTEE10-level codes), +E, MCAL_bmfmax (full codes), +E. Used because the linear cells of
+    the 2^3 factorial are unstable (deviation D-33). Returns point dict and 90% intervals for the text share."""
+    cells = {"": f"MCAL_frame@{T}", "C": f"MCAL_frame@{T}+{E}", "B": f"MCAL_bmfmax@{T}", "BC": f"MCAL_bmfmax@{T}+{E}"}
+    piv = df[df.estimator.isin(cells.values()) & df.y.isin(ys)].pivot_table(index="rep", columns=["estimator", "y"], values="est")
+    se = {k: np.stack([(piv[(e, y)].to_numpy() - truth[y]) ** 2 for y in ys], 1) for k, e in cells.items()}
+
+    def shares(idx):
+        lm = {k: np.log(v[idx].mean(0)) for k, v in se.items()}        # per-y log MSE
+        phiB = 0.5 * ((lm[""] - lm["B"]) + (lm["C"] - lm["BC"])).mean()
+        phiC = 0.5 * ((lm[""] - lm["C"]) + (lm["B"] - lm["BC"])).mean()
+        return phiB, phiC
+    R = len(piv)
+    pB, pC = shares(np.arange(R))
+    rng = np.random.default_rng(seed)
+    bs = np.array([shares(rng.integers(0, R, R)) for _ in range(B)])
+    share = bs[:, 1] / bs.sum(1)
+    return {"phi_codes": pB, "phi_text": pC, "text_share": pC / (pB + pC),
+            "text_share_lo": float(np.quantile(share, 0.05)), "text_share_hi": float(np.quantile(share, 0.95))}
+

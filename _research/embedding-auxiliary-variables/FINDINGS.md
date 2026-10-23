@@ -16,10 +16,13 @@ assessed. That is what the 8 held-out Census divisions are for (§9).
    - The gain is real. It survives random, permuted and constant-embedding controls, number masking, and a frozen previous-wave deployment.
    - It matches the pre-registered prediction (1.04) and the population ceiling (1.034).
    - It is well short of the 1.10 production bar.
-2. **A production system clears the bar, mostly without text.**
-   - The system: frozen ML heads on the register's own IRS codes plus text, in one bounded weight set. It beats today's GREG by **1.12** over the 10 headline variables (1.23 on the dollar items).
-   - The same system without text gives 1.07.
-   - So ML on codes already on the register is the bigger lever, and text adds about 5% on top. Neither clears 1.10 alone.
+2. **A production system clears the bar, but only by combining text with the full code block, and only on dollar items.**
+   - The system: frozen ML heads on the register's IRS codes plus text, in one bounded weight set. It beats today's GREG by **1.12** over the 10 headline variables, and by 1.23 on the dollar items.
+   - The ML learner itself adds nothing: 0.99 with coarse codes.
+   - The gain comes from richer unit descriptors: the full IRS code block and the text, which overlap.
+     - Text carries the larger Shapley share, 0.63 (0.58–0.68).
+     - In the order a real register experiences (codes are already there), text adds 4–5%: the system without text gives 1.07.
+   - Neither text alone nor codes alone clears 1.10.
 3. **It buys nothing where a multipurpose survey binds.**
    - The gains sit on dollar items: government grants, contributions, fundraising and program revenue, 1.18–1.41 each.
    - Volunteers, officer compensation and the yes/no items get 1.00–1.07.
@@ -32,12 +35,12 @@ assessed. That is what the 8 held-out Census divisions are for (§9).
    - Calibrating survey-only variables to lagged size multiplies late-filer nonresponse bias **3–10×**.
    - Text removes 19–35% of the bias that calibration adds.
    - Plain weighting classes without size calibration beat every text arm.
-6. **Last year's value of the same variable is worth 7–11×** (government grants, fundraising, officer compensation). Where an administrative line exists (T3010, payroll), linking it beats any text by two orders of magnitude.
+6. **Last year's value of the same variable is worth 7–11×** (government grants, fundraising, officer compensation). Where an administrative line exists (T3010, payroll), linking it dwarfs text's 1.04.
 7. **Protocol status.**
    - This is a development population, and the strict pre-registered verdict is **HARNESS NOT VALIDATED**: four gates have failing items.
    - Every failure is diagnosed:
      - a variance-estimator problem shared with production GREG;
-     - a defective linear arm, since repaired;
+     - an unstable linear comparison arm, so attribution uses a stable sub-design (D-32, D-33);
      - low power to realize planted signals;
      - one noise-control artifact.
    - The efficiency findings hold under every diagnosis. Confidence-interval claims for calibrated estimators do not.
@@ -45,7 +48,7 @@ assessed. That is what the 8 held-out Census divisions are for (§9).
 "Variance reduction, not productivity" is a correct description of the mechanism. As a value proposition for a
 survey with a tax-linked register, the reduction is 3–5%, and the larger and cheaper wins are elsewhere:
 - link administrative lags;
-- use ML on the codes the register already holds;
+- use the full activity and organization codes the register already holds, in a ratio-scale model calibration;
 - stop calibrating survey-only variables to size under size-related nonresponse.
 
 ---
@@ -210,7 +213,13 @@ Production P2 per variable, against today's GREG:
 
 **What this means**
 1. **Text works, and only a little.** The 4.4% gain matches the pre-registered prediction (1.04) and the population ceiling (1.034). It survives every negative control, masking numbers, a frozen previous-wave deployment (P2 increment 1.047), and the modern-embedding check: MiniLM is *worse* than LSA, and K = 64 is no better than K = 16.
-2. **Most of the production gain is ML on the codes the register already has**: the ratio-scale learner on the full IRS code block (BMF-max). The same learner on NTEE10-level codes alone is *worse* than GREG (0.993), while the full codes add 5.8%. Text then adds 4–5% on top. Neither text alone (P1) nor ML alone (P2-twin) clears 1.10; together they do, and only on the dollar items (H_D 1.23). On survey-type items (volunteers, yes/no) the whole system gives 1.025.
+2. **The production gain comes from descriptors, not from the learner.**
+   - The ratio-scale learner with NTEE10-level codes is no better than GREG (0.993).
+   - It gains when given richer descriptions of the units: the full IRS code block (BMF-max) and the text. The two overlap, so the order matters:
+     - text first, against the NTEE10-only twin: 1.086;
+     - full codes first: 1.058;
+     - both: 1.105 over the ML base.
+   - Neither text alone (P1) nor the codes-only system (P2-twin) clears 1.10. Together they do, and only on the dollar items (H_D 1.23). On survey-type items (volunteers, yes/no) the whole system gives 1.025.
 3. **Last year's value of the same variable dwarfs everything.** With the prior return's own lines (F2o), GREG improves 2.4× over H and the ML twin 5.2× on H_D. Text then adds nothing (S-F2 H_D 1.001; at F2o 0.99–1.00). Where an administrative lag of y exists, as for registered charities with T3010, link it; text is irrelevant.
 4. **Payroll removes the salaries gain**, as predicted (H7). Text on salaries is 1.028 without payroll on the register and 1.002 with it. Text gives nothing on any register-type variable (G7).
 5. **The pitfalls are real and large.**
@@ -223,7 +232,21 @@ Production P2 per variable, against today's GREG:
 - **Dollar targets only:** if only dollar totals had targets, government grants would bind and the take-some saving would be about 19%. Of that, about 9 points would come from text: the system without text saves about 10%.
 - **CV bands:** none changes. Gov. grants goes from 8.5% to 7.7%, both B.
 
-<!-- FACTORIAL (LINCAL): PENDING -->
+**Attribution.** The pre-registered 2³ factorial (learner × codes × text) is **not estimable** (D-32, D-33). Linear
+calibration on the full code block is fine in the median but explodes in about 0.4% of replicates, with errors up to
+237×. That happens with the original in-sample ridge-GREG and with a cross-fitted, model-calibrated linear learner
+alike. The stable sub-design is codes × text within the ratio-scale learner:
+
+| Contrast, GM over H | RE |
+|---|---|
+| Learner alone: ML with NTEE10 codes vs GREG | 0.993 (0.987–1.000) |
+| Text with a *linear* learner, no codes, vs GREG | **0.949** (0.940–0.959): text hurts without the ratio-scale model |
+| Everything: ML + full codes + text vs GREG | 1.097 (1.086–1.110) |
+| Shapley shares within the ML learner (log scale) | codes 0.037, **text 0.063**; text share **0.63** (0.58–0.68) |
+
+Within the ML system, text is the larger contributor (M1 passes, conditionally on the learner). It needs the
+ratio-scale formulation: entered linearly, the same text components cost 5%. The case for codes and text is
+the same "what kind of organization is this" signal, with text slightly richer.
 
 ### 4.3 A weak register (Stage 2B, R = 1,000): text still adds only a few percent
 
@@ -343,11 +366,11 @@ These are development results on NE. The confirmatory status needs the held-out 
 | M5 | Planted-signal recovery: ρ²_min(1,000) | No planted level ≤ 0.20 meets the bar (φ 0.20–0.34) | ρ²_min does not exist, so FALSIFIED is unreachable |
 | M6 | A frozen model keeps ≥ 75% of the gain | Per-variable frozen 0.73; single-weight frozen 1.06; difference (PPI) 0.85 | Borderline fail / pass / pass |
 | H14 | A single weight keeps the gain | 1.19 of P1's log gain | Pass |
-| M1 | Text is the main source of the best gain (Shapley share ≥ 0.5) | <!-- M1: PENDING --> | <!-- M1 status --> |
+| M1 | Text is the main source of the best gain (Shapley share ≥ 0.5, lower bound ≥ 0.25) | 2³ not estimable (D-33). Within the ML learner: text share 0.63 (0.58–0.68) | **Pass**, conditional on the ML learner |
 
 **§9.6 verdict.**
 - Strict: **HARNESS NOT VALIDATED**, from gate failures in the NE cell.
-- Diagnosed: the efficiency pattern is "real but small text gain; production bar reached only with ML on codes, and only for dollar items". That is closest to **REDUCED TO ML, NOT TEXT**, but that verdict needs P2-twin MET (it is 1.071).
+- Diagnosed: the efficiency pattern is "real but small text gain over a full-code model; production bar reached only when text and full codes are combined in a ratio-scale model, and only for dollar items". It fits none of the named verdicts. It is not REDUCED TO ML (the learner alone gives 0.99 and text carries the larger Shapley share), and it is not SUPPORTED (P1 is EXCLUDED and the binding-constraint saving is 0).
 - Formally, the pattern is **INCONCLUSIVE**. The binding failures are G4 (variance estimation, a remedy is available) and M5 (power).
 
 ---

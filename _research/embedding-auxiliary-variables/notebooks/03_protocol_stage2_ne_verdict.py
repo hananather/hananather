@@ -42,7 +42,7 @@ PROJ = os.path.abspath("..") if os.path.basename(os.getcwd()) == "notebooks" els
 sys.path.insert(0, os.path.join(PROJ, "src"))
 DATA = os.environ.get("EMBAUX_DATA", "/tmp/claude-0/data")
 import plotstyle; plotstyle.use()
-from protocol import H_SET, H_D, H_S, R_SET
+from protocol import H_SET, H_D, H_S, R_SET, gm_re
 from analysis import gates, primary, no_harm, factorial, planted, cell_metrics, paired_re, rho2_min
 from report import Y_LABEL
 pd.set_option("display.width", 220); pd.set_option("display.max_columns", 40); pd.set_option("display.max_colwidth", 60)
@@ -156,6 +156,24 @@ F_t["label"] = F_t.y.map(lambda y: Y_LABEL.get(y, y))
 display(F_t.round(4)); print("mean over H:"); display(F_mean.round(4).to_frame("mean"))
 # a share is only meaningful when the total gain is positive
 print("text share of the total log gain:", round(F_mean.phi_C_text / F_mean.log_RE_total, 3) if F_mean.log_RE_total > 0.01 else "n/a (total log gain <= 0.01)")
+
+# %% [markdown]
+# **The full 2³ is not estimable (D-33).** Linear calibration on the full code block is unstable. Both RIDGECAL and the
+# cross-fitted LINCAL are fine in the median but explode in about 0.4% of replicates (errors up to 200×), and those
+# replicates dominate log MSE. Attribution therefore uses the stable 2 × 2 of codes × text *within* the ratio-scale ML
+# learner, plus the learner contrast on its own.
+
+# %%
+from analysis import attribution_2x2
+A2 = attribution_2x2(df, truth)
+print({k: round(v, 4) for k, v in A2.items()})
+for nm, (a, b) in {"learner alone: MCAL_frame vs GREG": ("MCAL_frame@F1p", "GREG_size_cat@F1p"),
+                   "text alone, linear learner: LINCAL+E* vs GREG": ("LINCAL@F1p+Estar", "GREG_size_cat@F1p"),
+                   "everything: MCAL_bmfmax+E* vs GREG": ("MCAL_bmfmax@F1p+Estar", "GREG_size_cat@F1p")}.items():
+    if a in set(df.estimator):
+        pt, lo, hi, _ = gm_re(df, truth, a, b, H_SET, B=1000); print(f"{nm}: {pt:.3f} ({lo:.3f}-{hi:.3f})")
+print("M1 (text share >= 0.5 with lower bound >= 0.25), within the ML learner:",
+      "PASS" if (A2["text_share"] >= 0.5 and A2["text_share_lo"] >= 0.25) else "FAIL")
 
 # %% [markdown]
 # ## 4. Planted-signal recovery: what the harness can detect
