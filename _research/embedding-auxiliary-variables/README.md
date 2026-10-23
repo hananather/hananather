@@ -41,7 +41,9 @@ Data source: GivingTuesday 990 data lake, public bucket `s3://gt990datalake-rawd
 | `notebooks/02_benchmark_results` | Pilot v1 Monte Carlo (pre-protocol; kept for the record; known defects listed in protocol §0.3) |
 | `notebooks/03_protocol_stage2_ne_verdict` | **Stage 2A: primary pairs P1/P2, gates G1–G9, attribution factorial, planted-signal power** |
 | `notebooks/04_protocol_nonresponse_and_sae` | Stage 3 (late-filer nonresponse with take-all imputation) and Stage 4 (small area estimation) |
-| `src/` | Data: `fetch990`, `parse990_min`, `parse990` (an independent second parser, cross-checked), `parse_all`, `build_population`. Embeddings: `embed` (cached, hashed; TF-IDF/LSA, MiniLM, Cohere, random). Estimation: `survey`, `frame`, `mc`, `protocol`, `frozen`, `sae`, `analysis`. Runners: `stage2_ne`, `stage34_ne`. Tests: `test_harness` (11 tests, all pass). |
+| `notebooks/05_protocol_stage2b_weak_register` | Stage 2B: the weak register F0 (codes and BMF amounts only) on its own design; S2 and gap closure S2b |
+| `notebooks/06_protocol_stage2f_stratification` | Stage 2F: text at the design stage. Text-coded NTEE for missing codes (S4) and prediction strata (S5) |
+| `src/` | Data: `fetch990`, `parse990_min`, `parse990` (an independent second parser, cross-checked), `parse_all`, `build_population`. Embeddings: `embed` (cached, hashed; TF-IDF/LSA, MiniLM, Cohere, random). Estimation: `survey`, `frame`, `mc`, `protocol`, `frozen`, `sae`, `analysis`. Runners: `stage2_ne` (2A), `stage2b_ne` (2B), `stage2f_ne` (2F), `stage34_ne` (3, 4). Tests: `test_harness` (11 tests, all pass). |
 | `results/` | Small CSV/JSON outputs |
 
 The raw XML and derived parquet files live outside the repository (`EMBAUX_DATA`, default `/tmp/claude-0/data`). The scripts in `src/` rebuild them from the public bucket. A full rebuild plus the New England runs takes a few CPU hours.
