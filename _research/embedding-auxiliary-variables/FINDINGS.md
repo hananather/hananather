@@ -103,7 +103,7 @@ About 45 checks are in `notebooks/01_data_and_red_team` (`results/01_red_team_ch
 - Valid URLs exist for 72.5% of units (51% of the smallest quartile, 90% of the largest), not the 92.8% a naive "field non-empty" check suggests.
 - Big organizations file late. Prior-year returns cover 68.8% of revenue at D, and only 13% of take-all units respond within 300 days.
 - Volunteer counts are heaped and 19.7% blank. The estimand is capped at 10k and blank is treated as 0.
-- The 2023-08 BMF has **zero or missing amounts for 703 units holding 6.7% of expenses** (Harvard, Tufts, Northeastern; BCBS-MA is absent from the snapshot). This matters for any design built on BMF amounts alone (Stage 2B, D-28a).
+- The 2023-08 BMF has **zero or missing amounts for 722 units holding 6.7% of expenses** (Harvard, Tufts, Northeastern; BCBS-MA is absent from the snapshot). This matters for any design built on BMF amounts alone (Stage 2B, D-28a).
 
 **Leakage controls built into the runs**
 - Design-date availability: only information filed by D.

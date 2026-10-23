@@ -74,7 +74,7 @@ S6_Y = ["y_gov_grants", "y_contrib", "y_fundraising_exp", "y_volunteers_cap10k",
 # ## Stage 3 results
 
 # %%
-nr_rows = []
+nr_rows, TS = [], {}
 for scen in ["follow", "late"]:
     p = f"{OUT}/nr_{scen}.parquet"
     if not os.path.exists(p):
@@ -85,6 +85,7 @@ for scen in ["follow", "late"]:
     ta = pd.read_parquet(f"{OUT}/nr_{scen}_ta.parquet")
     dts = d.merge(ta, on=["rep", "y"]); dts["est"] = dts.est - dts.ta_used
     truth_ts = {y: truth[y] - meta["truth_ta"][y] for y in truth}
+    TS[scen] = (dts, truth_ts, d, truth)
     cts = cell_metrics(dts[["rep", "estimator", "y", "est", "var"]], truth_ts).rename(columns=lambda c: c + "_ts" if c not in ("estimator", "y") else c)
     cm = cm.merge(cts[["estimator", "y", "rb_pct_ts", "rrmse_pct_ts", "coverage_pct_ts"]], on=["estimator", "y"])
     nr_rows.append(cm)
@@ -99,20 +100,39 @@ nr = pd.concat(nr_rows) if nr_rows else pd.DataFrame()
 
 # %%
 TEXT_FREE = ["NR_rhg_HT", "NR_SQ_rhg_GREG_size_cat@F1p", "NR_rhg_MCAL_bmfmax@F1p", "NR_ps_frame_MCAL_bmfmax@F1p"]
-def s6(nr, scen, text="NR_rhg_MCAL_bmfmax@F1p+Estar", ref="protocol"):
-    """ref='protocol': per-y text-free method with the smallest |RB| of the take-some part; ref=<name>: that method."""
+
+def _boot(scen, text, ref, y, B=2000, seed=0):
+    """Paired replicate bootstrap, 90% intervals: BRF and RRMSE ratio (take-some), RRMSE ratio (total)."""
+    dts, tts, d, tr = TS[scen]
+    g = dts[dts.y == y].pivot(index="rep", columns="estimator", values="est")
+    G = d[d.y == y].pivot(index="rep", columns="estimator", values="est")
+    et, er = (g[text] - tts[y]).to_numpy(), (g[ref] - tts[y]).to_numpy()
+    Et, Er = (G[text] - tr[y]).to_numpy(), (G[ref] - tr[y]).to_numpy()
+    i = np.random.default_rng(seed).integers(0, len(et), (B, len(et)))
+    brf = 1 - np.abs(et[i].mean(1)) / np.abs(er[i].mean(1))
+    rr = np.sqrt((et[i] ** 2).mean(1) / (er[i] ** 2).mean(1))
+    rrT = np.sqrt((Et[i] ** 2).mean(1) / (Er[i] ** 2).mean(1))
+    q = lambda v: np.quantile(v, [0.05, 0.95])
+    return q(brf), q(rr), q(rrT)
+
+def s6(nr, scen, text="NR_rhg_MCAL_bmfmax@F1p+Estar", ref="protocol", gates_run=False):
+    """ref='protocol': per-y text-free method with the smallest |RB| of the take-some part; ref=<name>: that method.
+    Returns (table, point conditions met, formal pass). The formal pass also needs the NR1/NR2 gates (not run, D-30)."""
     m = nr[nr.scenario == scen].set_index(["estimator", "y"])
     out = []
     for y in S6_Y:
         r = min(TEXT_FREE, key=lambda e: abs(m.loc[(e, y), "rb_pct_ts"])) if ref == "protocol" else ref
         b_t, b_r = m.loc[(text, y), "rb_pct_ts"], m.loc[(r, y), "rb_pct_ts"]
+        (blo, bhi), (rlo, rhi), (Rlo, Rhi) = _boot(scen, text, r, y)
         out.append({"y": Y_LABEL.get(y, y), "reference": r, "bias text % (take-some)": b_t, "bias ref %": b_r,
-                    "BRF": 1 - abs(b_t) / abs(b_r) if b_r else np.nan,
-                    "RRMSE ratio (take-some)": m.loc[(text, y), "rrmse_pct_ts"] / m.loc[(r, y), "rrmse_pct_ts"],
+                    "BRF": 1 - abs(b_t) / abs(b_r) if b_r else np.nan, "BRF lo": blo, "BRF hi": bhi,
+                    "RRMSE ratio (take-some)": m.loc[(text, y), "rrmse_pct_ts"] / m.loc[(r, y), "rrmse_pct_ts"], "lo": rlo, "hi": rhi,
+                    "RRMSE ratio (total)": m.loc[(text, y), "rrmse_pct"] / m.loc[(r, y), "rrmse_pct"], "total lo": Rlo, "total hi": Rhi,
                     "coverage gap (pp)": m.loc[(text, y), "coverage_pct_ts"] - m.loc[(r, y), "coverage_pct_ts"]})
     t = pd.DataFrame(out)
-    passed = ((t["BRF"] >= 0.30).sum() >= 3) and (t["RRMSE ratio (take-some)"] <= 1.0).all() and (t["coverage gap (pp)"] >= -2).all()
-    return t, passed
+    point_ok = ((t["BRF"] >= 0.30).sum() >= 3) and (t["RRMSE ratio (take-some)"] <= 1.0).all() \
+        and (t["RRMSE ratio (total)"] <= 1.0).all() and (t["coverage gap (pp)"] >= -2).all()
+    return t, point_ok, point_ok and gates_run
 
 if len(nr):
     for scen in ["follow", "late"]:
@@ -120,8 +140,9 @@ if len(nr):
             continue
         for ref, lab in [("protocol", "S6 (protocol reference)"), ("NR_SQ_rhg_GREG_size_cat@F1p", "secondary: vs status quo GREG"),
                          ("NR_rhg_MCAL_bmfmax@F1p", "secondary: vs the same learner without text")]:
-            t, ok = s6(nr, scen, ref=ref)
-            print(f"TA-{scen}, {lab}: {'PASS' if ok else 'FAIL'}"); display(t.round(3))
+            t, point_ok, formal_ok = s6(nr, scen, ref=ref)
+            status = "PASS" if formal_ok else ("point conditions met; not a formal pass (NR1/NR2 gates not run, D-30)" if point_ok else "FAIL")
+            print(f"TA-{scen}, {lab}: {status}"); display(t.round(3))
             t.to_csv(f"{RES}/s6_{scen}_{ref.split('@')[0]}.csv", index=False)
         m = nr[nr.scenario == scen].set_index(["estimator", "y"]).rb_pct_ts
         claim = pd.DataFrame([{"y": Y_LABEL.get(y, y), "|bias| weighting class + HT %": abs(m[("NR_rhg_HT", y)]),
@@ -135,7 +156,7 @@ if len(nr):
     fig, axes = plt.subplots(1, 2, figsize=(9.6, 4.2), sharey=True)
     arms = ["NR_rhg_HT", "NR_SQ_rhg_GREG_size_cat@F1p", "NR_rhg_MCAL_bmfmax@F1p", "NR_rhg_MCAL_bmfmax@F1p+Estar"]
     names = ["weighting class + HT", "+ GREG on lagged size (status quo)", "+ ML twin (codes, no text)", "+ ML with text"]
-    for ax, scen in zip(axes, ["follow", "late"]):
+    for ax, scen in zip(axes, ["follow", "late"]):  # identical by construction; both shown as a check
         if not (nr.scenario == scen).any():
             continue
         m = nr[nr.scenario == scen].set_index(["estimator", "y"]).rb_pct_ts
@@ -145,8 +166,8 @@ if len(nr):
         ax.axvline(0, color=plotstyle.NEUTRAL, lw=1)
         ax.set_yticks(yy); ax.set_yticklabels([Y_LABEL.get(y, y) for y in S6_Y]); ax.invert_yaxis()
         ax.set_title(f"TA-{scen}"); ax.set_xlabel("relative bias of the take-some part (%)")
-    axes[0].legend(fontsize=7.5, loc="lower right")
-    fig.suptitle("Late-filer nonresponse: calibration to lagged size adds bias; text removes part of it")
+    axes[-1].legend(fontsize=7.5, loc="lower right")
+    fig.suptitle("Late-filer nonresponse: relative bias of the take-some part, weighting-class estimators\n(take-some estimates are the same under both take-all scenarios)")
     plt.tight_layout(); plt.savefig(f"{RES}/nr_bias.png", dpi=150); plt.show()
 
 # %% [markdown]

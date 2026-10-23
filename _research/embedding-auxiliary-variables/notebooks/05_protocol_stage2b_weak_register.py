@@ -22,7 +22,7 @@
 #
 # **Variants (deviation D-28a)**
 # - **w** is exactly as pre-registered.
-# - **wprof** is a sensitivity. The 703 units with zero or missing BMF amounts (6.7% of expenses, including Harvard) would sit in the bottom size classes under w. In wprof the NSO's 206 largest enterprises are profiled into take-all, as real business registers do.
+# - **wprof** is a sensitivity. Under w, the 722 units with a zero BMF income amount (289 of them absent from the 2023-08 BMF; 6.7% of expenses, Harvard among them) sit in the bottom size classes. wprof emulates NSO profiling: the 206 largest units by frame lagged expenses get that as their design size, and take-all stays the top 1% on this combined size. That puts 171 of the 206 in take-all, every zero-BMF giant included, plus 35 units with large BMF income. Zero-BMF units left in take-some hold 0.4% of expenses.
 #
 # **Text** is the same E* (TY2022 990 mission + programs). This is richer than BN registration text, so the setting favours text.
 

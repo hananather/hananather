@@ -9,10 +9,12 @@ samples depend only on (seed, rep), folds on [seed, rep, 1]) in a second cell wh
 
 Variants (deviation D-28):
   w     D1-W exactly as specified (size and take-all on BMF INCOME_AMT). The 2023-08 BMF has zero or
-        missing amounts for 703 units holding 6.7% of expenses (Harvard, Tufts, Northeastern, BCBS-MA),
+        missing amounts for 722 units holding 6.7% of expenses (Harvard, Tufts, Northeastern, BCBS-MA),
         which this design places in the bottom size classes.
-  wprof sensitivity: large-enterprise profiling. The 206 largest units by TY2022 expenses (the NSO's
-        profiled enterprises) get their profiled size; everyone else keeps BMF INCOME_AMT. x~ unchanged.
+  wprof sensitivity: large-enterprise profiling. The 206 largest units by frame lag_expenses (TY2022
+        expenses if filed by D, else BMF REVENUE_AMT: 86 of the 206) get that as their design size;
+        everyone else keeps BMF INCOME_AMT. Take-all is re-ranked on this combined size (171 of the 206
+        land in it, all zero-BMF giants included). x~ unchanged.
 
 Usage: stage2b_ne.py run <variant> <k> <K> <R> | merge <variant> <K>
 """
