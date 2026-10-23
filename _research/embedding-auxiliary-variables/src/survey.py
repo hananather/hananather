@@ -216,3 +216,29 @@ def summarise(est: np.ndarray, var: np.ndarray | None, truth: np.ndarray, z: flo
         out["var_rel_bias_pct"] = 100 * (var.mean(0) / est.var(0, ddof=1) - 1)
         out["ci_rel_width_pct"] = 100 * 2 * z * se.mean(0) / np.abs(truth)
     return out
+
+
+def bounded_calibration(X_s, d_s, T_X, L=0.2, U=5.0, maxit=50):
+    """Truncated linear calibration: weights w = d*g with g in [L, U] meeting sum_s w x = T_X when
+    feasible. Units hitting a bound are fixed there and the rest re-solved (iteratively).
+    Returns (w, converged)."""
+    n = len(d_s)
+    g = np.ones(n)
+    free = np.ones(n, bool)
+    for _ in range(maxit):
+        fixed_tot = (d_s[~free] * g[~free]) @ X_s[~free]
+        Xf, df = X_s[free], d_s[free]
+        A = (Xf.T * df) @ Xf
+        A = A + 1e-10 * np.diag(np.maximum(np.diag(A), 1e-300))
+        lam = np.linalg.solve(A, T_X - fixed_tot - df @ Xf)
+        g_new = g.copy()
+        g_new[free] = 1 + Xf @ lam
+        out = (g_new < L) | (g_new > U)
+        if not out.any():
+            g = g_new
+            return d_s * g, True
+        g = np.clip(g_new, L, U)
+        free = free & ~out
+        if free.sum() <= X_s.shape[1]:
+            break
+    return d_s * g, False

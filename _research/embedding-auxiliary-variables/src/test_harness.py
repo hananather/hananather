@@ -51,4 +51,14 @@ report("binary target not destroyed by ratio spec", 0.8 < m.loc[("MCAL_text", "y
 # same samples whatever estimators are run (common random numbers)
 df2 = run_cell(cell, {"HT": {"kind": "ht"}}, R=5, seed=1, verbose=False)
 report("sample stream independent of estimator set", np.allclose(df2[df2.estimator == "HT"].est.to_numpy(), df[(df.estimator == "HT") & (df.rep < 5)].est.to_numpy()))
+# N4: constant embedding reproduces the twin to machine precision (shared folds, same lambda path)
+mats2 = {"base": np.c_[S, x], "twin": np.c_[np.log(x)[:, None], (strata == 0)[:, None].astype(float)],
+         "twin_const": np.c_[np.log(x)[:, None], (strata == 0)[:, None].astype(float), np.ones((N, 4))]}
+cats2 = {"twin": np.array([False, True]), "twin_const": np.array([False, True, False, False, False, False])}
+cell2 = Cell(Y, names, des, mats2, x, cat_masks=cats2)
+sp2 = {"TWIN": {"kind": "mcal", "F": "twin", "X_base": "base", "ratio": True},
+       "CONST": {"kind": "mcal", "F": "twin_const", "X_base": "base", "ratio": True}}
+d2 = run_cell(cell2, sp2, R=20, seed=3, verbose=False).pivot_table(index=["rep", "y"], columns="estimator", values="est")
+rel = (np.abs(d2["CONST"] - d2["TWIN"]) / np.abs(d2["TWIN"])).max()
+report("N4 constant embedding identical to twin (machine precision)", rel < 1e-8, f"max rel diff {rel:.2e}")
 print("ALL PASS" if ok else "SOME FAILED")

@@ -10,6 +10,7 @@ Status: research note, 2026-10-23. Scope: find real finite populations where (a)
   3. GitHub code search (GitHub MCP), then `curl` of the raw files from raw.githubusercontent.com. This surfaced third-party mirrors of publisher data dictionaries: the CCEW register field definitions, CRA's *Open Data Dictionary v2.0* for T3010, ACNC AIS loaders that quote data.gov.au licence records, NSF award XML schema notes, and the EDGAR employee-count tagging notes. **These are secondary sources.** They are cited by GitHub URL and should be confirmed against the publisher before anything is published.
   4. Literature citations already found by search in this session, carried over from note 02 and marked "(via note 02)".
 - Anything from memory that I could not confirm is marked **[UNVERIFIED]**.
+- **Adversarial verification pass (2026-10-23).** Every measured number was re-computed with independent scripts, every GitHub source was re-fetched, every bucket listing was re-done, and the literature was checked against GitHub-hosted bibliographic records (WebSearch was still exhausted and WebFetch reached only github.com). Corrections are applied in place; see **Verification log** at the end.
 
 ---
 
@@ -20,10 +21,10 @@ Status: research note, 2026-10-23. Scope: find real finite populations where (a)
    - Skew: extreme. The top 1,000 units hold 49.5% of total revenue and the revenue CV is 18.
    - Frame: a pre-cutoff IRS Business Master File snapshot serves as the frame.
    - Panel: 96.3% of TY2023 filers link to a TY2022 return.
-   - Auxiliary: prior-year mission and program text is present on 100% of linked returns.
+   - Auxiliary: prior-year mission and program text is present on 100% of linked returns (measured on the 418-pair sample of 990→990 links; the 13,507 units whose TY2022 return was a 990-EZ have only the EZ purpose text, not Part III 4a–4e).
    - **It is text-only.** There are no PDFs or images in the public XML, so it cannot test the multimodal (Cohere embed-v4 image) claim.
 2. **For financial y the skeptic is right on this data.** Among linked units, TY2023 total revenue correlates **0.991** with TY2022 revenue on the raw scale (expenses 0.995, assets 0.994). Lagged administrative values leave almost no room for any covariate on design-weighted totals. Total revenue should be the **negative control**, not the headline.
-3. **The headroom is in y variables that the frame does not carry and that change from year to year.** Indicative out-of-sample R² on log1p(y_t), from n=418 stratified pairs:
+3. **The headroom is in y variables that the frame does not carry and that change from year to year.** Indicative out-of-sample R² on log1p(y_t), from n=418 stratified pairs (volunteers: the 307 non-blank cases):
 
    | y_t | Frame only | Frame + lagged y |
    |---|---|---|
@@ -38,13 +39,13 @@ Status: research note, 2026-10-23. Scope: find real finite populations where (a)
    - **(S3)** births and units without a prior return.
 4. **Leakage is mostly a timing problem, not a "text states y" problem.** Fewer than 1% of texts contain the exact y value. The big traps are elsewhere:
    - **(i)** Using a *current* BMF snapshot as the frame. The May-2026 BMF carries the TY2023 revenue itself for **18.3%** of TY2023 filers, against 0.6% in the December-2023 BMF.
-   - **(ii)** Using the same-year Schedule O. It contains "$" amounts in 35–53% of returns over $5M.
+   - **(ii)** Using the same-year Schedule O. **Corrected:** Schedule O proper contains "$" amounts in 17–25% of t−1 returns over $5M. The earlier 35–53% counted `ExplanationTxt` from every schedule (D, H, J, I, A, …), not only Schedule O.
    - **(iii)** Using a register "current activities" field that is overwritten over time (UK CCEW `charity_activities`), or a backfilled current name (CRA T3010: only 1.4% of BNs show any name change over 2020–2024).
    - **(iv)** Embedding-model memorization. A 2025 embedding model may have been trained on web pages, such as nonprofit profile sites, that quote TY2023 financials **[UNVERIFIED but must be tested]**.
 5. **Text is near-static.** Between TY2022 and TY2023 the mission text is identical for 70–93% of units and program text for 38–86%, depending on size. Text therefore acts as a **fine-grained, persistent classification** (between-unit signal), not as a signal of change. That is consistent with it helping stratification and SAE more than it helps estimate year-over-year change.
 6. **Coverage of frame-time text is size-graded and realistic.**
    - With a survey design cutoff of 30 Jun 2024, 91% of TY2023 990 filers already have a TY2022 return. That falls to 77% at a 31 Mar 2024 cutoff, and the shortfall is concentrated in small units (92% linkage below $50k against 99.2% above $25M).
-   - On the full BMF frame, text exists for only about 26.5% of entities (note 02). The 990-N postcard filers have a name and sometimes a URL, but no text.
+   - On the full BMF frame, text exists for only about 26.5% of entities (note 02; this is the May-2026 BMF. On the Dec-2023 BMF frame it is 28.6%). The 990-N postcard filers have a name and sometimes a URL, but no text.
 7. **Recommended replications.**
    - **(R1, Canadian) CRA T3010 open data.** About 84k charities a year. Program descriptions up to 2,500 characters, in English or French. Revenue from government split by federal, provincial and municipal level. Full-time and part-time staff counts. OGL-Canada licence. Blocked in the sandbox; the user must download it.
    - **(R2, genuine PDF/image) UK Charity Commission (England and Wales).** Structured annual-return y (income, government grants and contracts income, volunteers; employees for Part B filers) plus per-charity accounts PDFs, some of them scans. Blocked, and the PDFs must be scraped per charity.
@@ -87,10 +88,10 @@ Legend for timing. **Frame-time** means the auxiliary exists before the survey i
 **Access and format (verified by listing the bucket).**
 - **Yearly index CSVs:** `Indices/990xmls/yearly/{YEAR}_efiledata_xmls_created_on_2026-08-25.csv`, about 300 MB per year. Columns include EIN, FormType, TaxYear, TaxPeriod, DocStatus, GroupReturnForAffiliates, ReturnTs, SubmittedOn, ReturnVersion, OrganizationName, LegalDomicileState, TotalRevenueCY, TotalExpensesCY, TotalAssetsBkEOY, Website, YearFormed and URL.
 - **Per-return XML:** `EfileData/XmlFiles/{ObjectId}_public.xml`, averaging about 51 KB (838 files = 43 MB).
-- **Bulk IRS release zips:** `EfileData/XmlZips/{YYYY}_TEOS_XML_{MM}{A-D}.zip`, 56 MB–1.4 GB each, organised by **IRS release month, not tax year**.
-- **BMF snapshots:** `EfileData/BMF/IRS_BMF_{Y}_{M}_{D}_raw.csv`, about 320–340 MB each. 30 snapshots from 2023-08-16 to 2026-05-28 were listed.
-- **IRS SOI financial extracts:** `EfileData/Extracts/Data/{YY}eoextract990.xlsx` (TY18–23, 308–381 MB) plus `.dat` files for 2012–2017, with documentation `{YY}eofinextractdoc.xlsx`.
-- **Other files:** 990-N postcards (`EfileData/Postcards/990N_Postcards_*_raw.txt`, pipe-delimited, about 250–280 MB) and revocations.
+- **Bulk IRS release zips:** `EfileData/XmlZips/{YYYY}_TEOS_XML_{MM}{A-D}.zip`, 56 MB–1.4 GB each, organised by **IRS release month, not tax year**. (Some January releases run to letter H; older files are named `{YYYY}_TEOS_XML_CT{n}.zip` and `download990xml_2020_{n}.zip`.)
+- **BMF snapshots:** `EfileData/BMF/IRS_BMF_{Y}_{M}_{D}_raw.csv`, about 317–339 MB each (one, 2026-05-14, is 219 MB). 30 snapshots from 2023-08-16 to 2026-05-28 were listed.
+- **IRS SOI financial extracts:** `EfileData/Extracts/Data/{YY}eoextract990.xlsx` (files 18–23, 308–380 MB) plus `.dat` files for 2012–2017, with documentation `EfileData/Extracts/Documentation/{YY}eofinextractdoc.xlsx` (`.xls` for 12–17). **Corrected:** the files are labelled by IRS **processing year**, not tax year (the 2023 documentation reads "Total record count (Processing Year 2023): 338,048").
+- **Other files:** 990-N postcards (`EfileData/Postcards/990N_Postcards_*_raw.txt`, pipe-delimited, about 245–282 MB) and revocations.
 
 **Licence.** IRS e-file returns of exempt organisations are public-inspection documents **[UNVERIFIED wording of the statute and the GivingTuesday terms of use]**. Confirm the GivingTuesday redistribution terms before publishing derived data.
 
@@ -104,18 +105,19 @@ Legend for timing. **Frame-time** means the auxiliary exists before the survey i
 - After deduplication and removal of group returns, TY2023 has **≈349k Form 990 units** (348,907–348,997 depending on dedup order).
 - 331,124 of them are in the 50 states plus DC. 17,139 have a missing `LegalDomicileState` in the index (a defect; take state from the BMF instead). 734 are foreign or in territories.
 - 501(c)(3) organisations in the 50 states plus DC: 255,248.
+- (Re-computation gives 331,051–331,133 in the 50 states plus DC, 17,122–17,130 with missing state and 255,191–255,256 501(c)(3) units, depending on dedup order. The differences are below 0.05%.)
 
 **Skew (TY2023 Form 990).**
 - Revenue shares: top 10 units 5.7%, top 100 19.6%, top 1,000 49.5%, top 1% (about 3,500 units) 67.5%. Revenue CV is 18.3.
 - 1,500 units report negative revenue and 3,683 report zero.
-- Across years the top 1% hold 68–69% of revenue (TY2021–TY2023). This makes the population ideal for testing take-all plus ratio/GREG designs against text-assisted designs.
+- Across years the top 1% hold 66.8–67.4% of revenue (TY2021 67.0%, TY2022 66.8%, TY2023 67.4% on the deduplicated non-group population). **Corrected:** the earlier 68–69% applies only to all Form 990 index rows, including group returns and duplicate or amended rows. Either way, the population is well suited to testing take-all plus ratio/GREG designs against text-assisted designs.
 
 **Candidate y (Form 990 core; XPaths verified in the downloaded XML; concordance variable names from the NODC master concordance).**
 
 | y | XML element | NODC variable |
 |---|---|---|
 | Employees, Part I line 5 | `TotalEmployeeCnt` | `F9_01_ACT_GVRN_EMPL_TOT` |
-| Volunteers, Part I line 6 | `TotalVolunteersCnt` | `F9_01_ACT_GVRN_VOL_TOT`, "required = FALSE" |
+| Volunteers, Part I line 6 | `TotalVolunteersCnt` | `F9_01_ACT_GVRN_VOL_TOT`, "required = FALSE" (the concordance also marks employees and government grants FALSE, so the flag does not single out volunteers) |
 | Government grants, Part VIII 1e | `GovernmentGrantsAmt` | `F9_08_REV_CONTR_GOVT_GRANT` |
 | Contributions | `CYContributionsGrantsAmt` | |
 | Program service revenue | `CYProgramServiceRevenueAmt` | |
@@ -132,7 +134,7 @@ The SOI extract adds W-3 employees (`noemplyeesw3cnt`), compensation, grants pai
 | Part III line 1, mission | `MissionDesc` |
 | Part III 4a program description | `IRS990/Desc` (direct child, next to `ExpenseAmt`, `GrantAmt`, `RevenueAmt`) |
 | Part III 4b–4e program descriptions | `ProgSrvcAccomActy2Grp/Desc`, `…3Grp/Desc`, `…OtherGrp/Desc` |
-| Schedule O | `ExplanationTxt` |
+| Schedule O | `IRS990ScheduleO//ExplanationTxt`. The same element name also occurs in Schedules A, C, D, F, H, I, J, K, M and R (218 of 418 t−1 returns), so restrict by parent. |
 | Website | `WebsiteAddressTxt` |
 | Name | `OrganizationName` (also on the BMF) |
 | 990-EZ mission | `PrimaryExemptPurposeTxt` |
@@ -144,15 +146,17 @@ Provenance and timing:
 
 **Measured red-team facts.** These come from n=418 pairs: TY2023 Form 990 non-group returns linked to a TY2022 Form 990, with 60 drawn per TY2023 revenue class (seed 11; some XMLs failed to parse).
 
-| Revenue class | Employees >0 | Volunteers blank | Gov. grants >0 | Mission identical t vs t−1 | Program text identical | Program text has "$" | Program text has ≥2-digit numbers | Schedule O has "$" | Website in XML (t−1) |
+| Revenue class | Employees >0 | Volunteers blank | Gov. grants >0 | Mission identical t vs t−1 | Program text identical | Program text has "$" | Program text has ≥2-digit numbers | Schedule O has "$" (t−1; corrected: Sched. O only, all-schedule `ExplanationTxt` in parentheses) | Website in XML (t−1; real URL, excluding "N/A" and blank) |
 |---|---|---|---|---|---|---|---|---|---|
-| <$50k | 0.14 | 0.36 | 0.05 | 0.93 | 0.86 | 0.03 | 0.20 | 0.07 | 0.31 |
-| $50–200k | 0.31 | 0.53 | 0.14 | 0.92 | 0.71 | 0.03 | 0.27 | 0.07 | 0.54 |
-| $200–500k | 0.60 | 0.40 | 0.23 | 0.88 | 0.68 | 0.00 | 0.33 | 0.05 | 0.55 |
-| $0.5–1M | 0.77 | 0.27 | 0.30 | 0.90 | 0.68 | 0.05 | 0.35 | 0.12 | 0.73 |
-| $1–5M | 0.75 | 0.25 | 0.37 | 0.87 | 0.60 | 0.03 | 0.42 | 0.18 | 0.78 |
-| $5–25M | 0.90 | 0.03 | 0.52 | 0.70 | 0.38 | 0.10 | 0.50 | 0.35 | 0.95 |
-| >$25M | 0.85 | 0.03 | 0.42 | 0.80 | 0.40 | 0.17 | 0.68 | 0.53 | 0.80 |
+| <$50k | 0.14 | 0.36 | 0.05 | 0.93 | 0.86 | 0.03 | 0.20 | 0.03 (0.07) | 0.31 |
+| $50–200k | 0.31 | 0.53 | 0.14 | 0.92 | 0.71 | 0.03 | 0.27 | 0.05 (0.07) | 0.54 |
+| $200–500k | 0.60 | 0.40 | 0.23 | 0.88 | 0.68 | 0.00 | 0.33 | 0.03 (0.05) | 0.55 |
+| $0.5–1M | 0.77 | 0.27 | 0.30 | 0.90 | 0.68 | 0.05 | 0.35 | 0.05 (0.12) | 0.73 |
+| $1–5M | 0.75 | 0.25 | 0.37 | 0.87 | 0.60 | 0.03 | 0.42 | 0.13 (0.18) | 0.78 |
+| $5–25M | 0.90 | 0.03 | 0.52 | 0.70 | 0.38 | 0.10 | 0.50 | 0.17 (0.35) | 0.95 |
+| >$25M | 0.85 | 0.03 | 0.42 | 0.80 | 0.40 | 0.17 | 0.68 | 0.25 (0.53) | 0.80 |
+
+(The `WebsiteAddressTxt` element itself is non-blank in 90% of these TY2022 returns, but 93 of 418 values are the placeholder "N/A".)
 
 Further findings from the same sample:
 - **Exact-value leakage is rare.** The share of texts containing the exact value (≥100) of the same-year y: revenue 0.2%, expenses 0.0%, employees 0.2%, volunteers 0.7%. The t−1 text contains the t−1 value at 0.2–1.0%.
@@ -171,14 +175,16 @@ Further findings from the same sample:
   | Program service revenue | 39% | 0.965 |
   | Contributions | 20% | 0.852 |
 
+  Clarification: "identical" counts blank–blank pairs as identical, and the correlations treat blank as 0. Volunteers are blank in both years for 25% of pairs (item non-response). The government-grants line is absent, which means zero, in both years for 62%. Among pairs with a value in both years, only 61% (volunteers) and 6% (government grants) are identical, so the 64% grant persistence is mostly persistent zeros.
+
 - **Index-level lag (all linked TY2023 units).** Revenue: raw correlation 0.9913, log 0.805, median absolute % change 18%. Expenses: 0.9952 and 0.900. Assets: 0.9941 and 0.857. Exact revenue carry-forward: 0.68%.
-- **Text length.** Median TY2022 words: mission 30, program 29, Schedule O 144. Programs mentioning "volunteer": 7.2%. Mentioning government, grant or contract terms: 21.8%.
+- **Text length.** Median TY2022 words: mission 30, program 29, Schedule O 117 (corrected; 144 counts all-schedule `ExplanationTxt`). Program or mission text mentioning "volunteer": 7.2%. Mentioning government, grant or contract terms: 18.4% (21.8% with a regex that also matches federal, Medicaid and HUD).
 
 **Duplicates, amendments, group returns.**
 - TY2023 Form 990/990-EZ: 562,743 rows and 554,007 unique EINs. 8,369 EINs have more than one return (up to 7). 40% of the multi-return rows are amended returns, and 1,258 EINs have more than one distinct TaxPeriod (short years or a change of fiscal year). 359 EINs filed **both** a 990 and a 990-EZ for TY2023.
 - Group returns (`GroupReturnForAffiliates=True`): 589 TY2023 Form 990 returns covering **5.5% of total revenue**. Their subordinates do not file separately, so the unit definition is ambiguous; exclude them.
-- DocStatus flags in TY2023: AmendedReturn about 8.5k (plus combinations), InitialReturn about 22k, FinalReturn about 6.6k, ApplicationPending about 1.1k.
-- `SubmittedOn` contains impossible dates (1900–8202), so use `ReturnTs` for timing.
+- DocStatus single-flag values in the TY2023 index (all form types, not Form 990 only): AmendedReturn about 8.5k (plus combinations), InitialReturn about 22k, FinalReturn about 6.6k, ApplicationPending about 1.1k. Among Form 990 rows alone, counting combinations: Amended 5,971, Initial 6,201, Final 2,093, ApplicationPending 902.
+- `SubmittedOn` contains impossible dates (years 1900–8202 across the TY2021–TY2023 indices; 1924–7202 in TY2023), so use `ReturnTs` for timing.
 
 **Panel and coverage.**
 - 96.3% of TY2023 Form 990 non-group filers have a TY2022 return (Form 990 322,482; 990-EZ 13,507; none 12,918).
@@ -193,9 +199,9 @@ Further findings from the same sample:
 - Its financial fields come mostly from TAX_PERIOD 2022 (290k), with some from 2023 (32k) and 2021 (11.6k). About 12.8k are missing.
 - **Leakage check.** BMF `REVENUE_AMT` equals the TY2023 revenue for 0.62% of units in the Dec-2023 snapshot (chance or short-period returns), against **18.3%** in the 2026-05-28 snapshot. The latter's TAX_PERIOD is mostly 2024–2025, so it is post-outcome and must not be used as a frame.
 - Correlation of Dec-2023 BMF revenue with TY2023 revenue: raw 0.986, log 0.668.
-- **NTEE is missing for 30.1%** of TY2023 Form 990 filers. By ruling year: up to 1990, 60.1%; 1991–2000, 22.7%; after 2000, about 2–5%. By subsection: 501(c)(3) 15.1%, (c)(4) 62%, (c)(5) 86%, (c)(6) 70%, (c)(7) 76%.
+- **NTEE is missing for 30.1%** of TY2023 Form 990 filers. By ruling year: up to 1990, 60.1% (re-computed 60.3%); 1991–2000, 22.7%; after 2000, about 2–5% (re-computed 2.6% for 2001–2010 and 3.1% after 2010). By subsection: 501(c)(3) 15.1%, (c)(4) 62%, (c)(5) 86%, (c)(6) 70%, (c)(7) 76%.
 - **So the conventional NTEE stratifier is itself incomplete, and text-imputed classification is a realistic use.** This is the Ma (2021) NTEE-from-text precedent, via note 02.
-- State × NTEE-major domains (excluding missing NTEE): 1,394 domains, median 68 units, 412 with fewer than 30 units. That is a natural SAE structure.
+- State × NTEE-major domains (excluding missing NTEE): 1,394 domains, median 68 units, 412 with fewer than 30 units. That is a natural SAE structure. (These counts include territories and foreign addresses in BMF `STATE`. Restricted to the 50 states plus DC, as in §4.3, there are 1,324 domains, median 76, 348 with fewer than 30 units.)
 
 **Real-world NSO fit.** High for frame-time text auxiliaries in a non-profit or charity survey. The analogue at StatCan is BR units with CRA T3010 program text and BN registration "major business activity" text (note 02). **Caveat:** 990 program text is richer than a BN registration description. A "name-only" arm and a "short mission only" arm should bracket what an NSO actually holds.
 
@@ -226,7 +232,7 @@ Further findings from the same sample:
 **Text and timing.** Program descriptions are per filing (keyed by BN and FPE), so the t−1 description is cleanly frame-time for a t target. Bilingual (EN/FR) text is a genuine test of multilingual embeddings, and highly relevant to StatCan.
 
 **Leakage and quality (GovAlta KNOWN-DATA-ISSUES.md, third-party, reproducible SQL).**
-- **C-7:** the current legal name is backfilled onto historical years. Only 1,308 of 91,129 BNs (1.4%) show any name change in 2020–2024. **Name embeddings would therefore be post-hoc in T3010.**
+- **C-7:** the current legal name is backfilled onto historical years. Only 1,308 of 91,129 BNs (1.4%) show any name change in 2020–2024. (The same repository's `CRA/README.md` data-quality summary gives 0.86%, so the source is internally inconsistent; both figures are low.) **Name embeddings would therefore be post-hoc in T3010.**
 - **C-1:** 54,010 arithmetic violations across 30,856 BNs (12.8% of 240,714 BN-years). Examples: sub-lines of 4950 exceed the total (24,960 rows), Schedule 6 compensation ≠ Schedule 3 line 390 (13,504), total expenditures not reconciling (6,697).
 - **C-2:** 1,075 unit-error candidates (expenditure/revenue > 100×, compensation > total expenditures, money fields > $10B).
 - **C-8:** form revision v24→v27 (fields added or removed in 2023–2024).
@@ -246,18 +252,18 @@ Further findings from the same sample:
 
 **Field definitions** (drkane/charity-lookups `ccew-fields.md`, a mirror of CC data definitions):
 - `charity`: `charity_activities` ("the trustees' description of what they do and who they help"), `latest_income`, `latest_expenditure`, `charity_contact_web`, company number. Linked charities share a number; operating charities have `linked_charity_number = 0`.
-- `charity_governing_document`: `charitable_objects`, `area_of_benefit`. Charitable objects are **registration-time text**, the cleanest frame-time analogue of BN registration text (used by charity-classification/ukcat).
+- `charity_governing_document`: `charitable_objects`, `area_of_benefit`. Charitable objects are the closest frame-time analogue of BN registration text (used by charity-classification/ukcat). **Corrected:** they are not strictly registration-time text. The extract holds the current objects with no field-level date, and `governing_document_description` covers "the original document and any subsequent amendments", so objects can change after registration.
 - `charity_annual_return_parta`, up to 5 periods (`fin_period_order_number`): `total_gross_income`, `total_gross_expenditure`, `charity_receives_govt_funding_contracts` and `…_grants`, `count_govt_contracts` and `count_govt_grants`, `income_from_government_contracts` and `income_from_government_grants`, `count_volunteers` (the trustees' optional estimate; "not obliged to"), and salary-band counts above £60k.
-- `charity_annual_return_partb`: detailed income and expenditure, reserves, assets, `count_employees`, consolidated-accounts flag. Part B applies only to larger charities: above £500k income according to charitylens/sspencespence; the threshold is **[UNVERIFIED from CC]**.
+- `charity_annual_return_partb`: detailed income and expenditure, reserves, assets, `count_employees`, consolidated-accounts flag. Part B applies only to larger charities: above £500k income according to sspencespence (charitylens does not state a threshold); the threshold is **[UNVERIFIED from CC]**.
 - `charity_classification`: What/Who/How codes. `charity_area_of_operation` is also available. A third-party script notes that a plain employee count is not in Part A (tompickup23).
 
-**Licence.** Open Government Licence **[UNVERIFIED version]**. The accounts PDFs contain trustee names (personal data), so keep them out of any repository (sspencespence SKILL.md).
+**Licence.** Open Government Licence; tompickup23 `fetch_charities.py` cites v3.0 (third-party; **[UNVERIFIED against CC]**). The accounts PDFs contain trustee names (personal data), so keep them out of any repository (sspencespence SKILL.md).
 
-**Population.** Main registered charities. Size **[UNVERIFIED]**, roughly 170k. Income is known for annual-return filers; there is an income threshold for annual returns and accounts filing **[UNVERIFIED: £10k and £25k]**.
+**Population.** Main registered charities. Size roughly 170k (charitylens SEEDING.md, third-party; **[UNVERIFIED against CC]**). Income is known for annual-return filers; there is an income threshold for annual returns and accounts filing **[UNVERIFIED: £10k and £25k]**.
 
 **Leakage and timing (critical).**
 - The extract is a **snapshot**. `charity_activities` is the *current* description and may have been rewritten after the outcome year. A t−1 activities text needs an **archived** extract from before t **[UNVERIFIED whether CC or NCVO archives exist]**.
-- Charitable objects (governing document) and the t−1 accounts PDF are dated, so they are safe.
+- The t−1 accounts PDF is dated, so it is safe. **Corrected:** charitable objects are a current snapshot with no field-level date. They are probably stable for most charities **[UNVERIFIED amendment rate]**, but `governing_document_description` should be checked for amendments after t−1.
 - The accounts PDF for year t **is** the source of y_t (identical numbers), so only the t−1 PDF may be used.
 
 **Multimodal value.** Genuine. Accounts and trustees' report PDFs (text layer or scan) contain tables, charts and narrative. This is where Cohere embed-v4's page-image input is plausibly better than text extraction. It is the strongest real PDF population found.
@@ -280,7 +286,7 @@ Further findings from the same sample:
 
 **PDF route.** Financial reports for medium and large charities through the ACNC register **[UNVERIFIED bulk access; probably per-charity only]**.
 
-**Risks.** Withheld records (a coverage hole). Basic religious charities are exempt from financial questions **[UNVERIFIED]**. AIS text is same-filing (use t−1).
+**Risks.** Withheld records (a coverage hole). Basic religious charities do not provide financial information: per the opax doc (third-party), 8,449 AIS 2024 rows are basic religious charities and 7,829 of them carry 0 revenue, so zeros there are not figures (**[UNVERIFIED against ACNC]**). AIS text is same-filing (use t−1).
 
 **Verdict.** A strong alternative to CCEW, with cleaner structured y (staff, volunteers and government revenue for all AIS filers). Use it if CC scraping is infeasible.
 
@@ -308,7 +314,7 @@ Further findings from the same sample:
 
 **Licence.** Third-party notes disagree: CC BY 4.0 (arieg88/str-agent DATA_NOTES.md) against CC0 1.0 (Cijan540/airbnb-pricing-intelligence data_dictionary.md). The **photos are hosts' copyrighted images on Airbnb's CDN**, and the dataset licence does not cover them **[UNVERIFIED but likely]**.
 
-**y.** `price` (host-set, concurrent with the text and photos, so not "produced before y"). `estimated_occupancy_l365d` and `estimated_revenue_l365d` appear in newer snapshots, but **"Occupancy is estimated from reviews"** (arieg88), so the y is *model-derived*, and review-count covariates nearly reproduce it.
+**y.** `price` (host-set, concurrent with the text and photos, so not "produced before y"). `estimated_occupancy_l365d` and `estimated_revenue_l365d` appear in newer snapshots. Inside Airbnb has **"No booking data"** (arieg88), so these y are necessarily *model-derived*. **Clarification:** arieg88's line "Occupancy is estimated from reviews" describes that project's *own* estimate, which it shows next to Inside Airbnb's columns as a cross-check. That Inside Airbnb's own columns are review-based, and that review-count covariates nearly reproduce them, is **[UNVERIFIED]**.
 
 **Text and images.** Description, amenities and `picture_url`: genuine images.
 
@@ -319,7 +325,7 @@ Further findings from the same sample:
 ### 2.7 NIH RePORTER / ExPORTER and NSF awards
 
 **Access.**
-- NIH ExPORTER project and abstract CSVs (`RePORTER_PRJABS_C_FY[YEAR]_new.csv`; key columns `TOTAL_COST`, `ABSTRACT_TEXT`, `PROJECT_TERMS`, `ORG_NAME`, per akulesa/NIH_RePORTER README).
+- NIH ExPORTER project and abstract CSVs (projects `RePORTER_PRJ_C_FY[YEAR]_new.csv`, abstracts `RePORTER_PRJABS_C_FY[YEAR]_new.csv`). `TOTAL_COST`, `ABSTRACT_TEXT`, `PROJECT_TERMS` and `ORG_NAME` are key columns of the *merged* project-plus-abstract frame (per the akulesa/NIH_RePORTER README), not of the abstracts file alone.
 - NSF yearly zips of per-award XML via `nsf.gov/awardsearch/download?DownloadFileName=YYYY&All=true`, with fields `AbstractNarration` and `AwardAmount` ("amount awarded to date") (macks22/nsf-award-data `docs/nsf-xml-schema-details.md`).
 - Both blocked. Public domain **[UNVERIFIED]**. OpenAlex S3 is reachable but has no award amounts.
 
@@ -347,7 +353,7 @@ About 11–12M loans **[UNVERIFIED]**. Fields: NAICS, ZIP, business type, jobs r
 
 **Auxiliaries.**
 - **Wikipedia** county articles quote census population and income figures, which leak y, and they are edited post hoc. Sheehan et al. (2019) used geolocated Wikipedia embeddings (via note 02).
-- **AlphaEarth** annual 64-dimensional embeddings, 2017 onward (arXiv 2507.22291, via note 02). The GCS bucket is **reachable**.
+- **AlphaEarth** annual 64-dimensional embeddings, 2017 onward (arXiv 2507.22291, via note 02). The GCS bucket is **reachable**. (Confirmed: a 2017 tile header reports 64 samples per pixel on an 8192×8192 grid, and the bucket holds years 2017–2025.)
 - **Sentinel-2 L2A COGs** are reachable.
 - **Overture Places** (POI names, categories, websites) are reachable; licence **[UNVERIFIED]**.
 
@@ -383,7 +389,7 @@ Scores run from 0 (fails) to 3 (fully meets). **Reach** = usable from this sandb
 **Recommendation.**
 - **PRIMARY: IRS 990.**
 - **R1 (Canadian): CRA T3010.** It reruns the same benchmark with bilingual text and government-revenue-by-level y.
-- **R2 (multimodal): UK CCEW**, with t−1 accounts PDFs embedded as page images by Cohere embed-v4 against text extracted from the same PDFs and against registration-time charitable objects. Fall back to ACNC if scraping is infeasible.
+- **R2 (multimodal): UK CCEW**, with t−1 accounts PDFs embedded as page images by Cohere embed-v4 against text extracted from the same PDFs and against governing-document charitable objects (current snapshot; amendable). Fall back to ACNC if scraping is infeasible.
 - **Optional SAE arm:** county imagery embeddings, but only with a census or admin truth.
 
 ---
@@ -403,7 +409,7 @@ It collects y from a sample. Because every TY2023 return is later observed, the 
 
 | Object | Source | Date rule |
 |---|---|---|
-| Frame F (design time) | Default: `EfileData/BMF/IRS_BMF_2023_12_12_raw.csv`. It predates almost every TY2023 filing, and the equality test gives 0.62%. Sensitivity run: `IRS_BMF_2024_4_11_raw.csv`, the latest snapshot before a 30 Jun 2024 cutoff. It may already carry TY2023 values for the about 12k units that filed in 2024Q1. That is realistic for an NSO, but it must be reported through the equality test. | Snapshot date ≤ cutoff. Assert that the BMF TAX_PERIOD maps to tax year ≤ 2022 (default) and quantify the share that does not (sensitivity). |
+| Frame F (design time) | Default: `EfileData/BMF/IRS_BMF_2023_12_12_raw.csv`. It predates almost every TY2023 filing, and the equality test gives 0.62%. Sensitivity run: `IRS_BMF_2024_4_11_raw.csv`, the latest snapshot before a 30 Jun 2024 cutoff. It may already carry TY2023 values for the about 12k units that filed in 2024Q1. (Confirmed: its `REVENUE_AMT` equals TY2023 revenue for 3.6% of units, about 12.1k, against 0.62% in Dec-2023.) That is realistic for an NSO, but it must be reported through the equality test. | Snapshot date ≤ cutoff. Assert that the BMF TAX_PERIOD maps to tax year ≤ 2022 (default) and quantify the share that does not (sensitivity). |
 | Lagged admin x_{t−1} | TY2022 index plus XML, **first** return per EIN with `ReturnTs` ≤ cutoff | Later amendments are excluded from the frame. |
 | Text z_{t−1} | Same TY2022 return as x_{t−1} | ≤ cutoff (91.0% coverage at 30 Jun 2024; run 31 Mar 2024 as a stress case: 76.7%) |
 | Truth y_t | TY2023 index plus XML (index built 2026-08-25), **last** return per EIN (amended supersedes original) | Complete by about late 2025 |
@@ -436,7 +442,7 @@ Apply in this order and log the count dropped at each step:
 
 - From the BMF: `NTEE_CD` (major group, plus "missing" as its own level: 30% missing), `SUBSECTION`, `STATE`, `ZIP` (to county via a crosswalk), ruling year, `FOUNDATION`, `ASSET_CD`, `INCOME_CD`, `ASSET_AMT`, `INCOME_AMT`, `REVENUE_AMT`, `AFFILIATION`, `GROUP`.
 - From the TY2022 return (scenario S2 only): lagged total revenue, expenses, assets, and the lagged value of the target y.
-- Do **not** use `Website` from the index. It is a defect for 2022v5.0 schema returns (note 02); use the XML `WebsiteAddressTxt`.
+- Do **not** use `Website` from the index. It is a defect for 2022v5.0 schema returns (note 02); use the XML `WebsiteAddressTxt`. (Checked on the 418 TY2022 sample returns: the index `Website` is non-blank for 41%, against 90% for XML `WebsiteAddressTxt`, or 67% excluding "N/A". That the defect is specific to 2022v5.0 is not established: 98% of TY2022 returns are 2022v5.0, the 7 v4.1 returns show the same gap, and TY2023 2023v6.0 returns are also low at 43%.)
 
 ### 4.5 Text arms (all from TY2022, the t−1 return)
 
@@ -446,14 +452,14 @@ Apply in this order and log the count dropped at each step:
 | T1 | Mission: Part I line 1 plus Part III line 1 (deduplicated), with "See Schedule O" pointers resolved | t−1 filers | Closest to a BN/SS-4 activity description |
 | T2 | T1 plus Part III 4a–4e program descriptions (whitelisted XPaths only) | t−1 filers | Main arm |
 | T2-nodigits | T2 with all digits and "$" amounts masked | | Leakage-through-numbers ablation (program text has ≥2-digit numbers in 20–68% of cases) |
-| T3 | T2 plus Schedule O | | Ablation only (governance boilerplate; "$" amounts in 5–53%) |
+| T3 | T2 plus Schedule O | | Ablation only (governance boilerplate; "$" amounts in 3–25% of Schedule O proper, or 5–53% if all-schedule `ExplanationTxt` is included) |
 | T-cheap | TF-IDF or LSA of T2 | | The question is whether *generic embeddings* beat *cheap text features* |
 
 Embedding models: local MiniLM (training data predates TY2023) and, once allowlisted, Cohere embed-v4 (text mode). For units with no t−1 return, the text arms are missing. Handle this with a missingness indicator and a separate stratum, and **never impute from y_t**.
 
 ### 4.6 Target variables (headline vs control)
 
-Indicative out-of-sample R² for log1p(y_t). Source: 10-fold ridge on n=418, which is unweighted and stratified by y_t revenue, so treat the values as directional only. Frame = BMF income, assets, age, NTEE major and subsection.
+Indicative out-of-sample R² for log1p(y_t). Source: 10-fold ridge on n=418 (volunteers: n=307 non-blank), which is unweighted and stratified by y_t revenue, so treat the values as directional only. (Re-run: all values reproduce.) Frame = BMF income, assets, age, NTEE major and subsection.
 
 | y_t | R² frame only (S1) | R² frame + lagged y (S2) | Role |
 |---|---|---|---|
@@ -480,7 +486,7 @@ Uses:
 
 ### 4.8 Multimodal for the 990 (honest limit)
 
-The public 990 data are XML, and no page images exist. The only multimodal route is website screenshots or HTML for the units with a URL (31–95% by size class; XML field). That needs crawling outside the sandbox (Common Crawl is blocked here). Treat it as an **est-time** auxiliary with size-graded missingness. Do not render 990 XML to images just to "use" the image model: that is artificial and does not match real-world practice.
+The public 990 data are XML, and no page images exist. The only multimodal route is website screenshots or HTML for the units with a URL (31–95% by size class; XML field, excluding "N/A"). That needs crawling outside the sandbox (Common Crawl is blocked here). Treat it as an **est-time** auxiliary with size-graded missingness. Do not render 990 XML to images just to "use" the image model: that is artificial and does not match real-world practice.
 
 ---
 
@@ -493,7 +499,7 @@ Each test should print a number and a pass/fail rule. Values observed this sessi
 2. **Amendments.** Share of truth values taken from amended returns, and the distribution of |y_amended − y_original| / y_original. Fail if more than 1% of total revenue changes.
 3. **Group returns excluded.** Report their revenue share (observed 5.5%) and the number of subordinate EINs on the BMF that therefore have no own return.
 4. **Reference periods.** FYE-month mix (Dec 59%, Jun 25%). Flag short or long periods. Run a sensitivity analysis restricted to Dec FYE.
-5. **Geography.** Index state missing (17,139). Assert agreement between BMF state and XML state above 98%, otherwise investigate.
+5. **Geography.** Index state missing (17,139). Assert agreement between BMF state and XML state above 98%, otherwise investigate. (Observed in verification: the index `LegalDomicileState` matches Dec-2023 BMF `STATE` for only 94.5% of units where both exist, so this check fails as written. Part of the gap may be legitimate, because legal domicile is not the same as a mailing address **[UNVERIFIED field semantics]**.)
 
 **Timing and leakage**
 
@@ -551,7 +557,7 @@ Each test should print a number and a pass/fail rule. Values observed this sessi
 - U = main charities (`linked_charity_number = 0`) with Part A for financial periods t−1 and t.
 - y_t: `total_gross_income`, `income_from_government_grants` and `…_contracts`, the government-funding flags, `count_volunteers`, and Part B `count_employees` for the larger-charity subset.
 - Auxiliaries:
-  - (i) `charitable_objects` (registration-time text);
+  - (i) `charitable_objects` (governing-document text; a current snapshot that can be amended, see §2.3);
   - (ii) the t−1 accounts PDF: page images for Cohere embed-v4, against the PDF text layer for a text model, against OCR text;
   - (iii) `charity_activities` **only** from an extract archived before t.
 - Frame: classification codes, area of operation, registration date, lagged income.
@@ -603,7 +609,13 @@ Each test should print a number and a pass/fail rule. Values observed this sessi
 - EDGAR employees: https://raw.githubusercontent.com/Coral-Bricks-AI/reef/HEAD/alphacumen/skills/extract_item1_human_capital_headcount/SKILL.md ; https://raw.githubusercontent.com/Verdenroz/finance-query/HEAD/src/adapters/edgar/filings/employee_count.rs
 - 990 variable concordance: https://raw.githubusercontent.com/Nonprofit-Open-Data-Collective/irs-efile-master-concordance-file/master/concordance.csv ; https://raw.githubusercontent.com/Nonprofit-Open-Data-Collective/irs-990-efiler-database/master/README.md
 
-**Literature (via note 02, found by search earlier in this session).** Ma (2021) NVSQ, DOI 10.1177/0899764020968153. Corral, Henderson & Segovia (2025) *J. Dev. Econ.* 172. Newhouse (2023) WB PRWP 10512, DOI 10.1596/1813-9450-10512. Sheehan et al. (2019) KDD, arXiv 1905.01627. AlphaEarth Foundations, arXiv 2507.22291. Rolf et al. (2021) *Nat. Commun.* 12:4392, DOI 10.1038/s41467-021-24638-z.
+**Literature (via note 02, found by search earlier in this session; bibliographic details re-confirmed in verification from GitHub-hosted records).**
+- Ma, J. (2021). "Automated Coding Using Machine Learning and Remapping the U.S. Nonprofit Sector: A Guide and Benchmark." *NVSQ* 50(3): 662–687. DOI 10.1177/0899764020968153.
+- Corral, P., Henderson, H. & Segovia, S. (2025). "Poverty mapping in the age of machine learning." *J. Dev. Econ.* 172: 103377. DOI 10.1016/j.jdeveco.2024.103377.
+- Newhouse, D. (2023). "Small Area Estimation of Poverty and Wealth Using Geospatial Data: What Have We Learned So Far?" WB PRWP 10512. DOI 10.1596/1813-9450-10512.
+- Sheehan, E. et al. (2019). "Predicting Economic Development using Geolocated Wikipedia Articles." KDD 2019. DOI 10.1145/3292500.3330784; arXiv 1905.01627.
+- "AlphaEarth Foundations: An embedding field model for accurate and efficient global mapping from sparse label data." arXiv 2507.22291.
+- Rolf, E. et al. (2021). "A generalizable and accessible approach to machine learning with global satellite imagery." *Nat. Commun.* 12: 4392. DOI 10.1038/s41467-021-24638-z.
 
 **Scripts and intermediate files (session scratchpad; copy into `src/` if they need to persist).**
 - `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/ds03/scripts/profile_idx.py`: index profiling (form types, DocStatus, duplicates, skew)
@@ -613,3 +625,159 @@ Each test should print a number and a pass/fail rule. Values observed this sessi
 - `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/ds03/scripts/sample_pairs.py`, `parse_pairs.py`, `headroom.py`: the 418-pair XML sample, text and y red-team statistics, R² headroom
 - Data: `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/ds03/pairs420.csv`, `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/ds03/pairs_parsed.pkl`, XMLs under `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/ds03/xml/{t,p}/`
 - Reachability log: `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/ds03/reach.txt`
+
+---
+
+## Verification log
+
+Adversarial pass, 2026-10-23. **Method and limits.** WebSearch was unavailable (the shared 200-call budget was exhausted), and WebFetch resolved only github.com: arxiv.org, doi.org, crossref, nature.com, sagepub, semanticscholar, docs.cohere.com and developers.google.com all failed with `ENOTFOUND`. Checks therefore used:
+- independent re-computation on the local index, BMF and XML files;
+- fresh `curl` bucket listings, plus a newly downloaded `IRS_BMF_2024_4_11_raw.csv`;
+- re-fetches of all 23 cited raw.githubusercontent.com files, which all returned HTTP 200;
+- GitHub code search for bibliographic records.
+
+Verifier scripts are at `/tmp/claude-0/-home-user-hananather/61c19d0b-7d5d-50f6-9821-a76e0ea08cdb/scratchpad/verify03/scripts/` (`v_index.py`, `v_index2.py`, `v_bmf.py`, `v_xml.py`, `v_xml2.py`), and re-fetched sources are under `…/verify03/gh/`.
+
+**Outcome codes.** C = confirmed. C* = confirmed, with a clarification added in place. X = corrected in place. F = flagged (not established, or the sources conflict).
+
+### Reachability and bucket structure (§1, §2.1)
+
+| # | Claim | Outcome |
+|---|---|---|
+| 1 | GT data lake, AlphaEarth, Sentinel COGs, Overture, Landsat index, OpenAlex S3 and NOAA return 200 | C (re-tested; the Landsat range request returned 206) |
+| 2 | Old IRS AWS index returns 404; nccsdata, naip and commoncrawl S3 return 403 | C |
+| 3 | Government, Cohere, HF, Wikipedia, OpenAlex API, NSF and Inside Airbnb hosts return 000 | C (11 hosts re-tested) |
+| 4 | AlphaEarth `satellite_embedding/v1/annual/2017/10N/…`; Overture `release/2026-10-21.0/`; Sentinel `sentinel-s2-l2a-cogs/` | C |
+| 5 | AlphaEarth embeddings are 64-dimensional, 2017 onward | C (TIFF tag 277 = 64; years 2017–2025 listed) |
+| 6 | Yearly index naming, ~300 MB per year, column list | C |
+| 7 | Per-return XML averages ~51 KB (838 files = 43 MB) | C (43.3 MB) |
+| 8 | XmlZips `{YYYY}_TEOS_XML_{MM}{A-D}`, 56 MB–1.4 GB | C* (letters run to H; older `CT{n}` and `download990xml_2020_{n}` names) |
+| 9 | 30 BMF snapshots, 2023-08-16 to 2026-05-28, ~320–340 MB | C* (size range corrected: 317–339 MB plus one of 219 MB) |
+| 10 | `IRS_BMF_2024_4_11` is the last snapshot before 30 Jun 2024 | C (the next is 2024-07-25) |
+| 11 | SOI extracts are "TY18–23", 308–381 MB, documentation `{YY}eofinextractdoc.xlsx` | **X**: labelled by processing year; documentation sits in `Extracts/Documentation/` |
+| 12 | Postcards are pipe-delimited, ~250–280 MB; revocations exist | C* (246–282 MB) |
+| 13 | 990-N postcards carry a name and sometimes a URL | C (the website/email field is populated for some rows) |
+
+### Index-derived population facts (§0, §2.1, §4.3, §4.7)
+
+| # | Claim | Outcome |
+|---|---|---|
+| 14 | TY2023 and TY2022 row and form-type counts | C (exact) |
+| 15 | ≈349k units (348,907–348,997) | C |
+| 16 | 331,124 in 50 states + DC; 17,139 missing state; 734 other; 255,248 501(c)(3) | C (within 0.05%, depending on dedup) |
+| 17 | Top 10 / 100 / 1,000 / 1% revenue shares; CV 18.3; 1,500 negative and 3,683 zero revenue | C (5.67 / 19.6 / 49.5 / 67.4–67.5%) |
+| 18 | Top 1% hold 68–69% in TY2021–23 | **X**: 66.8–67.4% on the defined population; 68.1–68.9% only on all 990 rows |
+| 19 | 562,743 rows; 554,007 EINs; 8,369 multi-return EINs (max 7); 40% amended; 1,258 with more than one TaxPeriod; 359 filed both forms | C (exact) |
+| 20 | 589 group returns hold 5.5% of revenue | C (5.46%) |
+| 21 | DocStatus counts (~8.5k / 22k / 6.6k / 1.1k) | C* (single-flag values over all form types) |
+| 22 | `SubmittedOn` years run 1900–8202 | C* (across the TY2021–23 indices; TY2023 alone 1924–7202) |
+| 23 | 96.3% linked (322,482 / 13,507 / 12,918); linkage by revenue class; unlinked 34% InitialReturn and 38% YearFormed ≥ 2022 | C (exact) |
+| 24 | Cutoff coverage 66.3 / 76.7 / 91.0 / 94.9 / 95.6% | C (66.3 / 76.7 / 91.0 / 94.9 / 95.6) |
+| 25 | TY2023 arrivals by quarter | C (exact) |
+| 26 | FYE mix | C (Dec 59.2%, Jun 24.9%, Sep 5.2%, Aug 2.5%, Mar 2.0%, May 1.9%) |
+| 27 | Lag correlations: raw 0.9913 / 0.9952 / 0.9941, log 0.805 / 0.900 / 0.857, 18% median change, 0.68% carry-forward | C |
+| 28 | Schema versions (TY2022 98% 2022v5.0; TY2023 mix) | C (97.6%) |
+| 29 | POC state counts (24,939 / 19,516 / 12,936 / 99,232) | C (±15 units) |
+| 30 | ~5% chapter-type names | C (5.3%) |
+| 31 | XML volume ≈10 GB (8 states) and ≈36 GB (national) | C (arithmetic) |
+| 32 | S3 is 3.7% (final) and 9% (30 Jun 2024) | C |
+| 33 | Text exists for 26.5% of BMF entities | C* (May-2026 BMF; 28.6% on Dec-2023) |
+
+### BMF frame (§2.1, §4.2, §5)
+
+| # | Claim | Outcome |
+|---|---|---|
+| 34 | Dec-2023 BMF has 1,852,262 rows and holds 97.2% of filers | C |
+| 35 | TAX_PERIOD counts 290k / 32k / 11.6k / 12.8k missing | C |
+| 36 | `REVENUE_AMT == y_t`: 0.62% (Dec-2023) vs 18.3% (May-2026); 2026 TAX_PERIOD mostly 2024–25 | C |
+| 37 | Dec-2023 BMF vs TY2023 revenue correlation: raw 0.986, log 0.668 | C |
+| 38 | NTEE missing 30.1%; by ruling year; by subsection | C (≤1990 re-computed 60.3% vs 60.1%; others exact) |
+| 39 | 1,394 domains, median 68, 412 under 30 | C* (these include territories; 50 states + DC give 1,324 / 76 / 348) |
+| 40 | Apr-2024 BMF already carries TY2023 values for ~12k units | C (3.6%, ≈12.1k) |
+| 41 | Red-team item 5 threshold (state agreement > 98%) | C* (new observation: index vs BMF state agreement is 94.5%) |
+
+### XML sample, n=418 (§0, §2.1, §4.5, §4.6)
+
+| # | Claim | Outcome |
+|---|---|---|
+| 42 | Element names and XPaths, including `IRS990/Desc` beside `ExpenseAmt`/`GrantAmt`/`RevenueAmt` and the `OtherExpensesGrp/Desc` pitfall | C |
+| 43 | 418 of 420 pairs parsed (60 per class, seed 11) | C |
+| 44 | Red-team table: employees, volunteers blank, gov. grants, mission and program identity, "$", digits | C (exact) |
+| 45 | "Schedule O has '$'" column; "35–53% over $5M"; T3 "5–53%" | **X**: the parser read `ExplanationTxt` from every schedule. Schedule O proper is 0.03–0.25 (0.17–0.25 over $5M) |
+| 46 | Website-in-XML column | C* (excludes "N/A"; raw element non-blank in 90%) |
+| 47 | Exact-value leakage 0.2 / 0.0 / 0.2 / 0.7%; t−1 0.2–1.0% | C |
+| 48 | PY(t) = CY(t−1) for 98.3% (98.5% within 1%); index = XML for 100% | C |
+| 49 | Volunteer blanks 25–53% vs 3%; heaping 31 / 15 / 7%; median 30, p90 455; employees 5% | C |
+| 50 | Lag table (identity shares, log1p correlations) | C* (blank–blank pairs inflate identity: non-response for volunteers, persistent zeros for government grants) |
+| 51 | Median words: Schedule O 144 | **X**: 117 for Schedule O proper (mission 30 and program 29 confirmed) |
+| 52 | 8.4% of missions have ≤ 5 words | C |
+| 53 | 7.2% mention volunteers; 21.8% mention government/grant/contract | C* (21.8% uses a wider regex; 18.4% for the stated terms) |
+| 54 | R² headroom table (S1 / S2) | C (headroom.py re-run reproduces every value; volunteers n=307) |
+| 55 | Prior-year text present on 100% of linked returns | C* (sample covers 990→990 links only) |
+| 56 | Index `Website` is a 2022v5.0 defect | **F**: under-reporting confirmed (41% vs 90%); version-specificity not established |
+
+### Concordance and SOI documentation
+
+| # | Claim | Outcome |
+|---|---|---|
+| 57 | NODC names `F9_01_ACT_GVRN_EMPL_TOT`, `F9_01_ACT_GVRN_VOL_TOT`, `F9_08_REV_CONTR_GOVT_GRANT`; volunteers "required = FALSE" | C* (all three are FALSE; concordance versions run only to 2016) |
+| 58 | 990-EZ mission is in `PrimaryExemptPurposeTxt`; 990-EZ lacks Part I lines 5–6 | C (concordance; it has no 990-EZ XPath for the employee or volunteer variables) |
+| 59 | SOI `noemplyeesw3cnt` is the W-3 employee count | C (23eofinextractdoc: "Number of employees", Part V-2a) |
+
+### Secondary documentation (re-fetched)
+
+| # | Claim | Outcome |
+|---|---|---|
+| 60 | All 23 cited GitHub raw URLs resolve | C (HTTP 200) |
+| 61 | CCEW field definitions (`charity_activities` wording, `latest_income`, `linked_charity_number = 0`, Part A government fields, `count_volunteers` "not obliged", £60k salary bands, Part B `count_employees`, consolidated flag) | C |
+| 62 | CCEW zip sizes and row count (~250 MB / ~395k; Part B ~200 MB; trustees ~90 MB) | C (charitylens) |
+| 63 | Accounts PDFs are keyed by organisation number (~66% differ), use a redirect link and include scans; 0.5 s spacing; trustee names | C (sspencespence) |
+| 64 | Part B threshold of £500k "per charitylens/sspencespence" | **X**: attributed to sspencespence only |
+| 65 | No plain employee count in Part A | C (tompickup23) |
+| 66 | Charitable objects are "registration-time" and "dated" | **X**: a current snapshot that can be amended, with no field date |
+| 67 | ukcat uses `charitable_objects` | C |
+| 68 | CCEW licence version; ~170k charities | C* (OGL v3.0 and ~170k from third-party sources; still unverified against CC) |
+| 69 | CRA dataset `2dc3c94d-…`, CKAN `datastore_search`, OGL-Canada | C |
+| 70 | CRA ODD v2.0 layout: file names; 2,500-char description "either in English or French and no translation is provided"; 60-char program areas; lines 4540–5100; 300/370/390; years 2013–2023 | C |
+| 71 | ~84k records a year; ~48,500 Dec-31 filers; 71,954 in 2024 | C |
+| 72 | Section D below $100k; Schedule 3 iff field 3400; 247 sub-categories | C |
+| 73 | GovAlta C-1 (54,010 / 30,856 / 12.8% of 240,714 / 24,960 / 13,504 / 6,697), C-2 (1,075), C-8 (v24→v27), F-2 / F-11 | C |
+| 74 | C-7: 1.4% of BNs show any name change | **F**: KNOWN-DATA-ISSUES says 1.4%, but the same repo's README says 0.86% |
+| 75 | WEBURL exact-duplicate rows | C (350 rows, `CRA/docs/DATA_DICTIONARY.md`) |
+| 76 | ACNC register ID, 66,399 rows, weekly, 15 MB, 607 withheld; AIS 2013–2024 (CSV from 2019); 53,697 / 53,198 / 52,744 rows; reporting groups 296–328; verified 2026-09-29 | C |
+| 77 | ACNC licences (register CC BY 3.0 AU; AIS 2.5 / 3.0 / 4.0; 2024 "notspecified"; "personal, non-commercial") | C |
+| 78 | ACNC fields and the government-revenue definition | C (opax, charityscanner) |
+| 79 | Basic religious charities give no financial information | C* (opax: 8,449 rows; still unverified against ACNC) |
+| 80 | Inside Airbnb licence conflict (CC BY 4.0 vs CC0); file names; `estimated_*_l365d` columns | C |
+| 81 | "Occupancy is estimated from reviews" read as Inside Airbnb's method | **X**: the line describes arieg88's own estimate; Inside Airbnb's method is [UNVERIFIED] |
+| 82 | NIH ExPORTER file names and columns | C* (the columns belong to the merged project-plus-abstract frame) |
+| 83 | NSF download URL, `AbstractNarration`, `AwardAmount` "to date" | C |
+| 84 | EDGAR: headcount in Item 1 prose; `dei:EntityNumberOfEmployees` voluntary and mostly empty | C (third-party) |
+
+### Literature (§2.1, §2.10, §9)
+
+| # | Claim | Outcome |
+|---|---|---|
+| 85 | Ma (2021) NVSQ, DOI 10.1177/0899764020968153; NTEE-from-text classifier | C (ma-ji/npo_classifier README; bib record gives 50(3):662–687) |
+| 86 | Corral, Henderson & Segovia (2025) *J. Dev. Econ.* 172; validate on a pseudo-census | C (bib: 103377, DOI 10.1016/j.jdeveco.2024.103377; WB metadata abstract: pseudo-census design-based simulations) |
+| 87 | Newhouse (2023) PRWP 10512, DOI 10.1596/1813-9450-10512; non-sampled areas do worse | C (WB metadata: WPS10512, 2023-06-28; abstract: "Estimates for sampled areas are significantly more accurate than those for non-sampled areas") |
+| 88 | Sheehan et al. (2019) KDD, arXiv 1905.01627 | C (KDD 2019 DOI 10.1145/3292500.3330784; ermongroup repo) |
+| 89 | AlphaEarth Foundations, arXiv 2507.22291 | C (title confirmed; 64-D from data and opengeos) |
+| 90 | Rolf et al. (2021) *Nat. Commun.* 12:4392, DOI 10.1038/s41467-021-24638-z | C (CEGA bib record) |
+| 91 | Cohere embed-v4 takes page-image (image) input | C (third-party code only: v2 API `image_url` content; Cohere docs unreachable) |
+
+### Internal arithmetic
+
+| # | Claim | Outcome |
+|---|---|---|
+| 92 | §3 ranking totals | C (every row sums correctly; ranges are scored at their lower bound) |
+
+### Not checkable here, left as [UNVERIFIED] in the text
+
+- IRS public-inspection status and GivingTuesday terms of use.
+- CCEW £10k/£25k thresholds and the Part B threshold, against CC itself.
+- SEC 10-K filer count, PPP loan count, IPEDS size, and Overture licence.
+- Companies House, NZ and OSCR details.
+- SS-4 lines 16–17, Form 1023 access and StatCan program names (from note 02).
+- Whether ACNC financial reports are available in bulk.
+- Whether `charitable_objects` are rarely amended.

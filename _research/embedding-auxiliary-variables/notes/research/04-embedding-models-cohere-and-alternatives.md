@@ -23,7 +23,7 @@ Written 2026-10-23. Sibling notes: `01-methods-literature.md` (estimators), `02-
    - Time is the binding constraint, not money. Production rate limits are 2,000 text inputs/min (2.5 h per text pass) and 400 images/min (12.5 h per image pass).
    - A trial key cannot do this. It is capped at 1,000 API calls per month, while one text pass needs 3,125 calls, and it allows only 5 images/min.
 4. **Data residency is the real blocker, not price.**
-   - The Cohere SaaS API, Azure pay-as-you-go hubs (US regions plus Sweden Central) and Bedrock offer no Canadian processing. From ca-central-1, Bedrock reaches Embed v4 only through the `global.` cross-region profile, which may process data in any commercial AWS region (secondary source, checked 2026-10-11).
+   - Azure pay-as-you-go hubs (US regions plus Sweden Central) and Bedrock offer no Canadian processing. The Cohere SaaS API documents no processing region at all in the pages read, so Canadian processing there is **[UNVERIFIED]** (§2.4). From ca-central-1, Bedrock reaches Embed v4 only through the `global.` cross-region profile, which may process data in any commercial AWS region (secondary source, checked 2026-10-11).
    - Paths an NSO could use with confidential register text: a Cohere **private deployment** (Embed v4 runs as a one-GPU container), **Model Vault** (single-tenant; region by agreement; an Encrypted, confidential-computing tier in beta), or **open weights**.
 5. **Benchmark position.**
    - On the 29 RTEB retrieval tasks it shares with other models, embed-v4.0 scores **71.6** (mean NDCG@10). That is strong but not top: Qwen3-Embedding-8B, open, scores 75.4; gemini-embedding-001 76.0; voyage-4-large 79.8; NVIDIA Nemotron-3-Embed-8B, open, 81.9.
@@ -108,7 +108,7 @@ SDK details that matter:
 
   Trial keys are "limited to 1,000 API calls a month".
 - **Embed Jobs** (`/v1/embed-jobs`, `co.embed_jobs.create(dataset_id=..., input_type=..., model=..., embedding_types=..., truncate=...)`) are meant for 100K+ texts [C4]. The inputs are uploaded as a Cohere **Dataset** (CSV or JSONL with a `text` field), and **datasets are kept on Cohere for 30 days** unless deleted [C17]. That is a confidentiality issue.
-  - The docs contradict each other on model support. The Embed Jobs page says the API is "only compatible with our embed v3.0 models", yet it also describes v4 output dimensions, and the models table lists Embed Jobs for `embed-v4.0` [C4], [C11]. Test before relying on it.
+  - The docs contradict each other on model support. The Embed Jobs page says the API is "only compatible with our embed v3.0 models", yet it also describes v4 output dimensions, and the models table lists Embed Jobs for `embed-v4.0` [C4], [C11]. In SDK 7.3.0, `embed_jobs.create` has no `output_dimension` parameter at all [C18]. Test before relying on it.
   - Embed Jobs take text only.
   - A newer `/v2/batches` API exists in the OpenAPI spec; its examples are for chat [C10].
 - **Prices**: cohere.com/pricing was unreachable, so these are from LiteLLM's table, which cites cohere.com/pricing **(secondary)**:
@@ -137,12 +137,12 @@ SDK details that matter:
 | Route | Model id | Canadian processing? | Notes |
 |---|---|---|---|
 | Cohere SaaS API (`api.cohere.com/v2/embed`) | `embed-v4.0`, `embed-v5.0-*` | Not documented **[UNVERIFIED]** | Simplest. Datasets/Embed Jobs retained 30 days [C17]. |
-| AWS Bedrock | `cohere.embed-v4:0`; profiles `us.cohere.embed-v4:0` and `global.cohere.embed-v4:0` (secondary: AWS samples, LiteLLM) | **No.** From ca-central-1, only `global.` exists, and it "may process a request outside Canada… any commercial AWS Region" [S2]. `ca.` profiles exist for few models. | Cohere's own platform table still says "(Coming Soon)" for v4 on Bedrock and OCI [C11]. That table is stale. v5 is not on Bedrock [C11]. |
+| AWS Bedrock | `cohere.embed-v4:0`; profiles `us.cohere.embed-v4:0` and `global.cohere.embed-v4:0` (secondary: AWS samples, LiteLLM) | **No.** From ca-central-1, only `global.` exists, and it "may process a request outside Canada… any commercial AWS Region" [S2]. Per [S2], `ca.amazon.nova-lite-v1:0` is the only `ca.` profile AWS offers. | Cohere's own platform table still says "(Coming Soon)" for v4 on Bedrock and OCI [C11]. That table is stale. v5 is not on Bedrock [C11]. |
 | AWS SageMaker (Marketplace) | "Unique per deployment" [C11] | Possibly, if the listing supports ca-central-1 **[UNVERIFIED]** | You get your own endpoint. v4 and v5 are both listed [C7], [C8]. |
 | Azure AI / Microsoft Foundry | `cohere-embed-v-4-plan`, `Cohere-Embed-V5-Pro`, `Cohere-Embed-V5-Fast` [C11] | **No** for pay-as-you-go. Hubs must be in East US, East US 2, North Central US, South Central US, Sweden Central, West US or West US 3 [C13]. | Two routes: `v1/embeddings` (Azure schema) and `v1/embed` (Cohere schema) [C13]. |
 | Oracle OCI Generative AI | `cohere.embed-v4.0` (seen at `us-chicago-1` in Oracle devrel samples, secondary) | Unknown **[UNVERIFIED]** | v3 has separate `-image-` model ids on OCI [C11]. |
 | Cohere private deployment (on-prem or VPC) | container image; `docker run --gpus=1` for "embed-v4" [C15] | **Yes**, in your own environment | "The data never leaves your environment, and the model can be fully network-isolated" [C15]. Needs a commercial agreement. Frozen weights give the best reproducibility. |
-| Model Vault (Standard or Encrypted) | vault endpoint | "Region selection supports data-residency requirements; contact Cohere to confirm the regions" [C16] | Single-tenant. Zero Data Retention option. Encrypted tier uses TEEs (Intel TDX / AMD SEV-SNP plus NVIDIA confidential-computing GPUs) with remote attestation. |
+| Model Vault (Standard or Encrypted) | vault endpoint | "Region selection supports data-residency requirements; contact Cohere to confirm the regions" [C16] (from the Encrypted Vault compliance page) | Single-tenant. Zero Data Retention option. Encrypted tier uses TEEs (Intel TDX / AMD SEV-SNP plus NVIDIA confidential-computing GPUs) with remote attestation. |
 
 For StatCan, the confidential production path is a private deployment or a Model Vault with Canadian residency confirmed in writing. The public-data proof of concept (IRS 990, public text) can use the SaaS API.
 
@@ -151,10 +151,10 @@ For StatCan, the confidential production path is a private deployment or a Model
 - **Lifecycle terms** [C6]:
   - *Active*.
   - *Legacy*: no more updates.
-  - *Deprecated*: "no longer available to new customers but remain available to existing users until retirement". An existing user is anyone who used the model within 90 days before the announcement. A shutdown date is assigned.
+  - *Deprecated*: "no longer available to new customers but remain available to existing users until retirement". An existing user is anyone who has used the model or endpoint "within 90 days of the deprecation announcement". A shutdown date is assigned.
   - *Shutdown*: requests fail.
 - Notice is given "via email and in our documentation along with blog posts" [C6].
-- **Track record**: `embed-english-v2.0`, `embed-english-light-v2.0` and `embed-multilingual-v2.0` were retired on **2026-04-04**, and requests now fail [C9]. Cohere's v2 representation models date from roughly 2022–2023 per the changelog index **[UNVERIFIED exact dates]**.
+- **Track record**: `embed-english-v2.0`, `embed-english-light-v2.0` and `embed-multilingual-v2.0` were retired on **2026-04-04**, and requests now fail [C9]. The changelog announces `multilingual-22-12` on 2022-12-12 and introduces the `embed-*-v2.0` names on 2023-04-26, as renames of earlier models. The v2 generation therefore lasted roughly 3.3–3.5 years.
 - There is **no documented guarantee that outputs are bit-identical over time** for a given model id. Deterministic serving, and whether outputs depend on batch composition, are also undocumented. Test both (§7).
 - **Inconsistencies to keep on file**:
   - mteb metadata gives `release_date="2024-12-01"` for embed-v4.0, while Cohere's changelog says 2025-04-15.
@@ -181,9 +181,14 @@ For StatCan, the confidential production path is a private deployment or a Model
 
 **Method.** I sparse-cloned `embeddings-benchmark/results` at commit `0acf39c` (2026-10-22). For each model I took the revision folder with the most tasks, and from each task file the `test` split's `main_score`, averaged over its subsets. The task lists come from `mteb==2.26.20`. These are my aggregates, not the official leaderboard, but they use the same files.
 
+*Verification note (2026-10-23).* The numbers below reproduce exactly only with these refinements to the stated method:
+- Pick, per model, the revision folder holding the most tasks *of that benchmark*, not the most tasks overall. Under the overall rule, jina-v4, text-embedding-3-large/-small and gte-multilingual-base have no RTEB files.
+- For splits, use CUREv1's `all` split and MIRACLRetrievalHardNegatives' `dev` split. Neither has a `test` split.
+- In MTEB(eng, v2), restrict the multilingual tasks to their English subsets: AmazonCounterfactual `en`, STS17 `en-en`, STS22.v2 `en`, and `en` for MTOPDomain, MassiveIntent and MassiveScenario. Averaging over all subsets gives different numbers; for example, Qwen3-Embedding-8B scores 74.7 instead of 75.2 and MiniLM 54.4 instead of 59.0.
+
 **Caveat.** These are retrieval and general benchmarks. A covariate's value depends on how well a regularized model can predict y from e (the population R², §5). MTEB *classification* is the closest proxy. Retrieval NDCG is a weak proxy.
 
-**(a) RTEB retrieval tasks.** 29 tasks shared by embed-v4.0 and Qwen3-Embedding-8B (finance, health, legal, code, multilingual; several are private RTEB sets). Main score is NDCG@10.
+**(a) RTEB retrieval tasks.** 29 tasks shared by embed-v4.0 and Qwen3-Embedding-8B (finance, health, legal, code, multilingual; several are private RTEB sets). Main score is NDCG@10. *Verified:* `RTEB(beta)` lists 30 tasks, and embed-v4.0 lacks only SWEbenchCodeRetrieval. 13 of the 29 shared tasks are closed (private) sets.
 
 | Model | Mean | Open weights? |
 |---|---|---|
@@ -208,6 +213,8 @@ For StatCan, the confidential production path is a private deployment or a Model
 | static-retrieval-mrl-en-v1 | 34.7 | yes |
 | potion-base-8M (static) | 25.7 | yes |
 
+*Verification note.* The rows for text-embedding-3-large (65.6), gte-multilingual-base (59.2) and text-embedding-3-small (58.7) reproduce only when MIRACLRetrievalHardNegatives is taken from a *different* revision folder than the other 28 tasks. For text-embedding-3-small, that MIRACL file covers only the Persian (`fa`) subset (27.2), so its 58.7 is not comparable. Using the best revision alone gives 66.0, 59.0 and 59.2 over 28 tasks.
+
 **(b) MTEB(eng, v2), 41 tasks.** Mean(Task) and the Classification and Clustering means:
 
 | Model | Mean(Task) | Classification | Clustering |
@@ -225,7 +232,7 @@ For StatCan, the confidential production path is a private deployment or a Model
 | potion-retrieval-32M | 53.9 | 67.0 | 41.3 |
 | static-retrieval-mrl-en-v1 | 51.3 | 64.5 | 32.2 |
 
-**Cohere v4/v5, OpenAI 3-large, Voyage, BGE-M3 and Jina v4 have no complete MTEB(eng, v2) run in the repo.** That gap is exactly the classification and clustering evidence this project needs.
+**Cohere v4/v5, OpenAI 3-large, Voyage, BGE-M3 and Jina v4 have no complete MTEB(eng, v2) run in the repo.** *Verified:* embed-v4.0 (float, int8 and binary) has no Classification or Clustering file at all, and voyage-4-large has no MTEB(eng, v2) file. OpenAI 3-large has files for all 41 tasks only when revision folders 1–3 are pooled, and some of those files use an older format with no `scores` key; no single revision is complete. That gap is exactly the classification and clustering evidence this project needs.
 
 **(c) ViDoRe v2, visual document retrieval.** 4 tasks; main score NDCG@5.
 
@@ -271,12 +278,12 @@ Quality tiers are relative and based on §3:
 | Cohere `embed-v4.0` | 1536 (256–1536 MRL) | 128k | text, image, mixed | $0.12 per 1M text tokens; $0.47 per 1M image tokens (sec.) | A−/B+ | RTEB 71.6; §2 |
 | Cohere `embed-v5.0-pro` / `-fast` | 2048 (256–2048 MRL) | 128k | text, image, mixed | $0.12 / $0.08 per 1M text tokens; $0.40 per 1M image tokens (sec.) | not yet benchmarked | Pro and Fast share one space [C8] |
 | OpenAI `text-embedding-3-large` | 3072 (`dimensions` param) | 8192 tokens per input; ≤ 2048 inputs and ≤ 300k tokens per request | text | $0.13 per 1M; batch $0.065 (sec.) | B+ | OpenAPI spec [O1]; RTEB 65.6 |
-| Google `gemini-embedding-001` | 3072 (MRL) | 2048 | text | $0.15 per 1M online, $0.12 batch | A | Vertex pricing [G1]; MTEB(eng, v2) 73.3 |
-| Google `gemini-embedding-2` | 3072 / 1536 / 768 | 8192 | text, image, video, audio, PDF | $0.20 per 1M text (batch $0.10); $0.45 per 1M image tokens (batch $0.225) | A (ViDoRe v2 62.4) | Pricing page still says "Preview" [G1]; mteb gives GA 2026-04-22 |
-| Google Vertex `multimodalembedding@001` | 1408 (sec.: 128/256/512 also) | short text | text, image, video | $0.0001 per image | C for documents | [G1]; text reportedly English-only and 32 tokens (sec.) **[UNVERIFIED]** |
+| Google `gemini-embedding-001` | 3072 (MRL) | 2048 | text | $0.15 per 1M online, $0.12 batch (the page lists "Gemini Embedding" at $0.00015 and $0.00012 per "1,000 count"; reading the count as tokens is an interpretation) | A | Vertex pricing [G1]; MTEB(eng, v2) 73.3 |
+| Google `gemini-embedding-2` | 3072 / 1536 / 768 | 8192 | text, image, video, audio (mteb); PDF **[UNVERIFIED]** | $0.20 per 1M text (batch $0.10); $0.45 per 1M image tokens (batch $0.225) | A (ViDoRe v2 62.4) | Pricing page still says "Preview" [G1]; mteb gives GA 2026-04-22 |
+| Google Vertex `multimodalembedding@001` | 1408 **[UNVERIFIED]** (sec.: 128/256/512 also; LiteLLM instead lists `output_vector_size` 768) | short text | text, image, video | $0.0001 per image | C for documents | [G1]; text reportedly English-only and 32 tokens (sec.) **[UNVERIFIED]** |
 | Voyage `voyage-4-large` / `-4` / `-4-lite` | 1024 (2048 option) | 32k | text | $0.12 / $0.06 / $0.02 per 1M (sec.) | A (RTEB 79.8) | SDK `voyageai.Client.embed(texts, model, input_type, output_dtype, output_dimension)` [V1] |
-| Voyage `voyage-multimodal-3` / `-3.5` | 1024 (3.5: 256–2048, sec.) | 32k | text, image (3.5: plus video) | $0.12 per 1M text (sec.); pixel-based image price (sec.) **[UNVERIFIED]** | B+ (ViDoRe v2 54.9) | `Client.multimodal_embed(inputs, model, input_type, ...)` [V1] |
-| Amazon `nova-2-multimodal-embeddings` | 3072 | 8192 | text, image, audio, video | **[UNVERIFIED]** | unknown | mteb metadata, 2025-10-28 |
+| Voyage `voyage-multimodal-3` / `-3.5` | 1024 (3.5: 256–2048 **[UNVERIFIED]**; LiteLLM lists 1024 for both) | 32k | text, image (3.5: plus video) | $0.12 per 1M text (sec.); pixel-based image price (sec.) **[UNVERIFIED]** | B+ (ViDoRe v2 54.9) | `Client.multimodal_embed(inputs, model, input_type, ...)` [V1] |
+| Amazon `nova-2-multimodal-embeddings` | 3072 | 8192 | text, image, audio, video | $0.135 per 1M text tokens; $0.00006 per image (LiteLLM, sec.) | unknown | mteb metadata, 2025-10-28 |
 | Amazon `titan-embed-text-v2:0` | 1024 | 8192 | text | $0.02 per 1M (sec.) | C/B− | **Callable in-region in ca-central-1** [S2]. Useful as the "Canadian-resident API" control. |
 
 ### 4.2 Open-weight / on-prem models (what an NSO can run inside its own enclave)
@@ -287,18 +294,18 @@ Parameters, dims, context, license and release dates are from mteb 2.26.20 `Mode
 |---|---|---|---|---|---|---|---|---|
 | Qwen3-Embedding-0.6B / 4B / 8B | 0.60 / 4.0 / 7.6B | 1024 / 2560 / 4096 (MRL yes) | 32k | Apache-2.0 | text | yes (100+ languages) | B+ / A / A | **Primary open text rung.** Accepts instructions: "using instructions… typically yields an improvement of 1% to 5%" [Q1]. A task instruction such as "Represent this nonprofit's mission for predicting its size" is a free extra treatment. |
 | Qwen3-VL-Embedding-2B / 8B (2026-01) | 2.1 / 8.1B | 2048 / 4096 (MRL) | 32k | Apache-2.0 | text, image, screenshot, video, mixed | yes (33 languages incl. FR) | A (self-reported) | **Open counterpart of Cohere image and fused input.** Single vector from the EOS token [Q2]. |
-| NVIDIA Nemotron-3-Embed-1B / 8B; Nemotron-3.5-Embed-1B / 8B (2026-10-20) | 1.1 / 8.0B; 1.6 / 8.4B | 2048 / 4096 | 32k | openmdw-1.1 | 3: text; 3.5: text+image | multilingual | A (3-8B RTEB 81.9) | Strongest open text model on RTEB here. 3.5 is days old with no checked results. Check license terms **[UNVERIFIED]**. |
+| NVIDIA Nemotron-3-Embed-1B / 8B; Nemotron-3.5-Embed-1B / 8B (2026-10-20) | 1.1 / 8.0B; 1.6 / 8.4B | 2048 / 4096 | 32k | openmdw-1.1 | 3: text; 3.5: text+image | multilingual | A (3-8B RTEB 81.9) | Strongest open text model on RTEB here. 3.5 is days old with no checked results. (Result folders for 3.5-Embed-1B and 8B do exist at commit 0acf39c, but they were not aggregated here.) Check license terms **[UNVERIFIED]**. |
 | BGE-M3 | 568M | 1024 | 8192 | MIT | text (dense, sparse and multi-vector) | yes | B | Classic multilingual baseline; RTEB 58.9 |
 | multilingual-e5-large-instruct | 560M | 1024 | 514 | MIT | text | yes | B | MTEB(eng, v2) 65.6; short context |
 | gte-multilingual-base | 305M | 768 | 8192 | Apache-2.0 | text | yes | B− | Cheap multilingual |
 | granite-embedding-311m-multilingual-r2 (2026-04) | 312M | 128–768 (MRL) | 8192 | Apache-2.0 | text | yes | B (unchecked) | Enterprise-friendly provenance **[UNVERIFIED]** |
 | embeddinggemma-300m; embeddinggemma-2 (2026-10-06) | 308M; 271M | 768; {768, 512, 256, 128} | 2048; 8192 | Gemma license | text; text+image+audio+video | yes | B+ | MTEB(eng, v2) 69.7 / 67.5. Read the Gemma terms. |
 | voyage-4-nano | 346M | 2048 (2048 / 1024 / 512 / 256) | 32k | Apache-2.0 | text | multilingual (sec.) | B? | Shares the Voyage-4 family; runs locally through `voyageai` [V1] |
-| nomic-embed-text-v1.5 | 137M | 768 (MRL) | 8192 | Apache-2.0 | text | EN | B− | Fully open training data and code (Nussbaum et al. 2024, arXiv:2402.01613) |
-| all-MiniLM-L6-v2 | 22.7M | 384 | 256 | Apache-2.0 | text | EN only | C | **Already in sandbox** (ONNX). Measured **about 35 texts/s on 4 vCPU**, so 300k texts take about 2.4 h. |
-| model2vec potion-base-8M; static-retrieval-mrl-en-v1 | 7.6M; 31M | 256; 1024 | ∞ (static) | MIT; Apache-2.0 | text | EN | C− | "Static" rung; MTEB(eng, v2) about 51–54 |
+| nomic-embed-text-v1.5 | 137M | 768 (MRL) | 8192 | Apache-2.0 | text | EN | B− | Open training code (Nussbaum et al. 2024, arXiv:2402.01613). The training data is *not* fully open: per the contrastors README it is obtainable through the `nomic` package after creating an account, and mteb lists `public_training_data=None`. |
+| all-MiniLM-L6-v2 | 22.7M | 384 | 256 | Apache-2.0 | text | EN only | C | **Already in sandbox** (ONNX). Measured **about 35 texts/s on 4 vCPU**, so 300k texts take about 2.4 h. *Re-measured in verification* (4 vCPU, onnxruntime 1.29, batch 32–128): 116–146 texts/s at about 40 tokens, 65–77 at about 74, 33–41 at about 144 and 15–23 at 256. So 35 texts/s matches inputs of about 140 tokens. At the 60-token template assumed in §7, 300k texts take about 1 h. |
+| model2vec potion-base-8M; static-retrieval-mrl-en-v1 | 7.6M; 31M | 256; 1024 | ∞ (static) | MIT; Apache-2.0 | text | EN | C− | "Static" rung. MTEB(eng, v2): 51.3 for static-retrieval-mrl-en-v1. potion-base-8M has no complete run; the 53.9 in §3(b) belongs to potion-retrieval-32M. |
 | jina-embeddings-v4; jina-v5-omni | 3.9B; 1.0–1.6B | 2048; ≤1024 | 32k | **CC-BY-NC-4.0** | text+image; omni | yes | A−/B+ | **License excludes production use**; benchmark only, if at all |
-| ColPali v1.3, ColQwen2.5 v0.2, colnomic-embed-multimodal-7b, nemotron-colembed | 2.9–8.7B | **multi-vector**: 128 dims per patch or token | 16k–262k | Apache-2.0 adapters; base-model licenses vary **[UNVERIFIED]** | page images | partly | A for retrieval | **Not a single vector.** It must be mean-pooled to use as a covariate, which throws away what it was trained for. Use only as a sensitivity rung. |
+| ColPali v1.3, ColQwen2.5 v0.2, colnomic-embed-multimodal-7b, nemotron-colembed | 2.9–8.7B | **multi-vector**: 128 dims per patch or token for ColPali, ColQwen and colnomic; mteb lists 2560–4096 per token for nemotron-colembed-vl v2 | 16k–262k | ColPali, ColQwen and colnomic are Apache-2.0 per mteb; nemotron-colembed has a custom NVIDIA license (mteb links its HF LICENSE); base-model licenses vary **[UNVERIFIED]** | page images | partly | A for retrieval | **Not a single vector.** It must be mean-pooled to use as a covariate, which throws away what it was trained for. Use only as a sensitivity rung. |
 | CLIP ViT-L/14, SigLIP / SigLIP2 so400m | 0.43B; 0.88–1.1B | 768; 1152 | 77; 64 text tokens | MIT / Apache-2.0 | natural images + short text | partly | C for documents (ViDoRe v2 SigLIP 33.0) | Fine for photos (storefronts, satellite tiles). Wrong for PDF pages. |
 
 **Sandbox reality.**
@@ -325,7 +332,7 @@ The ladder breaks the total gain into increments. Each rung changes one thing. A
 | **R1** | Hand-built text features: length, presence of mission text, about 30 keyword flags (hospital, university, church, foundation, housing…). | What a methodologist could do without ML. | anywhere | 0 |
 | **R2** | TF-IDF (unigrams and bigrams, min_df ≥ 5) → TruncatedSVD (LSA) at k ∈ {64, 256} | Lexical signal; deterministic and transparent | in the enclave | CPU, minutes |
 | **R3** | Static word vectors averaged (GloVe 300d or spaCy `en_core_web_lg`; model2vec potion if available) | Distributional semantics without context | in the enclave | CPU, minutes |
-| **R4** | all-MiniLM-L6-v2 (384d) | Small contextual model, the cheapest "real embedding" | in the enclave (in sandbox now) | about 2.4 h CPU |
+| **R4** | all-MiniLM-L6-v2 (384d) | Small contextual model, the cheapest "real embedding" | in the enclave (in sandbox now) | about 2.4 h CPU (about 1 h at 60-token inputs; see §4.2) |
 | **R5** | Strong open text model: Qwen3-Embedding-0.6B (primary; also 8B), BGE-M3 or mE5-large-instruct for EN/FR. Run Qwen with and without a task instruction. | Model scale and quality, with nothing leaving the enclave. **The key control for the Cohere question.** | GPU in the enclave | GPU hours |
 | **R6** | **Cohere embed-v4.0, text**. Primary `classification`, 1536 float. Factors: `input_type` ∈ {classification, clustering, search_document}; dims ∈ {256, 512, 1024, 1536}; float vs int8. | The proprietary-API increment. The input_type and dims factors measure sensitivity to analyst choices. | external API (public data only) | about $2.16 per pass |
 | **R6b** | Cohere embed-v5.0-pro, text (2048 and 1536) | Vendor version change; the bridging-study analogue | external | about $2.16 |
@@ -422,7 +429,7 @@ Every option is negligible next to analyst time. **Choose the model on governanc
 3. **Provider equivalence is untested.** `embed-v4.0` on the Cohere API, `cohere.embed-v4:0` on Bedrock and the Azure deployment may not be byte-identical. Pick one provider per study.
 4. **Residency.** In practice, none of the managed clouds keep Embed v4 processing in Canada (§2.4). Only private deployment, a Model Vault with a written region guarantee, or open weights fit confidential frames. Make "open-weight rung within X% of Cohere" a decision criterion.
 5. **Licensing.** Jina v4 and v5 (CC-BY-NC) and possibly some ColPali bases should not go into a production recommendation. Gemma and openmdw terms need legal review **[UNVERIFIED]**.
-6. **Language.** Cohere v4 and v5, Qwen3, BGE-M3, mE5 and Granite-multilingual cover French. MiniLM, nomic-v1.5 and the static English models do not. For Canadian registers, add a French-text subset check.
+6. **Language.** Cohere v4 and v5, Qwen3, BGE-M3, mE5 and Granite-multilingual cover French. (For v5, the changelog says "over 100 languages". For v4, none of the first-party pages read states language coverage **[UNVERIFIED]**, but v4 has French RTEB results: French1 88.8, FrenchLegal1 93.3.) MiniLM, nomic-v1.5 and the static English models do not. For Canadian registers, add a French-text subset check.
 7. **Docs inconsistencies.** v4 support in Embed Jobs, the stale Bedrock and OCI table, and the v4 release date (§2) show why the protocol records what the API actually returned (`api_version`, billed units), not what the docs say.
 
 ---
@@ -443,11 +450,11 @@ Cohere first-party. All were read from `github.com/cohere-ai/cohere-developer-ex
 - [C10] Cohere OpenAPI spec, `cohere-openapi.yaml`: `/v2/embed` request body, `EmbedInputType`, `EmbeddingType`, `EmbedInput`, `ApiMeta.billed_units`, `/v2/batches`. https://github.com/cohere-ai/cohere-developer-experience/blob/main/cohere-openapi.yaml
 - [C11] Cohere. "An Overview of Cohere's Models": platform model-id table. https://docs.cohere.com/docs/models
 - [C12] Cohere. "Cohere Models on Amazon Bedrock". https://docs.cohere.com/v2/docs/amazon-bedrock
-- [C13] Cohere. "Cohere on Microsoft Azure": models list and pay-as-you-go hub regions. https://docs.cohere.com/v2/docs/cohere-on-microsoft-azure
+- [C13] Cohere. "Cohere on the Microsoft Azure Platform": models list and pay-as-you-go hub regions. https://docs.cohere.com/v2/docs/cohere-on-microsoft-azure
 - [C14] Cohere. "Cohere on Oracle Cloud Infrastructure (OCI)". https://docs.cohere.com/docs/oracle-cloud-infrastructure-oci
-- [C15] Cohere. "Private Deployment Overview": https://docs.cohere.com/docs/private-deployment-overview. "Model Deployment" (single container): https://docs.cohere.com/v2/docs/single-container-on-private-clouds
+- [C15] Cohere. "Private Deployment Overview": https://docs.cohere.com/docs/private-deployment-overview. "Deploying Models in Private Environments" (single container): https://docs.cohere.com/v2/docs/single-container-on-private-clouds
 - [C16] Cohere. Model Vault overview: https://docs.cohere.com/docs/model-vault. Standard pricing: https://docs.cohere.com/docs/model-vault/standard/pricing. Encrypted supported models, compliance and pricing: https://docs.cohere.com/docs/model-vault/encrypted/supported-models, …/compliance, …/pricing
-- [C17] Cohere. "Datasets" (30-day retention). https://docs.cohere.com/docs/datasets
+- [C17] Cohere. "The Cohere Datasets API (and How to Use It)" (30-day retention: "Datasets get deleted 30 days after creation"). https://docs.cohere.com/docs/datasets
 - [C18] `cohere` Python SDK 7.3.0 (PyPI wheel; `cohere/v2/client.py`, `cohere/client.py`, `types/embed_by_type_response_embeddings.py`). https://pypi.org/project/cohere/
 
 Benchmarks and model metadata:
@@ -471,3 +478,105 @@ Secondary (use with care):
 - [S2] AWS Solutions Library. "Canada (Central) Region Model Support", accelerated-intelligent-document-processing-on-aws (live checks 2026-10). https://github.com/aws-solutions-library-samples/accelerated-intelligent-document-processing-on-aws/blob/main/docs/canada-region-model-support.md
 - [S3] aws-samples/Cohere-on-AWS, `demo-pdf-processing/pdf_processor_cohere.py` (`us.cohere.embed-v4:0`, us-west-2). https://github.com/aws-samples/Cohere-on-AWS
 - [S4] oracle-devrel/technology-engineering, `ai/generative-ai-service/image-embed-and-search/README.md` (`cohere.embed-v4.0`, us-chicago-1). https://github.com/oracle-devrel/technology-engineering
+
+---
+
+## Verification log
+
+Adversarial check run on 2026-10-23.
+
+**How each check was done.**
+- WebSearch was unavailable: the turn's search budget was already spent.
+- WebFetch failed with DNS errors on `docs.cohere.com`, `cohere.com` and `arxiv.org`, but worked for `github.com`.
+- Checks therefore rely on:
+  - an independent sparse clone of `cohere-ai/cohere-developer-experience` (HEAD `0afa66c`, 2026-10-22);
+  - the PyPI wheels `cohere==7.3.0`, `voyageai==0.5.0` and `mteb==2.26.20`, confirmed as the latest releases via the PyPI JSON API;
+  - a fresh sparse checkout of `embeddings-benchmark/results` at `0acf39c`, with every §3 aggregate recomputed;
+  - raw GitHub files for [Q1], [Q2], [O1], [S1]–[S4];
+  - a curl of [G1];
+  - a local re-run of the MiniLM throughput test.
+- Papers cited from mteb citation strings were matched against those strings only. arxiv.org was unreachable, so none of the papers was fetched.
+
+Outcome codes: **C** = confirmed; **X** = corrected in place; **F** = newly flagged [UNVERIFIED].
+
+| # | Claim (section) | Source checked | Outcome |
+|---|---|---|---|
+| 1 | v4/v5 modalities, 128k context, Matryoshka dims and defaults (v4 1536, v5 2048), similarity metrics (§1, §2.1) | `fern/pages/models/embed.mdx`, `models.mdx` | C |
+| 2 | v4 released 2025-04-15; on Cohere Platform, SageMaker and Azure at launch | `changelog/2025-04-15-embed-multimodal-v4.mdx` | C |
+| 3 | v5 released 2026-09-30. Pro and Fast share one space; Cohere recommends indexing with Pro and querying with Fast. Output types float, int8, binary. Available via API, Foundry, SageMaker and Vault | `changelog/2026-09-30-embed-v5.mdx` | C |
+| 4 | Docs examples default to v5. Quote on `classification`/`clustering`. `image` input_type with v5 defaults to `search_document`. `inputs` limits (20 MB, 1568², 56², four allowed input_types). Up to 96 images for v5 | `v2/text-embeddings/embeddings.mdx` (also the v1 page) | C |
+| 5 | `/v2/embed`: texts ≤ 96, inputs ≤ 96. Images: v4+ "no limit" per call, ≤ 20 MB combined; jpeg/png/webp/gif. `max_tokens`, `output_dimension`, `truncate` (default END), `priority` 0–999 (0 = highest) | `cohere-openapi.yaml` V2EmbedRequest | C |
+| 6 | `EmbedInputType` enum and the classifier/clustering descriptions | OpenAPI `EmbedInputType` | C |
+| 7 | Six embedding types; binary is 1/8 of the float length (1536 → 192) | OpenAPI `EmbeddingType`, `EmbedByTypeResponse` | C |
+| 8 | `meta.billed_units.{input_tokens,image_tokens,images}`, `meta.api_version`, response `id` | OpenAPI `ApiMeta`, `EmbedByTypeResponse` | C |
+| 9 | `/v2/batches` exists and its examples are chat models | OpenAPI (examples use `command` / `batch-command`) | C |
+| 10 | Rate limits: Embed 2,000/2,000; images 5/400; EmbedJob 5/50. Trial capped at 1,000 calls/month | `going-to-production/rate-limits.mdx` | C |
+| 11 | Embed Jobs: "only compatible with our embed v3.0 models", 100K+, CSV/JSONL `text` field, v4 dims described; models table lists Embed Jobs for v4 | `v2/text-embeddings/embed-jobs-api.mdx`, `models.mdx` | C. Added: SDK `embed_jobs.create` has no `output_dimension` |
+| 12 | Datasets deleted after 30 days | `get-started/datasets.mdx` | C. Title in [C17] **X** |
+| 13 | Lifecycle terms and email/docs/blog notice | `going-to-production/deprecations.mdx` | C. The "existing user" wording "within 90 days *before*" changed to the doc's "within 90 days *of*" (**X**) |
+| 14 | v2 embed models retired 2026-04-04; requests fail | changelog `2026-04-04-…`, deprecations page | C |
+| 15 | v2 generation dates were "[UNVERIFIED]" | changelog 2022-12-12 (`multilingual-22-12`) and 2023-04-26 (v2.0 renames) | **X** (dates filled in) |
+| 16 | Platform table: v4 "(Coming Soon)" on Bedrock and OCI; Azure ids; SageMaker "Unique per deployment"; v5 N/A on Bedrock; OCI v3 `-image-` ids | `models.mdx` | C |
+| 17 | Azure pay-as-you-go hub regions; `v1/embeddings` and `v1/embed` routes | `v2/deployment-options/cohere-on-microsoft-azure.mdx` | C. Title in [C13] **X** |
+| 18 | `BedrockClient`/`V2`, `OciClient`/`V2`, `pip install cohere[oci]` | Bedrock and OCI pages; SDK `bedrock_client.py`, `oci_client.py` | C |
+| 19 | Private deployment: "data never leaves your environment…"; `docker run … --gpus=1` for embed-v4; needs a Cohere license | `private-deployment-overview.mdx`, `single-container-on-private-clouds.mdx` | C. Title in [C15] **X** |
+| 20 | Model Vault Standard prices for Embed 4 (Small/Medium) and Embed 5 Pro/Fast (Small/Medium) | `model-vault/standard/pricing.mdx` | C |
+| 21 | Vault: no rate limits. Encrypted is beta and "free of charge to design partners". TDX/SEV-SNP + NVIDIA CC GPUs, remote attestation, ZDR. Region quote | Model Vault overview, encrypted/pricing, attestation, compliance | C. The region quote comes from the Encrypted compliance page (**X**: clarified) |
+| 22 | `ClientV2.embed` signature; returns `EmbedByTypeResponse`; `.float_` alias | `cohere/v2/client.py`, `types/embed_by_type_response_embeddings.py` | C |
+| 23 | v1 `Client.embed` batches 96 over `ThreadPoolExecutor(64)`; `ClientV2.embed` resolves to the non-batching V2 method | `cohere/client.py`, `config.py`, `client_v2.py` | C |
+| 24 | `co.embed_jobs.create(dataset_id, input_type, model, embedding_types, truncate)` | `cohere/embed_jobs/client.py` | C |
+| 25 | voyageai `embed(texts, model, input_type, truncation, output_dtype, output_dimension)` and `multimodal_embed(inputs, model, input_type, …)`; voyage-4-nano local: 32k, default 2048, dims {2048, 1024, 512, 256} | `voyageai/client.py`, `local/model_registry.py` | C |
+| 26 | Package versions `cohere 7.3.0`, `voyageai 0.5.0`, `openai 3.37.0`, `mteb 2.26.20` | PyPI JSON API | C (all are the latest releases) |
+| 27 | Results repo commit `0acf39c…` dated 2026-10-22 | `git log` | C |
+| 28 | RTEB table, 20 rows; 29 shared tasks | recomputed | C. All 20 values reproduce, but only under the refined method (**X** in the §3 method note). Three rows mix revision folders, one of them with a fa-only MIRACL file (**X**: caveat added) |
+| 29 | int8 = 71.7 vs float 71.6; binary −2.6 | recomputed | C |
+| 30 | No public classification or clustering results for embed-v4 | file listing (v4, int8 and binary folders) | C |
+| 31 | MTEB(eng, v2) table, 12 rows, 41 tasks | recomputed | C. All 12 values reproduce only with English-only subsets (**X**: method note) |
+| 32 | "No complete MTEB(eng, v2) run" for Cohere v4/v5, 3-large, Voyage, BGE-M3, Jina v4 | file listing | C, with a nuance: 3-large has all 41 task files when revisions 1–3 are pooled (**X**: clarified) |
+| 33 | ViDoRe v2 table, 9 rows; no Cohere v4 ViDoRe result | recomputed; file listing | C |
+| 34 | Qwen3-VL README: MMEB-V2 77.8 / 73.2; VisDoc 82.4 / 79.2; MMTEB 67.9, 70.6, 68.4, 61.1, 58.9 | raw README | C |
+| 35 | Qwen3-VL specs: 2048/4096 dims, 32k, MRL, Apache-2.0, 33 languages incl. French, `[EOS]` vector | raw README; mteb | C |
+| 36 | Qwen3-Embedding: "1% to 5%" instruction gain; 100+ languages | raw README | C |
+| 37 | mteb gives embed-v4.0 `release_date="2024-12-01"` | `cohere_v.py` | C |
+| 38 | Qwen3-Embedding 0.60/4.0/7.6B; 1024/2560/4096; 32k; Apache-2.0; revision `b22da495` | mteb `qwen3_models.py` | C |
+| 39 | Qwen3-VL-Embedding 2.1/8.1B; released 2026-01 | mteb | C |
+| 40 | Nemotron-3 1.1/8.0B and 3.5 1.6/8.4B; 2048/4096; 32k; openmdw-1.1; 3.5 is image+text, released 2026-10-20 | mteb | C. Note added that 3.5 result folders exist |
+| 41 | BGE-M3 568M/1024/8192/MIT; revision `5617a9f6` | mteb | C |
+| 42 | mE5-large-instruct 560M/1024/514/MIT | mteb | C |
+| 43 | gte-multilingual-base 305M/768/8192/Apache-2.0 | mteb | C |
+| 44 | granite-311m-multilingual-r2: 2026-04-29; 312M; dims 128–768; 8192; Apache-2.0 | mteb | C |
+| 45 | embeddinggemma-300m (308M, 768, 2048) and -2 (2026-10-06, 271M, {768, 512, 256, 128}, 8192, text/image/audio/video); Gemma license | mteb | C |
+| 46 | voyage-4-nano 346M, Apache-2.0 | mteb | C |
+| 47 | nomic-embed-text-v1.5 137M/768/8192/Apache-2.0; "fully open training data and code" | mteb; contrastors README via WebFetch | Specs C. The open-data claim is **X**: data needs a `nomic` account; mteb lists `public_training_data=None` |
+| 48 | all-MiniLM-L6-v2 22.7M/384/256/Apache-2.0; revision `8b3219a9` | mteb | C |
+| 49 | potion-base-8M 7.6M/256/MIT; static-retrieval-mrl-en-v1 31M/1024/Apache-2.0; "MTEB(eng, v2) about 51–54" | mteb; results | Specs C. The MTEB figure is **X**: potion-base-8M has no complete run, and 53.9 is potion-retrieval-32M |
+| 50 | jina-embeddings-v4 3.9B/2048/32k/CC-BY-NC-4.0; jina-v5-omni 1.0–1.6B, ≤1024, CC-BY-NC-4.0 | mteb | C |
+| 51 | ColPali family 2.9–8.7B, 16k–262k, "128 dims", "Apache-2.0 adapters" | mteb | Size and context C. Dims and license **X**: nemotron-colembed is 2560–4096 per token with a custom NVIDIA license |
+| 52 | CLIP ViT-L/14 0.43B/768/77 tokens, MIT; SigLIP so400m 0.88–1.1B/1152/64, Apache-2.0 | mteb; github.com/openai/CLIP | C |
+| 53 | API model specs: gemini-001 3072/2048; gemini-2 dims/8192/GA 2026-04-22 (preview 2026-03-10); nova-2 3072/8192/2025-10-28; Titan v2 1024/8192; voyage-4-large 1024 (2048 option)/32k; voyage-multimodal-3 1024/32k; 3-large 3072 | mteb | C |
+| 54 | Citation metadata for [M3]–[M6], [Q1], [Q2] and the other model papers (authors, years, arXiv ids, MMTEB DOI, MIEB ICCV pp. 22187–22198) | mteb citation strings; Qwen READMEs | C, as metadata only; papers not fetched |
+| 55 | Cohere prices: v4 $0.12 text, $0.47 image; v5-pro $0.12; v5-fast $0.08; Azure v5 images $0.40; Bedrock and OCI v4 $0.12; Azure v5 `deprecation_date` 2027-01-23 | LiteLLM JSON (main, 2026-10-23) | C |
+| 56 | OpenAI 3-large $0.13 (batch $0.065); Voyage-4 $0.12/$0.06/$0.02; voyage-multimodal-3 $0.12; Titan v2 $0.02 | LiteLLM | C |
+| 57 | nova-2 price "[UNVERIFIED]" | LiteLLM | **X** (filled in: $0.135 per 1M tokens, $0.00006 per image, secondary) |
+| 58 | Vertex prices: Gemini Embedding $0.15/$0.12; Gemini Embedding 2 "Preview" at $0.20/$0.10 text and $0.45/$0.225 image; multimodalembedding $0.0001 per image | curl of [G1] | C. Unit wording "per 1,000 count" noted (**X**: clarified) |
+| 59 | multimodalembedding@001 dims 1408 | none first-party; LiteLLM says 768 | **F** |
+| 60 | voyage-multimodal-3.5 dims 256–2048 "(sec.)" | LiteLLM lists only 1024 | **F** |
+| 61 | gemini-embedding-2 accepts PDF | mteb lists text/image/audio/video only | **F** |
+| 62 | OpenAI: 8192 tokens per input, ≤ 2048 inputs, ≤ 300k tokens per request | `openai-openapi` `CreateEmbeddingRequest` | C |
+| 63 | AWS Canada: v4 only via `global.` from ca-central-1; `global.` = "any commercial AWS Region"; checked 2026-10-11; Titan v2 supported in ca-central-1; "`ca.` profiles exist for few models" | [S2] raw markdown | C. The `ca.` claim is **X**: there is only one, `ca.amazon.nova-lite-v1:0` |
+| 64 | `us.cohere.embed-v4:0` in us-west-2 | [S3] `pdf_processor_cohere.py` | C |
+| 65 | `cohere.embed-v4.0` at us-chicago-1 | [S4] README | C |
+| 66 | Cost and time arithmetic (§1, §7): $2.16; 3,125 calls; 150 min; 12.5 h; T = 432/1,193/2,683/3,136 → $61/$168/$378/$442; v5 $52–$376; $25.92/$6.48 and 30/7.5 h; $2.34/$1.17, $2.70/$2.16, $3.60/$1.80, $30; 1.84/0.46/0.31 GB; pilot < $0.50 | recomputed | C |
+| 67 | Image tokens ≈ px/784 | not documented in any page read | Remains [UNVERIFIED]; consistent with 2,458,624/784 = 3,136 |
+| 68 | Sandbox: huggingface.co, api.cohere.com, docs.cohere.com, cohere.com, ModelScope and Ollama blocked; qdrant-fastembed GCS 403; GitHub releases and cloud.google.com reachable | curl via the proxy | C |
+| 69 | MiniLM about 35 texts/s on 4 vCPU → 2.4 h for 300k | local re-run, ORT 1.29, 4 vCPU | **X**: throughput depends on length; 35/s matches about 140 tokens, and about 1 h at 60 tokens |
+| 70 | Cohere v4 covers French (§8.6) | no first-party statement found; RTEB French tasks exist | **F** for the docs claim (with empirical note) |
+| 71 | "The Cohere SaaS API … offer[s] no Canadian processing" (§1.4) | §2.4 itself marks it [UNVERIFIED] | **X** (reworded to [UNVERIFIED]) |
+
+**Totals.** 71 checks:
+- 49 confirmed as stated (C only);
+- 17 with an in-place correction or clarification: #12, 13, 15, 17, 19, 21, 28, 31, 32, 47, 49, 51, 57, 58, 63, 69, 71. Rows 12, 17 and 19 are the [C17], [C13] and [C15] titles; row 21 is the [C16] quote location; row 71 also turns an assertion into [UNVERIFIED];
+- 4 newly flagged [UNVERIFIED]: #59, 60, 61, 70;
+- 1 left at its existing [UNVERIFIED] status: #67.
+
+No citation was removed. Every source in §9 was located, except the papers, which were matched only against their citation metadata.
