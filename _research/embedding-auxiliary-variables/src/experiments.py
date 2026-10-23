@@ -84,6 +84,7 @@ def conventional_specs():
         # text-free machine learning (fair comparator for text ML)
         "MCAL_frame_raw": {"kind": "mcal", "F": "ml_frame", "hard": 0, "X_base": "size", "cf": True},
         "MCAL_frame_ratio": {"kind": "mcal", "F": "ml_frame_ratio", "hard": 0, "X_base": "size", "cf": True, "ratio": True},
+        "MCAL_frame_ratio_sep": {"kind": "mcal", "F": "ml_frame_ratio", "hard": 0, "X_base": "sep", "cf": True, "ratio": True},
     }
 
 
@@ -93,6 +94,8 @@ def embedding_specs(nm, K_add=10, K_ratio=32, full=True, n_hard_size_cat=None):
         f"RIDGE_size_cat+{nm}:ratio{K_ratio}": {"kind": "ridge", "X": f"size_cat+{nm}:ratio{K_ratio}", "hard": n_hard_size_cat},
         f"MCAL_raw+{nm}": {"kind": "mcal", "F": f"ml+{nm}", "hard": 0, "X_base": "size", "cf": True},
         f"MCAL_ratio+{nm}": {"kind": "mcal", "F": f"mlr+{nm}", "hard": 0, "X_base": "size", "cf": True, "ratio": True},
+        # text model calibrated on top of the strongest conventional calibration (separate ratios by stratum)
+        f"MCAL_ratio_sep+{nm}": {"kind": "mcal", "F": f"mlr+{nm}", "hard": 0, "X_base": "sep", "cf": True, "ratio": True},
         f"GREG_weak+{nm}:add{K_ratio}": {"kind": "greg", "X": f"weak+{nm}:add{K_ratio}"},
     }
     if full:

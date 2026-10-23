@@ -107,6 +107,21 @@ class Cell:
         self.rep = 0
 
 
+def _clipped_pop_sum(cell, spec, F, lam, Fs, T_target, w, hard, lo, hi, folds):
+    """Population sum of x * clip(ratio prediction) -- clipping is nonlinear, so predict every unit."""
+    xt_U = cell.size + spec.get("ratio_offset", 1.0)
+    if folds is None:
+        b0, Bx = _ridge_fit(Fs, T_target, w, lam, hard)
+        return (np.clip(b0 + F @ Bx, lo, hi) * xt_U[:, None]).sum(0)
+    k = folds.max() + 1
+    tot = np.zeros(T_target.shape[1])
+    for f in range(k):
+        tr = folds != f
+        b0, Bx = _ridge_fit(Fs[tr], T_target[tr], w[tr], lam, hard)
+        tot += (np.clip(b0 + F @ Bx, lo, hi) * xt_U[:, None]).sum(0) / k
+    return tot
+
+
 def _estimate(spec, cell: Cell, s_ts, d_ts, Y_ts, rng):
     kind = spec["kind"]
     i = cell.ts_index[s_ts]
@@ -182,6 +197,13 @@ def _estimate(spec, cell: Cell, s_ts, d_ts, Y_ts, rng):
             M = b0 + Fs @ Bx
             sumM = pop_sum(b0, Bx)
         if ratio:
+            if spec.get("clip", True):
+                # robustness: keep predicted ratios inside the range seen in the sample (1st-99th pct);
+                # a few units with tiny x and large y otherwise create extreme ratios and leverage
+                lo, hi = np.percentile(T_target, [1, 99], axis=0)
+                M = np.clip(M, lo, hi)
+                if spec.get("_clip_pop", True):
+                    sumM = _clipped_pop_sum(cell, spec, F, lam, Fs, T_target, w, hard, lo, hi, folds if spec.get("cf", True) else None)
             M = M * xt[:, None]
         if kind == "syn":
             return sumM, np.full_like(Y_ts, np.nan)
@@ -193,6 +215,11 @@ def _estimate(spec, cell: Cell, s_ts, d_ts, Y_ts, rng):
             t[j], e[:, j] = t_[0], e_[:, 0]
         return t, e
     raise ValueError(kind)
+
+
+def _stable_hash(name: str) -> int:
+    import zlib
+    return zlib.crc32(name.encode())
 
 
 def _nr_weights(spec, cell: Cell, s_ts, d_ts):
@@ -236,17 +263,21 @@ def _var_counts(E, design, r_ts):
 
 
 def run_cell(cell: Cell, specs: dict, R=500, seed=0, verbose=True):
-    rng = np.random.default_rng(seed)
+    # separate streams: sample draws depend only on (seed, rep) -- identical samples whatever estimators
+    # are run, so different runs (main, nonresponse, SAE, reruns) share common random numbers;
+    # estimator-internal randomness (CV folds) gets its own per-(estimator, rep) stream
+    rng_draw = np.random.default_rng(seed)
     des = cell.design
     rows, timing = [], {k: 0.0 for k in specs}
     t0 = time.time()
     for r in range(R):
-        s = des.draw(rng)
+        s = des.draw(rng_draw)
         cell.rep = r
         s_ts = s[cell.ts[s]]
         d_ts, Y_ts = cell.d[s_ts], cell.Y[s_ts]
         for name, spec in specs.items():
             t1 = time.time()
+            rng = np.random.default_rng([seed, r, _stable_hash(name)])
             try:
                 if spec.get("nr"):
                     r_ts, dr = _nr_weights(spec, cell, s_ts, d_ts)

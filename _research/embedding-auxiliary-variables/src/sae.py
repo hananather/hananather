@@ -61,7 +61,7 @@ def run_sae(cell, domains, models: dict, R=200, seed=0, verbose=True):
     """cell: mc.Cell; domains: population int labels (N,); models: name -> spec with kind in
     {'greg' (X), 'mcal_ratio' (F, X_base), 'mcal_raw' (F, X_base)}. Returns long DataFrame of
     domain estimates and variances, and the domain truth table."""
-    rng = np.random.default_rng(seed)
+    rng_draw = np.random.default_rng(seed)    # same sample stream as mc.run_cell with the same seed
     des = cell.design
     dom = pd.factorize(np.asarray(domains))[0]
     D = dom.max() + 1
@@ -74,7 +74,8 @@ def run_sae(cell, domains, models: dict, R=200, seed=0, verbose=True):
     rows = []
     t0 = time.time()
     for r in range(R):
-        s = des.draw(rng)
+        s = des.draw(rng_draw)
+        rng = np.random.default_rng([seed, r, 7])
         s_ts = s[cell.ts[s]]
         i = cell.ts_index[s_ts]
         d_ts, Y_ts = cell.d[s_ts], Y[s_ts]
@@ -105,8 +106,9 @@ def run_sae(cell, domains, models: dict, R=200, seed=0, verbose=True):
                     b0, Bx = _ridge_fit(Fs[tr], T[tr], w[tr], lam, 0)
                     M_s[te] = b0 + Fs[te] @ Bx
                     M_U += (b0 + F @ Bx) / 5
-                if ratio:
-                    M_s, M_U = M_s * xs[:, None], M_U * xU[:, None]
+                if ratio:   # same robustness rule as mc.py: clip predicted ratios to the sample's 1-99th pct
+                    lo, hi = np.percentile(T, [1, 99], axis=0)
+                    M_s, M_U = np.clip(M_s, lo, hi) * xs[:, None], np.clip(M_U, lo, hi) * xU[:, None]
                 # calibrate the prediction on the base matrix (model calibration, as nationally)
                 Xb = cell.mats[spec["X_base"]]
                 M_cal_U, M_cal_s = np.zeros_like(M_U), np.zeros_like(M_s)
