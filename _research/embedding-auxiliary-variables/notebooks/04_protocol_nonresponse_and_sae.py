@@ -153,22 +153,20 @@ if len(nr):
 
 # %%
 if len(nr):
-    fig, axes = plt.subplots(1, 2, figsize=(9.6, 4.2), sharey=True)
+    # take-some estimates do not depend on the take-all scenario (D-29), so one panel suffices
+    fig, ax = plt.subplots(figsize=(8.6, 4.4))
     arms = ["NR_rhg_HT", "NR_SQ_rhg_GREG_size_cat@F1p", "NR_rhg_MCAL_bmfmax@F1p", "NR_rhg_MCAL_bmfmax@F1p+Estar"]
     names = ["weighting class + HT", "+ GREG on lagged size (status quo)", "+ ML twin (codes, no text)", "+ ML with text"]
-    for ax, scen in zip(axes, ["follow", "late"]):  # identical by construction; both shown as a check
-        if not (nr.scenario == scen).any():
-            continue
-        m = nr[nr.scenario == scen].set_index(["estimator", "y"]).rb_pct_ts
-        yy = np.arange(len(S6_Y))
-        for j, (a, nm) in enumerate(zip(arms, names)):
-            ax.barh(yy + (j - 1.5) * 0.2, [m[(a, y)] for y in S6_Y], height=0.18, color=plotstyle.SERIES[j], label=nm)
-        ax.axvline(0, color=plotstyle.NEUTRAL, lw=1)
-        ax.set_yticks(yy); ax.set_yticklabels([Y_LABEL.get(y, y) for y in S6_Y]); ax.invert_yaxis()
-        ax.set_title(f"TA-{scen}"); ax.set_xlabel("relative bias of the take-some part (%)")
-    axes[-1].legend(fontsize=7.5, loc="lower right")
-    fig.suptitle("Late-filer nonresponse: relative bias of the take-some part, weighting-class estimators\n(take-some estimates are the same under both take-all scenarios)")
-    plt.tight_layout(); plt.savefig(f"{RES}/nr_bias.png", dpi=150); plt.show()
+    m = nr[nr.scenario == nr.scenario.iloc[0]].set_index(["estimator", "y"]).rb_pct_ts
+    yy = np.arange(len(S6_Y))
+    for j, (a, nm) in enumerate(zip(arms, names)):
+        ax.barh(yy + (j - 1.5) * 0.2, [m[(a, y)] for y in S6_Y], height=0.18, color=plotstyle.SERIES[j], label=nm)
+    ax.axvline(0, color=plotstyle.NEUTRAL, lw=1)
+    ax.set_yticks(yy); ax.set_yticklabels([Y_LABEL.get(y, y) for y in S6_Y]); ax.invert_yaxis()
+    ax.set_xlabel("relative bias of the take-some part (%), late-filer nonresponse")
+    ax.set_title("Late-filer nonresponse: relative bias of the take-some part, by adjustment method", loc="left", fontsize=10)
+    ax.legend(fontsize=8, loc="center left", bbox_to_anchor=(1.01, 0.5), frameon=False)
+    plt.tight_layout(); plt.savefig(f"{RES}/nr_bias.png", dpi=150, bbox_inches="tight"); plt.show()
 
 # %% [markdown]
 # ## Stage 4 results: small area estimation
@@ -204,8 +202,10 @@ a = per[(per.y == y) & (per.estimator == "FH_text")].set_index("domain").rrmse_p
 b = per[(per.y == y) & (per.estimator == "FH_twin")].set_index("domain").rrmse_pct
 fig, ax = plt.subplots(figsize=(5.2, 5))
 ax.scatter(b, a.reindex(b.index), s=18, color=plotstyle.SERIES[0])
-lim = [0, max(b.max(), a.max()) * 1.05]; ax.plot(lim, lim, color=plotstyle.NEUTRAL, lw=1)
-ax.set_xlim(lim); ax.set_ylim(lim)
-ax.set_xlabel("domain RRMSE %, FH with BMF-max twin"); ax.set_ylabel("domain RRMSE %, FH with text")
-ax.set_title("Government grants by state x NTEE10 domain\n(points below the line: text helps)")
+lim = [min(b.min(), a.min()) * 0.8, max(b.max(), a.max()) * 1.25]; ax.plot(lim, lim, color=plotstyle.NEUTRAL, lw=1)
+ax.plot(lim, [0.9 * v for v in lim], color=plotstyle.NEUTRAL, lw=0.8, ls="--")
+ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlim(lim); ax.set_ylim(lim)
+ax.axvline(25, color=plotstyle.SERIES[1], lw=0.8, ls=":"); ax.axhline(25, color=plotstyle.SERIES[1], lw=0.8, ls=":")
+ax.set_xlabel("domain RRMSE %, FH with BMF-max twin (log)"); ax.set_ylabel("domain RRMSE %, FH with text (log)")
+ax.set_title("Government grants, state x NTEE10 domains\nbelow solid line: text helps; dashed: 10% better; dotted: 25% publishable", fontsize=9)
 plt.tight_layout(); plt.savefig(f"{RES}/sae_gov_grants_domains.png", dpi=150); plt.show()

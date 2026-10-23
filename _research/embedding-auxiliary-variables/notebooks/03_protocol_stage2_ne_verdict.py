@@ -123,15 +123,15 @@ per.columns = [Y_LABEL.get(c[3:], c[3:]) for c in per.columns]
 display(per.T.round(3))
 
 # %%
-fig, ax = plt.subplots(figsize=(7.5, 4.6))
+fig, ax = plt.subplots(figsize=(9.0, 4.8))
 rows = P[(P.set == "H")].reset_index(drop=True)
 yy = np.arange(len(rows))
 ax.errorbar(rows.gm_re, yy, xerr=[rows.gm_re - rows.lo95, rows.hi95 - rows.gm_re], fmt="o", color=plotstyle.SERIES[0], capsize=0, lw=1.5)
 ax.axvline(1.0, color=plotstyle.NEUTRAL, lw=1); ax.axvline(1.10, color=plotstyle.SERIES[1], lw=1, ls="--")
 ax.text(1.101, len(rows) - 0.5, "production bar 1.10", color=plotstyle.TEXT2, fontsize=8)
 ax.set_yticks(yy); ax.set_yticklabels(rows.pair); ax.invert_yaxis()
-ax.set_xlabel("GM relative efficiency over the 10 headline variables (90% bootstrap interval)")
-ax.set_title("Stage 2A, New England: what text adds (and what ML adds)")
+ax.set_xlabel("GM relative efficiency over 10 headline variables (90% interval)")
+ax.set_title("Stage 2A, New England: what text adds, and what ML adds", loc="left")
 plt.tight_layout(); plt.savefig(f"{RES}/primary_pairs.png", dpi=150); plt.show()
 
 # %% [markdown]

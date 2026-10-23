@@ -91,7 +91,7 @@ for comp in ["S4: D1-imp vs D1", "S5: D2a vs D1-H44"]:
     print(comp); display(t.round(3))
 
 # %%
-fig, ax = plt.subplots(figsize=(7.4, 3.8))
+fig, ax = plt.subplots(figsize=(8.6, 3.8))
 sub = S[S.set.isin(["all 15"]) & S.comparison.isin(["S4: D1-imp vs D1", "S5: D2a vs D1-H44", "D1-H44 vs D1 (one more size class)"])].reset_index(drop=True)
 yy = np.arange(len(sub))
 cols = {"HT": plotstyle.SERIES[0], "GREG_size_cat@F1p": plotstyle.SERIES[1], "MCAL_bmfmax@F1p": plotstyle.SERIES[2]}
@@ -101,5 +101,5 @@ for est, c in cols.items():
 ax.axvline(1, color=plotstyle.NEUTRAL, lw=1); ax.axvline(1.05, color=plotstyle.SERIES[3], lw=1, ls="--")
 ax.set_yticks(yy); ax.set_yticklabels(sub.comparison + "  (" + sub.estimator.str.split("_").str[0] + ")", fontsize=8); ax.invert_yaxis()
 ax.set_xlabel("GM relative efficiency over all 15 variables (90% bootstrap interval)")
-ax.set_title("Text at the design stage"); ax.legend(fontsize=7.5, loc="lower right")
-plt.tight_layout(); plt.savefig(f"{RES}/design_stage.png", dpi=150); plt.show()
+ax.set_title("Text at the design stage", loc="left"); ax.legend(fontsize=7.5, loc="center left", bbox_to_anchor=(1.01, 0.5), frameon=False)
+plt.tight_layout(); plt.savefig(f"{RES}/design_stage.png", dpi=150, bbox_inches="tight"); plt.show()
