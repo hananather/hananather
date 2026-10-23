@@ -52,6 +52,18 @@ def embed_tfidf_lsa(texts, dim=256, seed=0):
     return normalize(Z), {"vocab_size": len(tf.vocabulary_)}
 
 
+def lsa_fit_transform(train_texts, apply_texts, dim=256, seed=0):
+    """TF-IDF + SVD fitted on one corpus (e.g. the previous wave's frame) and applied to another, so
+    that frozen models see the same representation in both waves."""
+    from sklearn.decomposition import TruncatedSVD
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.preprocessing import normalize
+    tf = TfidfVectorizer(ngram_range=(1, 2), min_df=3, max_df=0.5, sublinear_tf=True, strip_accents="unicode", lowercase=True)
+    M = tf.fit_transform([t or "" for t in train_texts])
+    svd = TruncatedSVD(dim, random_state=seed).fit(M)
+    return normalize(svd.transform(M)), normalize(svd.transform(tf.transform([t or "" for t in apply_texts])))
+
+
 def embed_minilm(texts, batch=64, max_len=256, threads=None):
     import onnxruntime as ort
     from tokenizers import Tokenizer

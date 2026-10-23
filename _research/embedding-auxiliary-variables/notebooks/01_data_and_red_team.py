@@ -273,6 +273,46 @@ for _, r in probe.iterrows():
           "compare across models; a jump for an API model would suggest it has seen post-2023 web data")
 
 # %% [markdown]
+# ## 9. Protocol v1.0 blocking tests on the design-date frame (`ne_pop_v2`)
+# The protocol (`notes/benchmark-protocol.md` §10.1) adds tests the pilot frame failed. These are:
+# - **C2** baseline starvation: every BMF code must be on the frame;
+# - **B2** availability at the design date D = 2024-06-30;
+# - **B5** no previous-wave target-year information in the previous wave's BMF fields;
+# - **C3** a valid-URL flag;
+# - **D1** influence of the largest single take-some unit;
+# - **D6** stratum jumpers;
+# - **D7** allocation feasibility.
+
+# %%
+from frame import production_design
+v2 = pd.read_parquet(f"{DATA}/pop/{REGION}_pop_v2.parquet")
+bmf_cols = [c for c in v2.columns if c.startswith("bmf_")]
+check("C2 BMF-max fields on the frame", f"{len(bmf_cols)} fields", "pass" if len(bmf_cols) >= 12 else "fail", ", ".join(bmf_cols))
+sz = pd.qcut(v2.lag_expenses.rank(method="first"), 4, labels=["Q1", "Q2", "Q3", "Q4"])
+av_by = v2.avail_t1.groupby(sz, observed=True).mean().round(3).to_dict()
+rev_av = (v2.y_revenue * v2.avail_t1).sum() / v2.y_revenue.sum()
+check("B2 t-1 return available at D=2024-06-30 (units / revenue)", f"{v2.avail_t1.mean():.1%} / {rev_av:.1%}", "info", f"by size quartile {av_by}")
+check("B2 text source at D", v2.text_source.value_counts().to_dict(), "info", "t-2 = TY2021 text fallback; name = BMF name only")
+prev2 = pd.read_parquet(f"{DATA}/pop/{REGION}_wave2022_pop_v2.parquet")
+leak_prev = float((prev2.bmf_revenue_amt.round() == prev2.y_revenue.round()).mean())
+check("B5 previous wave: BMF REVENUE_AMT equals previous-wave target-year revenue", f"{leak_prev:.1%}",
+      "info", "this is why the frozen heads and Stage-1 selection recompute BMF amounts from TY2021 (src/frozen._b5)")
+url = v2.website.fillna("").str.strip().str.lower()
+valid = url.str.contains(r"\.") & ~url.isin(["n/a", "none", "na", "see schedule o", "n.a."])
+check("C3 valid-URL share (vs field non-empty)", f"{valid.mean():.1%} vs {v2.has_website.mean():.1%}", "flag",
+      f"by size quartile {valid.groupby(sz, observed=True).mean().round(2).to_dict()} (deviation D-14)")
+des_v2, info_v2 = production_design(v2, 1000)
+ta = (des_v2.n_h >= des_v2.N_h)[des_v2.strata]
+for yc in ["y_gov_grants", "y_contrib", "y_fundraising_exp", "y_volunteers_cap10k", "y_officer_comp"]:
+    vv = v2[yc].to_numpy(); ts_tot = vv[~ta].sum()
+    check(f"D1 largest single take-some unit share ({yc})", f"{vv[~ta].max() / ts_tot:.1%}", "flag" if vv[~ta].max() / ts_tot > 0.05 else "pass")
+size_t = np.log1p(v2.y_expenses.clip(lower=0)); b = info_v2["size_boundaries_log"]
+jump = (np.searchsorted(b, size_t) != np.searchsorted(b, np.log1p(v2.lag_expenses.clip(lower=0))))[~ta].mean()
+check("D6 stratum jumpers (take-some units changing size class t-1 -> t)", f"{jump:.1%}", "info")
+check("D7 allocation feasibility at n=1000", f"sum(min n_h)={int(np.minimum(10, des_v2.N_h).sum())} <= n={des_v2.n}", "pass")
+check("F1 take-all response by day 300", f"{(v2.days_to_file_t <= 300)[ta].mean():.1%}", "info", "take-all nonrespondents need imputation (Stage 3)")
+
+# %% [markdown]
 # ## Summary of checks
 
 # %%

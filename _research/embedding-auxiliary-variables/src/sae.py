@@ -93,7 +93,7 @@ def run_sae(cell, domains, models: dict, R=200, seed=0, verbose=True):
             else:
                 F = cell.mats[spec["F"]]
                 grp = None if cell.groups is None else cell.groups[i]
-                mspec = {"hard": 0, "ratio": spec["kind"] == "mcal_ratio", "cf": True}
+                mspec = {"F": spec["F"], "hard": 0, "ratio": spec["kind"] == "mcal_ratio", "cf": True}
                 M_s, _, M_U = model_predict(cell, mspec, F, i, Y_ts, d_ts, rng, grp, need_U=True)
                 # calibrate the prediction on the base matrix (model calibration, as nationally)
                 Xb = cell.mats[spec["X_base"]]

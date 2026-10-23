@@ -41,7 +41,7 @@ def joint_features(prev, curr, T, prev_E=None, curr_E=None, K=32, min_count=20):
     both = pd.concat([_b5(prev), _b5(curr)], ignore_index=True)
     n0 = len(prev)
     av = both.avail_t1.to_numpy(float) if "avail_t1" in both else np.ones(len(both))
-    lags = both[TIER_LAGS[T]].clip(lower=0).to_numpy(float)
+    lags = both[TIER_LAGS[T]].clip(lower=0).to_numpy(float).copy()
     for j, c in enumerate(TIER_LAGS[T]):
         if c not in F1_LAGS:
             lags[:, j] *= av

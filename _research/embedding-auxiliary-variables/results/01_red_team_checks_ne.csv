@@ -13,6 +13,7 @@ PY revenue on t return equals CY revenue on t-1 return,97.9%,pass,restatements a
 parsed revenue equals GivingTuesday index revenue,100.00%,pass,
 truth taken from amended returns,"1.5% of units, 0.9% of expenses",info,
 fiscal-year-end month mix (t),"{12: 0.472, 6: 0.328, 9: 0.079, 8: 0.034}",info,"reference periods differ across units, as in real business surveys"
+independent parsers agree on all target and text fields,100.00% (min over 11 fields),pass,57 of 60 common fields identical
 uninformative mission text (empty / 'see schedule o' / < 3 words),2.1%,warn,
 "units sharing an identical mission text (chapters, templates)",4.8%,warn,cross-fitting uses grouped folds so duplicates cannot leak across folds
 text containing any digit / '$',44.1% / 3.8%,info,numbers-masked variant is embedded to test whether gains come from numbers
@@ -22,7 +23,7 @@ text states the exact target value (y_gov_grants),0.005%,pass,
 mission text identical in t-1 and t,84.5%,info,"text is a near-static description: expect between-unit signal, not change signal"
 response rate (unit / expense-weighted),60.1% / 18.4%,info,
 "text-coded NTEE accuracy, 10 groups (lsa256_full)",70.1%,info,chance (largest class) is about 24%
-"text-coded NTEE accuracy, 10 groups (minilm_full)",71.1%,info,chance (largest class) is about 24%
+"text-coded NTEE accuracy, 10 groups (minilm_full)",71.0%,info,chance (largest class) is about 24%
 "text-coded NTEE accuracy, 10 groups (minilm_mission)",69.3%,info,chance (largest class) is about 24%
 placebo y gains nothing from text (lsa256_full),-0.004,pass,
 memorisation probe: text predicts revenue change (lsa256_full),-0.0036,info,compare across models; a jump for an API model would suggest it has seen post-2023 web data
@@ -30,3 +31,16 @@ placebo y gains nothing from text (minilm_full),-0.0037,pass,
 memorisation probe: text predicts revenue change (minilm_full),-0.0026,info,compare across models; a jump for an API model would suggest it has seen post-2023 web data
 placebo y gains nothing from text (minilm_mission),-0.003,pass,
 memorisation probe: text predicts revenue change (minilm_mission),-0.0037,info,compare across models; a jump for an API model would suggest it has seen post-2023 web data
+C2 BMF-max fields on the frame,16 fields,pass,"bmf_asset_cd, bmf_income_cd, bmf_foundation, bmf_affiliation, bmf_classification, bmf_activity, bmf_deductibility, bmf_group, bmf_acct_pd, bmf_organization, bmf_subsection, bmf_ntee_cd, bmf_asset_amt, bmf_income_amt, bmf_revenue_amt, bmf_name"
+B2 t-1 return available at D=2024-06-30 (units / revenue),91.9% / 68.8%,info,"by size quartile {'Q1': 0.928, 'Q2': 0.95, 'Q3': 0.933, 'Q4': 0.865}"
+B2 text source at D,"{'t-1': 18959, 't-2': 1563, 'name': 104}",info,t-2 = TY2021 text fallback; name = BMF name only
+B5 previous wave: BMF REVENUE_AMT equals previous-wave target-year revenue,16.9%,info,this is why the frozen heads and Stage-1 selection recompute BMF amounts from TY2021 (src/frozen._b5)
+C3 valid-URL share (vs field non-empty),72.5% vs 92.8%,flag,"by size quartile {'Q1': 0.52, 'Q2': 0.69, 'Q3': 0.78, 'Q4': 0.9} (deviation D-14)"
+D1 largest single take-some unit share (y_gov_grants),1.5%,pass,
+D1 largest single take-some unit share (y_contrib),0.7%,pass,
+D1 largest single take-some unit share (y_fundraising_exp),1.4%,pass,
+D1 largest single take-some unit share (y_volunteers_cap10k),0.6%,pass,
+D1 largest single take-some unit share (y_officer_comp),1.9%,pass,
+D6 stratum jumpers (take-some units changing size class t-1 -> t),9.2%,info,
+D7 allocation feasibility at n=1000,sum(min n_h)=340 <= n=1000,pass,
+F1 take-all response by day 300,13.1%,info,take-all nonrespondents need imputation (Stage 3)

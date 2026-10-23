@@ -84,7 +84,7 @@ def tier_mats(pop: pd.DataFrame, design, tiers=("F1p",), min_count=20):
     C, Ccont = bmfmax_codes(pop, min_count)
     mats, cats = {}, {}
     for T in tiers:
-        lags = pop[TIER_LAGS[T]].clip(lower=0).to_numpy(float) if TIER_LAGS[T] else np.zeros((len(pop), 0))
+        lags = pop[TIER_LAGS[T]].clip(lower=0).to_numpy(float).copy() if TIER_LAGS[T] else np.zeros((len(pop), 0))
         # extras beyond F1 are unknown when the t-1 return is not available at D
         for j, c in enumerate(TIER_LAGS[T]):
             if c not in F1_LAGS:
@@ -206,17 +206,24 @@ def placebo_targets(pop, design, seed=0):
     return {"y_plc_perm": perm, "y_plc_noise": noise, "y_bin_plc_bern": bern}
 
 
-def _pop_av(Y, F, w, cat, design, ts, back, lam=1e-2, lam_c=20.0):
+def _pop_av(Y, F, w, cat, design, ts, back, lam=1e-2, lam_c=20.0, k=5, seed=12345):
     """Anticipated variance (per column) of the difference estimator built on a population-fitted
-    same-class ridge (oracle model, used for the planted calibration and ceilings)."""
-    g = RidgeGram(F[ts], Y[ts], w[ts], cat, 0)
-    b0, Bx = g.coef(lam, lam_c, np.arange(Y.shape[1]))
-    E = (Y[ts] - (b0 + F[ts] @ Bx)) * back[ts][:, None]
+    same-class ridge, using K-fold cross-fitting over the take-some population: without it the
+    handful of very large units that dominate the AV are fitted in-sample by extra columns, which
+    inflated ceilings by 3-5% even for a planted target with no text signal (deviation D-4)."""
+    idx = np.flatnonzero(ts)
+    folds = np.random.default_rng(seed).permutation(len(idx)) % k
+    E = np.zeros((len(idx), Y.shape[1]))
+    for f in range(k):
+        tr, te = idx[folds != f], idx[folds == f]
+        g = RidgeGram(F[tr], Y[tr], w[tr], cat, 0)
+        b0, Bx = g.coef(lam, lam_c, np.arange(Y.shape[1]))
+        E[folds == f] = (Y[te] - (b0 + F[te] @ Bx)) * back[te][:, None]
     fac = np.zeros(design.H)
     ok = (design.n_h > 0) & (design.n_h < design.N_h)
     fac[ok] = design.N_h[ok] ** 2 * (1 - design.n_h[ok] / design.N_h[ok]) / design.n_h[ok]
     out = np.zeros(Y.shape[1])
-    st = design.strata[ts]
+    st = design.strata[idx]
     for h in np.unique(st):
         m = st == h
         if m.sum() > 1:
@@ -224,12 +231,19 @@ def _pop_av(Y, F, w, cat, design, ts, back, lam=1e-2, lam_c=20.0):
     return out
 
 
-def planted_targets(pop, design, E, F_twin, cat_twin, levels=(0.0, 0.05, 0.10, 0.20), plantings=3, K=32, seed=0):
-    """lin-same planted family (protocol §5.2) on the gov-grants null base.
-    y0 = x~ * (y/x~)_pi with pi a permutation within NTEE10 x size class x state (keeps zeros, skew and
-    ratio-to-size; breaks any unit-level text link). u = w'Z_K(E) orthogonalised against the twin
-    features and standardised. y = y0 * exp(a u - a^2/2), with a calibrated so that the same-class
-    population partial rho^2 on the AV scale, 1 - AV(F+C+E)/AV(F+C), equals the target level."""
+def planted_targets(pop, design, E, F_twin, cat_twin, levels=(0.0, 0.05, 0.10, 0.20), plantings=3, K=32, seed=0,
+                    sigma=0.5):
+    """Planted-signal targets with known same-class partial rho^2 on the AV scale (protocol §5.2),
+    rho^2 = 1 - AV(F+C+E)/AV(F+C), computed with the same ratio-ridge class as the MC estimators.
+
+    u = w'Z_K(E) with w random, orthogonalised against the twin features and standardised.
+
+    Family 'pr' (protocol form, diagnostic only): y = y0 exp(a u - a^2/2) on the gov-grants null base
+      y0 = x~ (y/x~)_pi (pi within NTEE10 x size class x state). Its attainable rho^2 is capped near
+      1/(1 + CV^2) of the zero-inflated, heavy-tailed base, so the achieved rho^2 at a in {0.5,1,2,3}
+      is recorded instead of calibrating to the targets (deviation D-3).
+    Family 'lgn' (used in the MC): y = x~ c exp(sigma (rho u + sqrt(1-rho^2) eps) - sigma^2/2), eps
+      iid N(0,1), c = median positive gov-grant ratio; rho calibrated by bisection to each target."""
     rng = np.random.default_rng(seed)
     x = pop.lag_expenses.clip(lower=0).to_numpy(float) + 1
     cls = np.searchsorted(np.quantile(np.log(x), [1 / 3, 2 / 3]), np.log(x))
@@ -240,42 +254,44 @@ def planted_targets(pop, design, E, F_twin, cat_twin, levels=(0.0, 0.05, 0.10, 0
         idx = np.flatnonzero(key == k)
         r0[idx] = r[rng.permutation(idx)]
     y0 = x * r0
+    c = np.median(r[r > 0])
     Z, _ = pcs(np.asarray(E, float), K)
     ta = (design.n_h >= design.N_h)[design.strata]
     ts = ~ta
-    d = 1 / design.pi
-    w = d * x
+    w = (1 / design.pi) * x
     Fte = np.c_[F_twin, Z]
     cat_te = np.r_[cat_twin, np.zeros(K, bool)]
+
+    def rho2_of(y):
+        T = (y / x)[:, None]
+        return 1 - _pop_av(T, Fte, w, cat_te, design, ts, x)[0] / _pop_av(T, F_twin, w, cat_twin, design, ts, x)[0]
+
     out, info = {}, []
     for p in range(plantings):
-        wv = rng.normal(size=K)
-        u = Z @ wv
-        # orthogonalise against the twin features (population least squares, ridge-stabilised)
+        u = Z @ rng.normal(size=K)
         A = F_twin - F_twin.mean(0)
         coef = np.linalg.lstsq(A[ts], (u - u.mean())[ts], rcond=None)[0]
         u = u - A @ coef
         u = (u - u.mean()) / u.std()
+        eps = rng.normal(size=len(x))
+        for a_ in (0.5, 1.0, 2.0, 3.0):                      # protocol form: attainable rho^2
+            info.append({"family": "pr", "planting": p, "a": a_, "rho2_achieved": rho2_of(y0 * np.exp(a_ * u - a_ * a_ / 2))})
         for rho2 in levels:
-            if rho2 == 0:
-                a = 0.0
-            else:
-                lo_a, hi_a = 0.0, 3.0
-                for _ in range(14):
-                    a = 0.5 * (lo_a + hi_a)
-                    y = y0 * np.exp(a * u - a * a / 2)
-                    T = (y / x)[:, None]
-                    av_tw = _pop_av(T, F_twin, w, cat_twin, design, ts, x)[0]
-                    av_te = _pop_av(T, Fte, w, cat_te, design, ts, x)[0]
-                    got = 1 - av_te / av_tw
-                    if got < rho2:
-                        lo_a = a
+            lo_r, hi_r = 0.0, 1.0
+            rho = 0.0
+            if rho2 > 0:
+                for _ in range(16):
+                    rho = 0.5 * (lo_r + hi_r)
+                    yy = x * c * np.exp(sigma * (rho * u + np.sqrt(1 - rho * rho) * eps) - sigma ** 2 / 2)
+                    if rho2_of(yy) < rho2:
+                        lo_r = rho
                     else:
-                        hi_a = a
-            y = y0 * np.exp(a * u - a * a / 2)
+                        hi_r = rho
+            yy = x * c * np.exp(sigma * (rho * u + np.sqrt(1 - rho * rho) * eps) - sigma ** 2 / 2)
             name = f"y_plant_r{int(round(100 * rho2)):02d}_p{p}"
-            out[name] = y
-            info.append({"y": name, "rho2_target": rho2, "a": a, "planting": p})
+            out[name] = yy
+            info.append({"family": "lgn", "y": name, "planting": p, "rho2_target": rho2, "rho": rho,
+                         "rho2_achieved": rho2_of(yy)})
     return out, pd.DataFrame(info)
 
 
@@ -321,3 +337,42 @@ def shapley(logmse: dict):
                 tot += wgt * (logmse[S] - logmse[S | {j}])
         phi[j] = tot
     return phi
+
+
+def ceiling_av(pop, design, F, cat, ynames, lams=(1e-3, 1e-2, 1e-1, 1.0, 10.0), lamcs=(5.0, 20.0, 100.0), k=5, seed=12345):
+    """Same-class population ceiling (protocol C1 / §8.4): the y-type ridge fitted on the take-some
+    population with 5-fold cross-fitting (D-4), oracle (lam, lam_c) per y; returns AV per y."""
+    ta = (design.n_h >= design.N_h)[design.strata]
+    idx = np.flatnonzero(~ta)
+    folds = np.random.default_rng(seed).permutation(len(idx)) % k
+    d = 1 / design.pi
+    x = pop.lag_expenses.clip(lower=0).to_numpy(float) + 1
+    Y = pop[ynames].to_numpy(float)
+    is_bin = np.array([y.startswith("y_bin_") for y in ynames])
+    fac = np.zeros(design.H)
+    ok = (design.n_h > 0) & (design.n_h < design.N_h)
+    fac[ok] = design.N_h[ok] ** 2 * (1 - design.n_h[ok] / design.N_h[ok]) / design.n_h[ok]
+    st = design.strata[idx]
+    best = np.full(len(ynames), np.inf)
+    for jset, ratio in ((np.flatnonzero(~is_bin), True), (np.flatnonzero(is_bin), False)):
+        if len(jset) == 0:
+            continue
+        T = Y[:, jset] / x[:, None] if ratio else Y[:, jset]
+        w = d * x if ratio else d
+        back = x if ratio else np.ones_like(x)
+        lo, hi = (np.percentile(T[idx], [1, 99], axis=0) if ratio else (-np.inf, np.inf))
+        grams = [RidgeGram(F[idx[folds != f]], T[idx[folds != f]], w[idx[folds != f]], cat, 0) for f in range(k)]
+        for lc in (lamcs if (cat is not None and np.any(cat)) else (20.0,)):
+            for l in lams:
+                E = np.zeros((len(idx), len(jset)))
+                for f, g in enumerate(grams):
+                    te = idx[folds == f]
+                    b0, Bx = g.coef(l, lc, np.arange(len(jset)))
+                    E[folds == f] = (T[te] - np.clip(b0 + F[te] @ Bx, lo, hi)) * back[te][:, None]
+                av = np.zeros(len(jset))
+                for h in np.unique(st):
+                    m = st == h
+                    if m.sum() > 1:
+                        av += fac[h] * E[m].var(0, ddof=1)
+                best[jset] = np.minimum(best[jset], av)
+    return best

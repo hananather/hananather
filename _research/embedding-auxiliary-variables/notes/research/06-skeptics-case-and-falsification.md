@@ -10,6 +10,8 @@ This note argues the case against the claim as hard as it can be argued, and the
   - from memory, tagged **[UNVERIFIED]**.
 
   I did not run new literature searches.
+
+  *Clarification (verification pass, 2026-10-23):* many items tagged [n01] or [n02] here are themselves marked "[UNVERIFIED: not re-checked]" in those notes, so the tag means "taken from the sibling note", not "independently confirmed". A later adversarial pass (WebSearch again exhausted, WebFetch again failing on DNS) re-checked what it could against reachable primary or first-party sources (ACL Anthology metadata, CRAN package documentation, the source repository of docs.cohere.com, a mirror of CRA's T3010 open-data dictionary) and re-derived the §4 numbers from the saved outputs and local data. Corrections were made in place; see **Verification log** at the end.
 - **Data.** Every number in §4 is new and was computed for this note. The population is the New England 990 build: N = 20,626 "continuing" organizations that filed a full 990 for both TY2022 and TY2023, built by `src/build_population.py`. Frame variables come from the 2023-08 BMF and the TY2022 return; targets come from TY2023.
 - **Text arms (TY2022 return).**
   - LSA-256 = TF-IDF + SVD on mission plus program descriptions;
@@ -125,11 +127,11 @@ where R²_{T|B} is the partial R² of the text given B, computed on take-some re
 ### 3.1 Redundancy: embeddings mostly re-encode what the frame already has
 
 **Argument.**
-- Industry codes are *made from the same text*. StatCan assigns NAICS to the BN "major business activity" text with an automated classifier (G-Code). The US Census auto-coder assigns NAICS from the SS-4 business description for more than 80% of new applications ([n02] §2.4).
+- Industry codes are *made from the same text*. StatCan assigns NAICS to the BN "major business activity" text with an automated classifier (G-Code). The US Census auto-coder assigns NAICS from the business name and the SS-4 business description for more than 80% of incoming applications (2020) ([n02] §2.4; both statements are [UNVERIFIED: not re-checked] in n02, and the UNECE and Census sources were unreachable in the verification pass).
 - An embedding of that description is therefore largely a continuous version of the code.
 - For size variables, which dominate business-survey variance, the frame's lagged admin size (GST/HST revenue, T2/GIFI, PD7A payroll) already explains most of the variance:
   - on the 990, the raw-scale correlation between TY2023 and TY2022 revenue is 0.991, so R² ≈ 0.98 ([n03]);
-  - a comparably high R² for StatCan BR tax data is **[UNVERIFIED]**, though StatCan has used tax data in place of survey data since the mid-1960s ([n02]).
+  - a comparably high R² for StatCan BR tax data is **[UNVERIFIED]**, though StatCan has used tax data in place of survey data since the mid-1960s ([n02]; [UNVERIFIED: not re-checked] there).
 
 **Where incremental signal could plausibly exist** (the skeptic's honest list):
 - (a) **Mission-driven or composition variables** that no register carries: volunteers, government-grant dependence, program type, grants to individuals, the share of program-service revenue.
@@ -153,7 +155,8 @@ where R²_{T|B} is the partial R² of the text given B, computed on take-some re
 **Argument.**
 - Sentence and document embedders are trained contrastively for *semantic similarity* (retrieval, clustering, classification).
 - A number reaches the model as sub-word tokens. "$1,234,567" and "$9,234,567" share most tokens, and pooling one vector over a document dilutes the one token sequence that carries the magnitude.
-- Probing studies of the 2019 generation of models found that embeddings encode some numeracy for small, in-range numbers and *fail to extrapolate*: Wallace, Wang, Li, Singh & Gardner (2019), "Do NLP models know numbers? Probing numeracy in embeddings," EMNLP **[UNVERIFIED]**; Naik, Ravichander, Rose & Hovy (2019), "Exploring numeracy in word embeddings," ACL **[UNVERIFIED]**.
+- Probing studies of the 2019 generation of models found that embeddings encode some numeracy for small, in-range numbers and *fail to extrapolate*: Wallace, Wang, Li, Singh & Gardner (2019), "Do NLP models know numbers? Probing numeracy in embeddings," EMNLP-IJCNLP, pp. 5307–5315, doi:10.18653/v1/D19-1534; Naik, Ravichander, Rose & Hovy (2019), "Exploring numeracy in word embeddings," ACL, pp. 3374–3380, doi:10.18653/v1/P19-1329 (both verified against ACL Anthology metadata).
+  - *Clarification:* the abstracts report more numeracy than "some". Wallace et al. find that GloVe and word2vec "accurately encode magnitude for numbers up to 1,000" and that BERT's sub-word units are "less exact". Naik et al. find "an approximate notion of magnitude" but poor numeration. The extrapolation failure is in the body of Wallace et al. and was not re-read in the verification pass.
 - A linear head on a pooled vector cannot implement "read the number and take its log".
 
 **Consequence.** If a PDF of financial statements carries a size variable, the right pipeline is **field extraction**:
@@ -176,11 +179,11 @@ Embed only what extraction cannot capture: narrative, funding-source description
 - OLS-GREG and calibration on raw dimensions are singular (p ≥ n) or near-interpolating;
 - the residuals shrink, so the linearization variance collapses;
 - calibration weights go negative;
-- efficiency falls below HT (Cardot, Goga & Shehzad 2017; Chauvet & Goga 2022; Eustache, Dagdoug & Haziza 2025; Bouhadra & Dagdoug 2026; all [n01]).
+- efficiency falls below HT (Cardot, Goga & Shehzad 2017; Chauvet & Goga 2022; Eustache, Dagdoug & Haziza 2025; Bouhadra & Dagdoug 2026; all [n01], where all four are tagged [UNVERIFIED: not re-checked]).
 
 Under a Gaussian homoscedastic model, note 01 derives E[v̂]/V ≈ (1 − p/n)/(1 + p/(n − p − 2)):
 - p/n = 0.17 (p = 85, n = 500): about 0.69, giving nominal 95% CIs that cover about 90%;
-- p/n = 0.87 (p = 437, n = 500): about 0.014, so the CIs are useless.
+- p/n = 0.87 (p = 437, n = 500): about 0.015, so the CIs are useless.
 
 The MC on the heavy-tailed 990 population is *worse* than this Gaussian prediction (§4.5):
 - p = 85: variance estimator −49% to −58%, coverage 73–82%;
@@ -198,10 +201,10 @@ Flexible learners such as kNN, forests or GBMs fitted *in-sample* on near-unique
 
 | Code | Leak | Mechanism | 990 example | Detection test | Rule |
 |---|---|---|---|---|---|
-| **L1** | Contemporaneous same-record text | Text written *with* or *from* y in the same reporting act | TY2023 Schedule O or Part III narrative used for TY2023 y; "$" amounts appear in 35–53% of Schedule O for >$5M filers ([n03]) | Compare same-year text (t) with lagged text (t−1). A gain at t well above the gain at t−1 is leakage. | Only text dated before the frame reference date |
+| **L1** | Contemporaneous same-record text | Text written *with* or *from* y in the same reporting act | TY2023 Schedule O or Part III narrative used for TY2023 y; Schedule O proper contains "$" amounts in 17–25% of t−1 returns over $5M ([n03], *corrected* there: the earlier 35–53% counted explanation text from every schedule) | Compare same-year text (t) with lagged text (t−1). A gain at t well above the gain at t−1 is leakage. | Only text dated before the frame reference date |
 | **L2** | Self-reported size in the text | "serving 5,000 clients with 200 staff and a $10M budget" | Program descriptions contain ≥2-digit numbers in 20–68% of cases ([n03]) | Digits-masked arm (NC7). Test whether the text predicts lagged y better than y_t − y_{t−1}. | If the gain is in the digits, attribute it to a numeric auxiliary and extract it |
 | **L3** | Third-party derived text | Web profiles (charity directories, nonprofit explorers, Wikipedia infoboxes, LinkedIn headcounts) that *quote the current return* | A website or directory page crawled in 2025 quoting TY2023 revenue | Crawl date ≤ reference date. Strip numbers. Domain blacklist of aggregator sites. | Only first-party text archived before the reference date |
-| **L4** | Temporal leakage in the frame | Frame snapshot taken after the reference period | The May-2026 BMF carries the TY2023 revenue for **18.3%** of TY2023 filers, against 0.6% for the Dec-2023 BMF ([n03]) | Assert snapshot date ≤ design date. Share with REVENUE_AMT == y_t ≈ 0. | Archived snapshots only |
+| **L4** | Temporal leakage in the frame | Frame snapshot taken after the reference period | The May-2026 BMF carries the TY2023 revenue for **18.3%** of TY2023 filers, against 0.6% for the Dec-2023 BMF ([n03]; 18.3% recomputed, and 0.55% for the Aug-2023 BMF used as the frame here) | Assert snapshot date ≤ design date. Share with REVENUE_AMT == y_t ≈ 0. | Archived snapshots only |
 | **L5** | Model memorization | The embedding model's pretraining corpus contains pages that state the target | A 2025 API model trained on web pages that publish 990 financials **[UNVERIFIED mechanism]** | NC5: the text must not predict the *change* log(y_t/y_{t−1}). Compare a pre-cutoff model (MiniLM, released before TY2023) with a post-cutoff model (embed-v4). | A gain that appears only for the newest model is suspect |
 | **L6** | Tuning leakage | λ, k, model, input_type, text field or dimension chosen on population truth or on evaluation replicates | Per-y best λ inflates RE by up to 0.09 (§4.1) | Fix the tuning on an independent population or year pair (TY2021→22), then freeze | Pre-register all choices |
 | **L7** | Fold leakage through near-duplicates | Chapters and affiliates share template missions; random folds put copies in both train and test | About 5% of names match chapter patterns ([n03]); identical normalized missions, §4.3 | Group k-fold by text-duplicate cluster | Mandatory |
@@ -212,13 +215,13 @@ Flexible learners such as kNN, forests or GBMs fitted *in-sample* on near-unique
 
 **Facts** ([n02], [n03]):
 - **Websites.**
-  - EU enterprises with 10+ persons: 78% overall; 76.7% for small against 95.7% for large. Micro firms are far lower.
+  - EU enterprises with 10+ persons: 78% overall (2023); 76.7% for small against 95.7% for large (2025). Micro firms are far lower. (Eurostat figures via [n02], where they are [UNVERIFIED: not re-checked].)
   - US nonprofit e-filers: about 45% below $200k revenue against about 88% above $25M.
   - NE continuing full-990 filers (this note, §4.3): valid URLs for 51% below $200k against 92% above $25M.
 - **Frame-time text.**
-  - Among all BMF entities, only about 26.5% have a TY2022 990/990-EZ, and so any text.
-  - The roughly 1.0M 990-N filers have none.
-  - At a realistic design cutoff, 9–23% of current filers have no prior return, concentrated in small units.
+  - Among all BMF entities, only about 26.5% have a TY2022 990/990-EZ, and so any text (May-2026 BMF; recomputed).
+  - The roughly 1.0M 990-N filers have none. *Clarification:* the count is the 1,011,989 BMF rows with FILING_REQ_CD = 02 (recomputed); reading 02 as "990-N" is [UNVERIFIED] against the IRS dictionary, and 8.8% of those rows do have a TY2022 990/990-EZ ([n02]).
+  - *Corrected:* among TY2023 full-990 filers, 3.7% have no TY2022 990/990-EZ at all; with a design cutoff the share is 8.4% at 30 Jun 2024 and 31% at 31 Dec 2023 (recomputed; [n03] gives 3.7% and 9%). The earlier "9–23%" upper bound could not be reproduced. Units with no prior return at all are concentrated in small units (5.8% under $200k against 0.8% over $25M), but at the 30 Jun 2024 cutoff the share is flat (9.4% against 9.6%), because large units file late.
 
 **Consequences.**
 1. **Calibration needs Σ_U x_k.** An auxiliary that is missing for part of U can still be used with a missingness indicator and a zero-filled vector (both totals are then known). Imputing the embedding instead makes the "known total" model-dependent.
@@ -232,7 +235,7 @@ Flexible learners such as kNN, forests or GBMs fitted *in-sample* on near-unique
 - **Fold-split noise.** The cross-fitted estimator depends on the random fold split. Report the between-split SD and use the median over at least 5 repeated splits (Chernozhukov et al. 2018, [n01]).
 - **Small domains.** A GREG domain estimator uses the global model's synthetic part. Text models with many effective parameters transfer model error into domains of 5–30 sampled units. Report domain-level RB and coverage, not only the averages.
 - **Weights.**
-  - Calibration on many PCs produces negative and extreme g-weights (Cardot et al. 2017, [n01]: they choose the number of PCs so that all weights stay positive).
+  - Calibration on many PCs produces negative and extreme g-weights (Cardot et al. 2017, [n01]: they choose the number of PCs so that all weights stay positive; [UNVERIFIED: not re-checked]).
   - **Single-weight practice.** An NSO publishes *one* weight per microdata file. Model calibration on a y-specific m̂ gives y-specific weights.
   - If text helps only through y-specific m̂, the gain does not survive conversion to a single multipurpose weight. The **multipurpose damage** to the other published y must be measured (H9).
 
@@ -243,11 +246,11 @@ Flexible learners such as kNN, forests or GBMs fitted *in-sample* on near-unique
   - A frame embedded with vintage A and births embedded with vintage B are in different spaces. Every model change needs a bridging study, like a questionnaire redesign.
   - The production path is open weights (or a private deployment) with stored vectors and hashes (`src/embed.py` already hashes its inputs).
 - **Confidentiality.** Register text (BN activity descriptions, survey write-ins, tax schedules) cannot go to an external API. Cohere embed jobs keep uploaded datasets for 30 days unless they are deleted ([n04]). For StatCan, the confidential route is private deployment, single-tenant Model Vault with Canadian residency confirmed in writing, or open weights in the enclave ([n04]). A proof of concept on public 990 or T3010 text does not show that the production path is feasible.
-- **Cost.** Compute is trivial: about $2 per text pass over 300k units; $60–$450 per page-image pass ([n04]). The real costs are the URL-finding, crawl and linkage pipeline (ISTAT found URLs for about 75–81% of enterprises, [n02]), governance, versioning and bridging studies. Each must be set against the sample units saved: n × (1 − 1/RE) × cost per unit.
+- **Cost.** Compute is trivial: about $2 per text pass over 300k units; $60–$450 per page-image pass ([n04]). *Clarification:* this assumes about 60 tokens per unit at $0.12 per 1M text tokens, and about 425–3,200 image tokens per page at $0.47 per 1M image tokens. The prices were confirmed only in a secondary source (the LiteLLM price table, which cites cohere.com/pricing); tokens per page are undocumented. The real costs are the URL-finding, crawl and linkage pipeline (*corrected:* ISTAT's URL search found about 75–81% of the websites that exist, with about 70–75% of enterprises having one; [n02], [UNVERIFIED: not re-checked]), governance, versioning and bridging studies. Each must be set against the sample units saved: n × (1 − 1/RE) × cost per unit.
 - **Drift.**
   - The frame text dates from the frame reference time, and websites change. If the text is crawled at survey time it becomes est-time (L1/L4).
   - If it is frozen at design time it ages. Mission text is unchanged year to year for 70–93% of units ([n03]), so ageing is slow, which also means the text carries no change signal.
-- **A strong conventional design must be the comparator.** That means stratification by industry × size with take-all large units, Neyman allocation, and ratio or GREG on lagged admin size. Under such a design here, GREG on the strong frame already reaches RE 6.0 over HT for expenses and 2.8 for revenue (project diagnostics `/tmp/claude-0/data/results/diag_ne_n1000.csv`; with the stronger ridge-fitted frame of §4.1, 16.0 and 7.4). Text is judged on what is left.
+- **A strong conventional design must be the comparator.** That means stratification by industry × size with take-all large units, Neyman allocation, and ratio or GREG on lagged admin size. Under such a design here, the strong-frame working model already reaches a population-ceiling RE over HT of 15.95 for expenses and 7.43 for revenue (project diagnostics `/tmp/claude-0/data/results/diag_ne_n1000.csv`, the same values as §4.1). Design-based MC at n = 1000 gives about 16–18× and 8–9× for the frame-only GREG and model-calibration arms (`mc_ne_v1_n1000_metrics.csv`, `mc_ne_frozen_n1000_metrics.csv`). *Corrected:* the figures 6.0 and 2.8 given earlier do not appear in the cited file. Text is judged on what is left.
 
 ### 3.8 Benchmark-design traps (publication-bias style)
 
@@ -386,7 +389,7 @@ Text carries a weak, coarse size signal (R² ≈ 0.2–0.3, against 1.0 for the 
 
 - Partial R² of LSA given code + meta: 0.10–0.13 for the composition y (contributions, government grants, program revenue, fundraising); 0.05 for volunteers and salaries.
 - Partial R² given the lag: **0.00–0.03**.
-- The lag of y is worth 3–6 times what the text is worth, and the text adds almost nothing on top of it.
+- The lag of y adds 3.5–5.4 times as much R² over the frame as fine code + meta + LSA together for the composition y and volunteers (about 11 times for salaries), and the text adds almost nothing on top of it. (*Corrected* from "3–6 times", recomputed from `describe2.out`.)
 
 **(d) Coverage, numbers in text, staleness, duplicates, concentration** (by lagged revenue class):
 
@@ -480,13 +483,13 @@ The ridge-difference arms put the raw 384 dimensions into a weighted ridge with 
 How to read this:
 1. **Raw embedding dimensions in OLS-GREG are a disaster, and the disaster is caused by p, not by the text.**
    - The text arms and the random-vector arm are indistinguishable: RE ≈ 0, coverage 0–5%, the variance estimator underestimates by about 100%, and 43–44% of the weights are negative.
-   - This is exactly the (1 − p/n)/(1 + p/(n − p − 2)) prediction of §3.3.
-2. **Even 32 additive PCs cost 14–40% efficiency and 10–20 points of coverage at n = 500.** Ten additive PCs cost 1–16%. Additive embedding terms on the raw dollar scale are the wrong functional form for skewed populations. The ratio form of §4.1 is needed (the project's working log reached the same conclusion).
+   - *Corrected:* this agrees in direction with the (1 − p/n)/(1 + p/(n − p − 2)) prediction of §3.3 but is worse than it. The formula predicts variance-estimator bias of about −86% at p = 309, −98.5% at p = 437 and −31% at p = 85; the MC gives about −100%, −100% and −49% to −58%.
+2. **Even 32 additive PCs cost 14–40% efficiency and 6–15 points of coverage at n = 500** (*corrected* from "10–20 points"; recomputed from `pn_mc_R500_n500.csv`). Ten additive PCs cost 1–16%. Additive embedding terms on the raw dollar scale are the wrong functional form for skewed populations. The ratio form of §4.1 is needed (the project's working log reached the same conclusion).
 3. **In-sample fitting reproduces the overfitting trap:**
    - coverage 2–4%;
    - variance estimator −100%;
    - relative bias up to ±190% for heavy-tailed y.
-4. **Cross-fitting restores near-nominal coverage for the binary y (94–96%), but not efficiency.** On raw additive dimensions the cross-fitted ridge is still 16–84% as efficient as the base GREG. For contributions, a heavy-tailed total, the relative bias is +15.6% because of extrapolation on outliers.
+4. **Cross-fitting restores near-nominal coverage for the binary y (94–96%), but not efficiency.** On raw additive dimensions the cross-fitted ridge is still only 15–84% as efficient as the base GREG. For contributions, a heavy-tailed total, the relative bias is +15.6% because of extrapolation on outliers.
 
    *Cross-fitting is necessary for validity, but it does not create a gain.*
 5. **For contributions, plain HT beats the 53-column base GREG by 1.73×.** Lagged size is a poor working model for contributions at n = 500, and the extra columns cost more than they return.
@@ -522,7 +525,7 @@ Each figure is the RE of the **best cross-fitted, design-based text-augmented es
 | P1 | Size y with an admin lag (revenue, expenses, assets; salaries when payroll is on the register; employees when PD7A/headcount is) | B2/B3 | **1.00** | 0.97–1.02 | Residual = change; text is static | 0.93–1.01; salaries 1.003 with lag. **Confirmed.** |
 | P2 | Size or cost-structure y *without* its own lag (salaries without payroll; employees without a lag) | B2 | 1.03 | 0.98–1.10 | Text weakly signals labour intensity | **Salaries 1.41: the prior is too low.** Employees 0.93. |
 | P3 | Composition or mission y without its own lag (government grants, contributions, program revenue, fundraising) | B2 | 1.08 | 1.00–1.25 | Activity type → funding mix | 1.04–1.20 (fixed λ 1.00–1.20). Consistent. |
-| P4 | Same y with its own lag (T3010-style register-plus) | B3 | **1.01** | 0.97–1.04 | Text substitutes for the lag | 0.93–1.001. **Confirmed.** |
+| P4 | Same y with its own lag (T3010-style register-plus) | B3 | **1.01** | 0.97–1.04 | Text substitutes for the lag | 0.93–1.005 (*corrected* from 0.93–1.001: salaries 1.003, volunteers 1.005). **Confirmed.** |
 | P5 | Heavy-tailed, heaped counts (volunteers) | B3 | 1.00 | 0.90–1.05 | Reporting noise dominates; 25–53% blanks for small units | 1.04 (S1), 1.005 (register-plus) |
 | P6 | Activity indicators without a lag (grants to individuals, foreign, lobbying, has government grants) | B2 | 1.08 | 1.00–1.20 | Text-defined, poorly coded by NTEE | 1.03–1.17. Consistent (upper half). |
 | P7 | Activity indicators with the lagged indicator | B3 | **1.01** | 0.99–1.04 | Checkboxes are sticky (91–99% agreement) | 0.999–1.017. **Confirmed.** |
@@ -530,7 +533,7 @@ Each figure is the RE of the **best cross-fitted, design-based text-augmented es
 | P8b | Same, effect on the *overall* total | B2 | 1.01 | 1.00–1.02 | Births are 3.7–9% of units and a smaller share of totals | Not tested |
 | P9 | Text-defined domain totals (membership from text vs best code proxy) | Code-proxy domain | RRMSE −20% to −50% | — | This is mostly *bias* correction of the domain definition, not variance reduction | Not tested |
 | P10 | Stratification on a text-informed m̂ (multipurpose design) | Industry × size, cum-√f / LH | 1.02 primary y | 0.98–1.06; ≥ 2% loss on ≥ 1 other y | Stratification gain is capped by ρ²; multipurpose trade-offs | Not tested |
-| P11 | Nonresponse adjustment with a *real* response mechanism (late filing) | RHG on size × NTEE × prior lateness | NR-bias reduction ≤ 10% | 0–25% | Response is driven by size, burden and history, not mission (Little & Vartivarian 2005, [n01]) | Not tested |
+| P11 | Nonresponse adjustment with a *real* response mechanism (late filing) | RHG on size × NTEE × prior lateness | NR-bias reduction ≤ 10% | 0–25% | Response is driven by size, burden and history, not mission. *Clarification:* that is the skeptic's prior. Little & Vartivarian 2005 ([n01]; [UNVERIFIED: not re-checked]) supply only the principle that an adjustment variable must predict both response and y. | Not tested |
 | P12 | Unit-level SAE, state × NTEE10 domains | EBLUP/GREG on frame | Domain MSE −0% to −15% (sampled); coverage worse | — | Domain random effects absorb much; gains mostly in non-sampled domains, where bias risk dominates | Not tested |
 | P13 | Neural embedding over TF-IDF/LSA on the *same* field | Same estimator with LSA | 1.00 | 0.97–1.05 | Short, formulaic texts; lexical features suffice | Not comparable yet (different fields) |
 | P14 | Image/PDF-page embedding over the text embedding of the same document | Same model, text mode | 1.00 | 0.98–1.02 | Text-native documents carry no visual signal | Not tested (990 has no PDFs) |
@@ -588,11 +591,11 @@ Every other test is secondary or a gate.
 | **H1** | Size null (skeptic) | RE vs B* for revenue, expenses, assets, employees | RE ∈ [0.97, 1.03] by TOST | RE > 1.05 triggers a **leakage alarm**, audited (L1–L9) before any interpretation | Pass | Ceilings 0.93–1.01 |
 | **H2** | Headroom gain, S1 (proponent) | RE vs B*(S1), headroom y | ≥ 2 of 6 y with RE ≥ 1.10 and Holm-adjusted lower bound ≥ 1.05 | Otherwise | Borderline: ceilings 1.04–1.20 shrink to about 1.0–1.12 at n = 1000 | Ceilings 1.04–1.20 |
 | **H3** | Survives register-plus (proponent) | RE vs B*(S3), lagged same y or indicator in B* | ≥ 1 of 6 y with RE ≥ 1.05 and lower bound ≥ 1.02 | Otherwise | **Fail** | 0.93–1.017 |
-| **H4** | Beyond codes (proponent) | RE(B*+text) / RE(B*+fine code+meta); and against the code-centroid arm | Both ratios ≥ 1.05 for every y that passes H2 | Otherwise | Pass (prior was fail; updated) | 1.10–1.40 and 1.05–1.38 |
+| **H4** | Beyond codes (proponent) | RE(B*+text) / RE(B*+fine code+meta); and against the code-centroid arm | Both ratios ≥ 1.05 for every y that passes H2 | Otherwise | Pass (prior was fail; updated) | *Corrected:* on the six headroom y, text over fine code + meta is 1.02–1.15 and text over the code centroid is 1.08–1.22 (salaries: 1.40 and 1.37). Program-service revenue (1.02) is below the 1.05 bar. |
 | **H5** | Neural over lexical (proponent of embeddings) | RE(neural) / RE(LSA), **same field**, same estimator | ≥ 1.03 with lower bound ≥ 1.00 | Otherwise | Fail | Not yet comparable |
 | **H6** | Negative controls (gate) | NC1–NC4, every y | RE upper bound ≤ 1.02; placebo y within [0.97, 1.01] | Any NC with lower bound > 1.00 **invalidates the run** | Pass | Pass (0.82–1.00) |
-| **H7** | Inference validity (gate) | Cross-fitted text estimators | \|RB\| ≤ 1% (or ≤ 2 MCSE); coverage 93–96.5% at n = 1000 and ≥ 92% at n = 500; variance-estimator relative bias within ±10% | Otherwise the arm is excluded | Pass for PC-based and cross-fitted arms | Smoke (R = 60): cross-fitted coverage 85–97%; R too small |
-| **H8** | Harness sensitivity (gate) | PC1 injected signal; PC3 known failure; NC10 in-sample fits | PC1 recovered within ±0.03; PC3 shows RE < 1 and coverage < 90%; NC10 shows coverage < 90% for ≥ 1 y | Otherwise the harness **cannot be trusted** | Pass | PC3 reproduced (RE ≈ 0, coverage 0–5%). NC10: in-sample ridge coverage 2–4% (§4.5); smoke-run model calibration 72–77%. PC1 not yet run. |
+| **H7** | Inference validity (gate) | Cross-fitted text estimators | \|RB\| ≤ 1% (or ≤ 2 MCSE); coverage 93–96.5% at n = 1000 and ≥ 92% at n = 500; variance-estimator relative bias within ±10% | Otherwise the arm is excluded | Pass for PC-based and cross-fitted arms | Smoke (R = 60): cross-fitted model-calibration coverage 85–98%; R too small |
+| **H8** | Harness sensitivity (gate) | PC1 injected signal; PC3 known failure; NC10 in-sample fits | PC1 recovered within ±0.03; PC3 shows RE < 1 and coverage < 90%; NC10 shows coverage < 90% for ≥ 1 y | Otherwise the harness **cannot be trusted** | Pass | PC3 reproduced (RE ≈ 0, coverage 0–5%). NC10: in-sample ridge coverage 2–4% (§4.5); smoke-run non-cross-fitted model calibration 72–78% for the five heavy-tailed dollar y (72–97% across all 14 y). PC1 not yet run. |
 | **H9** | Single-weight compatibility (proponent) | One set of text-calibrated weights for all published y | Negative weights ≤ 1%; g ∈ [0.2, 5]; ≥ 50% of the H2 gain kept on targets; ≤ 2% RE loss on every other y | Otherwise | Fail (multipurpose damage) | — |
 | **H10** | Leakage audit (gate) | (a) T2 vs T2-nodigits; (b) text(t) vs text(t−1); (c) NC5 change-y; (d) model vintage | (a) \|ΔRE\| ≤ 0.02; (c) partial R² ≤ 0.01; (d) Δ ≤ 0.03 on NC5. (b) is reported only, because same-year text is banned anyway | Any breach: the arm is excluded and the cause documented | Pass for t−1 text; possible breach for post-2024 API models on (d) | — |
 | **H11** | Realistic coverage (proponent) | H2 effect re-estimated on the *frame* population (births, no-text units; indicator method) | RE ≥ 1.07 | Otherwise | Fail (dilution) | — |
@@ -611,7 +614,7 @@ Every other test is secondary or a gate.
   - at least one of H3, H12, H14 or H15 passes for at least one *published* y;
   - H18 and H19 pass;
   - the operational conditions in §8 hold.
-- **"Only a substitute for missing admin data"** is the verdict if H2 passes but H3 fails. The recommendation is then to *acquire or link the lagged administrative variable*. Here that variable gave RE 2.4–14.6, against the text's 1.0–1.4.
+- **"Only a substitute for missing admin data"** is the verdict if H2 passes but H3 fails. The recommendation is then to *acquire or link the lagged administrative variable*. Here that variable gave RE 2.4–14.6 for every y except volunteers (1.19), against the text's 1.0–1.4.
 - **"Not useful"** is the verdict if H2 fails.
 
 ---
@@ -657,7 +660,7 @@ Every other test is secondary or a gate.
 | ID | Control | Requirement |
 |---|---|---|
 | PC1 | Injected signal: y* = y + c · σ_e · g(PCs), where g is a fixed random linear map of the text PCs, scaled to partial R² ∈ {0.05, 0.10, 0.20} | The harness must recover RE within ±0.03 of the finite-sample prediction (1 + p_eff/n)⁻¹ / (1 − R²) |
-| PC2 | Oracle lagged y | Large gains must appear: here RE 2.4–14.6 |
+| PC2 | Oracle lagged y | Large gains must appear: here RE 2.4–14.6 (volunteers only 1.19) |
 | PC3 | OLS-GREG on raw dimensions with p/n ≥ 0.5 | Must show RE < 1 and coverage < 90% |
 
 ### 7.4 Reporting rules
@@ -681,7 +684,7 @@ The skeptic concedes that embeddings are **useful in production** for a specific
 | # | Condition | Threshold | Why |
 |---|---|---|---|
 | C1 | **Effect size** at the survey's real n | Any one of:<br>• RE ≥ 1.15 vs B* with lower 95% bound ≥ 1.08 (≥ 13% fewer units, or ≥ 7% lower CV);<br>• NR-bias reduction ≥ 25%;<br>• median domain RRMSE down ≥ 15% | Below this the gain is smaller than the year-to-year noise in collection costs and response rates, and the pipeline is not worth running |
-| C2 | **No cheaper admin lag** | The lag of y cannot be obtained or linked at reasonable cost, *or* H3 passes | The lagged admin value achieved RE 2.4–14.6 here, against the text's ≤ 1.4. Buy the lag first. |
+| C2 | **No cheaper admin lag** | The lag of y cannot be obtained or linked at reasonable cost, *or* H3 passes | The lagged admin value achieved RE 2.4–14.6 here (volunteers 1.19), against the text's ≤ 1.4. Buy the lag first. |
 | C3 | **Validity** | Gates H6, H7, H8 and H10 pass; coverage ≥ 93%; \|RB\| ≤ 1% overall and in ≥ 90% of published domains | A variance gain with an invalid CI is not a gain |
 | C4 | **Replication and robustness** | H18 (a second population and a second year pair) and H19 (model and version swap, \|ΔRE\| ≤ 0.03) | Guards against a population-specific or vendor-specific artefact |
 | C5 | **Dissemination compatibility** | H9 (one weight set) passes, *or* the program publishes y-specific model-assisted estimates | NSO microdata carry one weight |
@@ -693,7 +696,7 @@ The skeptic concedes that embeddings are **useful in production** for a specific
    - ICT, AI-use or innovation surveys, using website text. This is the use with the strongest external precedent: CBS and ZEW predicted innovation status from website text ([n02]). Website text is size-graded and estimation-time, so it is limited to model-assisted estimation with a whole-frame crawl.
 2. **Births and units without admin history**, using the BN "major business activity" text, which every registrant gives ([n02]). The gain is confined to a small stratum. It matters for timely estimates of new businesses and for stratum assignment.
 3. **Text-defined domains** that no code captures, such as food-security organizations, arts education or AI developers. Here the text changes *what can be estimated* (domain membership), and that is closer to a bias correction than to variance reduction.
-4. **Code repair.** NTEE is missing for about 30% of BMF rows ([n03]), and StatCan notes that BR NAICS codes may be outdated or wrong ([n02]). Text-imputed codes feeding the *conventional* stratifier or post-stratifier are a measurable, low-risk use. (This is a productivity use, which the claim disowns. Its variance effect, fewer stratum jumpers, can still be measured.)
+4. **Code repair.** NTEE is missing for about 30% of BMF rows ([n03]), and StatCan notes that BR NAICS codes may be outdated or wrong ([n02]; [UNVERIFIED: not re-checked] there). The NTEE figure was recomputed: 29.6% of rows in the May-2026 BMF. Text-imputed codes feeding the *conventional* stratifier or post-stratifier are a measurable, low-risk use. (This is a productivity use, which the claim disowns. Its variance effect, fewer stratum jumpers, can still be measured.)
 
 **Where the skeptic will not concede, whatever the benchmark shows on public data:**
 - Financial size variables when tax data (GST/HST, T2/GIFI, PD7A) are on the BR.
@@ -710,8 +713,8 @@ The skeptic concedes that embeddings are **useful in production** for a specific
 | Annual business / industry surveys (financial y) | BN "major business activity" text from registration; codes made from it ([n02]) | **Yes**: GST/HST revenue, T2/GIFI, PD7A payroll | Near-universal for BN units | **No gain expected** (P1, H1) | 990 revenue, expenses, salaries vs B3 |
 | Same surveys, *births* in the current cycle | BN text and name only | No | All births | Plausible but small (P8, H15) | 990 units without a t−1 return |
 | Charities / nonprofit satellite account (financial y) | T3010 program descriptions (public) | **Yes**: the whole prior T3010 | ~84k registered charities ([n03]) | **No gain** vs register-plus (P4, P7) | 990 S3 scenario (register-plus) |
-| Nonprofit volunteering / program-activity content | T3010 program text | **No** (volunteers are not on T3010 **[UNVERIFIED]**) | All registered charities | **Most plausible use** (P3, P6; H2). On NE, though, volunteers reach only 1.04, activity indicators 1.03–1.17 and funding-mix dollars 1.13–1.20 (ceilings, before the finite-sample penalty). | 990 volunteers, program type and grants to individuals under S1 |
-| ICT, AI-use, e-commerce and innovation surveys | Websites (crawled), BN text | No | Websites size-graded: EU 77% small vs 96% large; Canada 2013 42% small vs 91% large ([n02]) | Plausible, if the whole frame is crawled at design time; ISTAT/CBS precedent ([n02]) | Needs a web-crawl population (not reachable from this sandbox) |
+| Nonprofit volunteering / program-activity content | T3010 program text | **No.** *Checked:* the T3010 open-data dictionary (v2.0, via a third-party mirror) has no volunteer-count field, only yes/no volunteer flags and a staff-and-volunteer training expense line. It does carry full-time and part-time staff counts. | All registered charities | **Most plausible use** (P3, P6; H2). On NE, though, volunteers reach only 1.04, activity indicators 1.03–1.17 and funding-mix dollars 1.13–1.20 (ceilings, before the finite-sample penalty). | 990 volunteers, program type and grants to individuals under S1 |
+| ICT, AI-use, e-commerce and innovation surveys | Websites (crawled), BN text | No | Websites size-graded: EU 77% small vs 96% large (2025); Canada 2013 42% small vs 91% large ([n02]; [UNVERIFIED: not re-checked] there) | Plausible, if the whole frame is crawled at design time; ISTAT/CBS precedent ([n02]) | Needs a web-crawl population (not reachable from this sandbox) |
 | Area-level SAE (poverty, income) | Area profiles (Wikipedia), satellite or POI embeddings | Census and admin covariates are strong | Complete | Text profiles **leak** (L3). Satellite embeddings are acceptable. | County SAE with census truth ([n03] §2.10) |
 | Financial statements as PDFs (public companies; UK charities' accounts) | PDF pages | Structured filings usually exist (XBRL, the CCEW annual return) | Larger entities only | Extract fields (H16). Image embeddings for narrative only (H17). | UK CCEW accounts PDFs ([n03] R2) |
 
@@ -722,13 +725,15 @@ The skeptic concedes that embeddings are **useful in production** for a specific
 ## 10. References
 
 **Tags.**
-- **[n01]–[n04]**: verified earlier in this session by the sibling notes `01-methods-literature.md`, `02-applied-precedents-and-real-data-sources.md`, `03-dataset-candidates-and-red-team.md` and `04-embedding-models-cohere-and-alternatives.md`. Full bibliographic detail and URLs are in those notes.
+- **[n01]–[n04]**: taken from the sibling notes `01-methods-literature.md`, `02-applied-precedents-and-real-data-sources.md`, `03-dataset-candidates-and-red-team.md` and `04-embedding-models-cohere-and-alternatives.md`. Full bibliographic detail and URLs are in those notes. *Clarification:* those notes checked most literature only through search-result snippets, and their own verification logs tag most items [UNVERIFIED: not re-checked]. An [n0x] tag is therefore not a confirmation.
 - **[UNVERIFIED]**: cited from memory. It could not be checked here because the shared search budget was exhausted and WebFetch failed with DNS errors.
+- **[UNVERIFIED: not re-checked]**: no reachable source in the verification pass (WebSearch exhausted; WebFetch `ENOTFOUND`; curl got no connection to Crossref, doi.org, arXiv, publishers or statistical agencies).
+- **Verified (2026-10-23)**: checked in the verification pass against the source named in the Verification log.
 
-**Survey estimation with many or ML auxiliaries [n01]**
+**Survey estimation with many or ML auxiliaries [n01]** (every entry in this group is [UNVERIFIED: not re-checked] unless marked Verified)
 - Breidt, F.J., Opsomer, J.D. (2017). Model-assisted survey estimation with modern prediction techniques. *Statistical Science* 32(2):190–205. doi:10.1214/16-STS589.
 - Breidt, F.J., Opsomer, J.D. (2008). Endogenous post-stratification in surveys: classifying with a sample-fitted model. *Annals of Statistics* 36(1):403–427. doi:10.1214/009053607000000703.
-- McConville, K.S., Breidt, F.J., Lee, T.C.M., Moisen, G.G. (2017). Model-assisted survey regression estimation with the lasso. *JSSAM* 5(2):131–158. doi:10.1093/jssam/smw041.
+- McConville, K.S., Breidt, F.J., Lee, T.C.M., Moisen, G.G. (2017). Model-assisted survey regression estimation with the lasso. *JSSAM* 5(2):131–158. doi:10.1093/jssam/smw041. **Verified** (authors, title, journal, 5:131–158 and DOI, `mase` package docs; issue number not checked).
 - Ta, T., Shao, J., Li, Q., Wang, L. (2020). Generalized regression estimators with high-dimensional covariates. *Statistica Sinica* 30:1135–1154. doi:10.5705/ss.202017.0384.
 - Cardot, H., Goga, C., Shehzad, M.-A. (2017). Calibration and partial calibration on principal components when the number of auxiliary variables is large. *Statistica Sinica* 27:243–260.
 - Chauvet, G., Goga, C. (2022). Asymptotic efficiency of the calibration estimator in a high-dimensional data setting. *JSPI* 217:177–187. doi:10.1016/j.jspi.2021.07.011.
@@ -738,28 +743,28 @@ The skeptic concedes that embeddings are **useful in production** for a specific
 - Dagdoug, M., Haziza, D. (2026). Machine learning methods for finite population parameter estimation in survey sampling. arXiv:2604.01160.
 - An, Dagdoug, Haziza, Tillé (2026). Agnostic model-assisted estimation with machine learning for survey data. arXiv:2609.10904.
 - Nascimento Silva, P.L.D., Skinner, C.J. (1997). Variable selection for regression estimation in finite populations. *Survey Methodology* 23(1):23–32.
-- Wu, C., Sitter, R.R. (2001). A model-calibration approach to using complete auxiliary information from survey data. *JASA* (volume and DOI [UNVERIFIED] in [n01]).
+- Wu, C., Sitter, R.R. (2001). A model-calibration approach to using complete auxiliary information from survey data. *JASA* 96(453):185–193. **Verified** (title, journal, volume, issue and pages, `NonProbEst` package docs; DOI not checked).
 - Montanari, G.E., Ranalli, M.G. (2005). Nonparametric model calibration estimation in survey sampling. *JASA* 100:1429–1442. doi:10.1198/016214505000000141.
 - Haziza, D., Beaumont, J.-F. (2017). Construction of weights in surveys: a review. *Statistical Science* 32(2):206–226.
-- Chernozhukov, V. et al. (2018). Double/debiased machine learning for treatment and structural parameters. *Econometrics Journal* 21(1):C1–C68.
+- Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W., Robins, J. (2018). Double/debiased machine learning for treatment and structural parameters. *Econometrics Journal* 21(1):C1–C68. doi:10.1111/ectj.12097. **Verified** (`DoubleML` package docs; issue number not checked).
 
 **Prediction-powered inference [n01]**
-- Angelopoulos, A.N., Bates, S., Fannjiang, C., Jordan, M.I., Zrnic, T. (2023). Prediction-powered inference. *Science* 382(6671):669–674. doi:10.1126/science.adi6000.
-- Zrnic, T., Candès, E. (2024). Cross-prediction-powered inference. *PNAS* 121(15):e2322083121. doi:10.1073/pnas.2322083121.
-- Mozer (2026). PPI is the difference estimator. arXiv:2603.19160.
-- Egami, N., Hinck, M., Stewart, B., Wei, H. (2023). Using imperfect surrogates for downstream inference. NeurIPS 36.
+- Angelopoulos, A.N., Bates, S., Fannjiang, C., Jordan, M.I., Zrnic, T. (2023). Prediction-powered inference. *Science* 382(6671):669–674. doi:10.1126/science.adi6000. *Partial:* the paper exists (arXiv:2301.09633, `ppi_py` README); the *Science* volume, pages and DOI are [UNVERIFIED: not re-checked].
+- Zrnic, T., Candès, E. (2024). Cross-prediction-powered inference. *PNAS* 121(15):e2322083121. doi:10.1073/pnas.2322083121. *Partial:* the paper exists (arXiv:2309.16598, `ppi_py` README); the PNAS details are [UNVERIFIED: not re-checked].
+- Mozer (2026). PPI is the difference estimator. arXiv:2603.19160. [UNVERIFIED: not re-checked]
+- Egami, N., Hinck, M., Stewart, B., Wei, H. (2023). Using imperfect surrogates for downstream inference. NeurIPS 36. *Partial:* the four authors and the 2023 DSL method are confirmed by the `dsl` R package DESCRIPTION; the venue and full title are [UNVERIFIED: not re-checked].
 
-**Nonresponse and stratification [n01]**
+**Nonresponse and stratification [n01]** (the first three entries are [UNVERIFIED: not re-checked])
 - Little, R.J.A., Vartivarian, S. (2005). Does weighting for nonresponse increase the variance of survey means? *Survey Methodology* 31(2):161–168.
 - Haziza, D., Lesage, É. (2016). A discussion of weighting procedures for unit nonresponse. *JOS* 32(1):129–145. doi:10.1515/jos-2016-0006.
 - Kern, C., Klausch, T., Kreuter, F. (2019). Tree-based machine learning methods for survey research. *Survey Research Methods* 13(1):73–93. doi:10.18148/srm/2019.v13i1.7395.
-- Lavallée, P., Hidiroglou, M. (1988). On the stratification of skewed populations. *Survey Methodology* 14(1).
-- Rivest, L.-P. (2002). A generalization of the Lavallée and Hidiroglou algorithm for stratification in business surveys. *Survey Methodology* 28(2):207–214.
+- Lavallée, P., Hidiroglou, M. (1988). On the stratification of skewed populations. *Survey Methodology* 14(1):33–43. **Verified** (title, volume and pages, `stratification` package docs, maintained by Rivest; issue number not checked).
+- Rivest, L.-P. (2002). A generalization of the Lavallée and Hidiroglou algorithm for stratification in business surveys. *Survey Methodology* 28(2):**191–198**. **Corrected** from 207–214 (`stratification` package docs; n01's verification log made the same correction).
 
-**Text and web data in official and economic statistics [n01, n02]**
+**Text and web data in official and economic statistics [n01, n02]** (every entry is [UNVERIFIED: not re-checked] in n01/n02 and here, except as marked)
 - Hoberg, G., Phillips, G. (2016). Text-based network industries and endogenous product differentiation. *JPE* 124(5):1423–1465. doi:10.1086/688176.
 - Daas, P.J.H., van der Doef, S. (2020). Detecting innovative companies via their website. *Statistical Journal of the IAOS* 36(4):1239–1251. doi:10.3233/SJI-200627.
-- Kinne, J., Lenz, D. (2021). Predicting innovative firms using web mining and deep learning. *PLoS ONE* 16(4):e0249071. doi:10.1371/journal.pone.0249071.
+- Kinne, J., Lenz, D. (2021). Predicting innovative firms using web mining and deep learning. *PLoS ONE* 16(4):e0249071. doi:10.1371/journal.pone.0249071. *Partial:* the title is confirmed as ZEW Discussion Paper 19-001 in the authors' ARGUS repository README; the *PLoS ONE* details are [UNVERIFIED: not re-checked].
 - Kinne, J., Axenbeck, J. (2018). Web mining of firm websites. ZEW Discussion Paper 18-033.
 - Cuffe, J. et al. (2019/2022). Using public data to generate industrial classification codes. In *Big Data for Twenty-First-Century Economic Statistics*, NBER. https://www.nber.org/chapters/c14278
 - UNECE (2024). Canada SBR classification (NAICS from the BN major business activity text via G-Code). https://unece.org/sites/default/files/2024-10/3.4_Canada%20SBR%20classification_0.pdf
@@ -767,13 +772,17 @@ The skeptic concedes that embeddings are **useful in production** for a specific
 - Website-coverage statistics (Eurostat, ISTAT, ABS, StatCan 2013) as compiled in [n02] §5.1.
 
 **Embedding models and operations [n04]**
-- Cohere model lifecycle and deprecations (Embed v2 retired 2026-04-04); embed-jobs dataset retention (30 days); pricing (embed-v4.0 at $0.12 per 1M text tokens, $0.47 per 1M image tokens). See [n04] §2.3–2.5 for URLs.
+- Cohere model lifecycle and deprecations (Embed v2 retired 2026-04-04); embed-jobs dataset retention (30 days); pricing (embed-v4.0 at $0.12 per 1M text tokens, $0.47 per 1M image tokens). See [n04] §2.3–2.5 for URLs. **Verified** in the source of docs.cohere.com (`cohere-ai/cohere-developer-experience`, commit 0afa66c, 2026-10-22): the lifecycle stages (`going-to-production/deprecations.mdx`), the retirement of `embed-english-v2.0`, `embed-english-light-v2.0` and `embed-multilingual-v2.0` effective 2026-04-04 (`changelog/2026-04-04-embed-v2-aya-8b-retirement.mdx`), "Datasets get deleted 30 days after creation" (`get-started/datasets.mdx`), Model Vault as single-tenant (`model-vault/overview.mdx`), embed-v4.0 released 2025-04-15 and embed-v5.0-pro/-fast released 2026-09-30 (changelogs). The prices were confirmed only in a secondary source, LiteLLM's `model_prices_and_context_window.json` (which cites cohere.com/pricing); cohere.com was unreachable.
 
-**Leakage, numeracy, benchmarking practice [UNVERIFIED]**
+**Leakage [UNVERIFIED]**
 - Kaufman, S., Rosset, S., Perlich, C., Stitelman, O. (2012). Leakage in data mining: formulation, detection, and avoidance. *ACM TKDD* 6(4).
 - Kapoor, S., Narayanan, A. (2023). Leakage and the reproducibility crisis in machine-learning-based science. *Patterns* 4(9).
-- Wallace, E., Wang, Y., Li, S., Singh, S., Gardner, M. (2019). Do NLP models know numbers? Probing numeracy in embeddings. EMNLP-IJCNLP.
-- Naik, A., Ravichander, A., Rose, C., Hovy, E. (2019). Exploring numeracy in word embeddings. ACL.
+
+**Numeracy (Verified against ACL Anthology metadata, `acl-org/acl-anthology` data/xml/D19.xml and P19.xml)**
+- Wallace, E., Wang, Y., Li, S., Singh, S., Gardner, M. (2019). Do NLP models know numbers? Probing numeracy in embeddings. *Proceedings of EMNLP-IJCNLP 2019*, pp. 5307–5315. doi:10.18653/v1/D19-1534.
+- Naik, A., Ravichander, A., Rose, C., Hovy, E. (2019). Exploring numeracy in word embeddings. *Proceedings of the 57th Annual Meeting of the ACL*, pp. 3374–3380. doi:10.18653/v1/P19-1329.
+
+**Benchmarking practice [UNVERIFIED]**
 - Lin, J. (2019). The neural hype and comparisons against weak baselines. *SIGIR Forum* 52(2).
 - Armstrong, T.G., Moffat, A., Webber, W., Zobel, J. (2009). Improvements that don't add up: ad-hoc retrieval results since 1998. CIKM.
 - Gelman, A., Loken, E. (2014). The statistical crisis in science. *American Scientist* 102(6).
@@ -789,3 +798,103 @@ The skeptic concedes that embeddings are **useful in production** for a specific
   - `numeracy.py` → `numeracy2.out`;
   - `numeracy_raw.py`;
   - `pn_mc.py` → `pn_mc_R500_n500.csv`. These live in the session scratchpad. Copy them into `src/` if they should persist.
+
+---
+
+## Verification log
+
+Adversarial verification pass, 2026-10-23. Corrections and clarifications were made in place and are marked *Corrected*, *Clarification*, **Verified** or [UNVERIFIED: not re-checked]. No new content was added beyond them. Downloaded checking material (ACL Anthology XML, CRAN package mirrors, the Cohere docs repository, LiteLLM's price table, the CRA dictionary mirror) is in the session scratchpad under `verify06/`, not in the repository.
+
+**E. Tools and reachability**
+
+| # | Check | Outcome |
+|---|---|---|
+| E1 | WebSearch | Exhausted: the shared per-turn budget of 200 calls was already spent before this pass. No search was run. |
+| E2 | WebFetch | Failed with `getaddrinfo ENOTFOUND` on aclanthology.org and arxiv.org. This CONFIRMS the note's statement. |
+| E3 | curl reachability | No connection (curl code 000) to api.crossref.org, doi.org, export.arxiv.org, docs.cohere.com, cohere.com/pricing, api.cohere.com, Eurostat API, www150.statcan.gc.ca, unece.org, census.gov, istat.it, canada.ca, dblp.org, semanticscholar.org. Reachable: raw.githubusercontent.com, `git clone` from github.com, and `gt990datalake-rawdata.s3.amazonaws.com` (200). The GitHub MCP tool is limited to the user's own repository. |
+
+**C. Citations and documentation checked against a reachable source**
+
+| # | Claim | Source used | Outcome |
+|---|---|---|---|
+| C1 | Wallace, Wang, Li, Singh & Gardner 2019, EMNLP | ACL Anthology `data/xml/D19.xml` (title, authors, pages, DOI, abstract) | **Verified**: EMNLP-IJCNLP 2019, pp. 5307–5315, doi:10.18653/v1/D19-1534. [UNVERIFIED] tag removed. Clarified that the abstract reports *more* numeracy than "some" (GloVe/word2vec accurate up to 1,000; BERT less exact); the extrapolation claim is from the paper body, not re-read. |
+| C2 | Naik, Ravichander, Rose & Hovy 2019, ACL | ACL Anthology `data/xml/P19.xml` | **Verified**: pp. 3374–3380, doi:10.18653/v1/P19-1329. Tag removed. |
+| C3 | Rivest 2002, *Survey Methodology* 28(2):207–214 | `cran/stratification` man/strata.LH.Rd and Sweden.Rd (maintainer: Rivest) | **Corrected** to 28(2):**191–198** (n01 had already made this correction). |
+| C4 | Lavallée & Hidiroglou 1988, *Survey Methodology* 14(1) | same | **Verified**; pages 33–43 added. |
+| C5 | McConville, Breidt, Lee & Moisen 2017, *JSSAM* 5(2):131–158, doi:10.1093/jssam/smw041 | `cran/mase` inst/REFERENCES.bib and DESCRIPTION | **Verified** (issue number not shown there). |
+| C6 | Wu & Sitter 2001, *JASA*, volume and DOI flagged [UNVERIFIED] | `cran/NonProbEst` man/model_calibrated.Rd | **Verified** and completed: *JASA* 96(453):185–193 (DOI not checked). |
+| C7 | Chernozhukov et al. 2018, *Econometrics Journal* 21(1):C1–C68 | `cran/DoubleML` docs and README | **Verified**; full author list and doi:10.1111/ectj.12097 added. |
+| C8 | Angelopoulos et al. 2023, *Science* 382(6671):669–674 | `aangelopoulos/ppi_py` README | **Partial**: the paper exists (arXiv:2301.09633); *Science* details not checked. Tagged. |
+| C9 | Zrnic & Candès 2024, *PNAS* 121(15) | same | **Partial**: the paper exists (arXiv:2309.16598); PNAS details not checked. Tagged. |
+| C10 | Egami, Hinck, Stewart & Wei 2023, NeurIPS 36 | `naoki-egami/dsl` DESCRIPTION | **Partial**: authors and the 2023 DSL method confirmed; venue and title not checked. |
+| C11 | Kinne & Lenz 2021, *PLoS ONE* 16(4) | `datawizard1337/ARGUS` README | **Partial**: title confirmed as ZEW DP 19-001; journal details not checked. |
+| C12 | Cohere lifecycle Active → Legacy → Deprecated → Shutdown | `cohere-ai/cohere-developer-experience` (commit 0afa66c, 2026-10-22), `fern/pages/going-to-production/deprecations.mdx` | **Verified** |
+| C13 | Embed v2 shut down 2026-04-04 | `fern/pages/changelog/2026-04-04-embed-v2-aya-8b-retirement.mdx` | **Verified**: `embed-english-v2.0`, `embed-english-light-v2.0` and `embed-multilingual-v2.0` are retired, and "requests using these model IDs will fail". |
+| C14 | Embed-job datasets kept 30 days unless deleted | `fern/pages/get-started/datasets.mdx` ("Datasets get deleted 30 days after creation") | **Verified** |
+| C15 | Model Vault is single-tenant; residency must be confirmed | `model-vault/overview.mdx`; `model-vault/encrypted/compliance.mdx` ("contact Cohere to confirm the regions") | **Verified**. The note's "confirmed in writing" is advice consistent with the docs. |
+| C16 | embed-v4 is post-cutoff for TY2023 (L5, NC9) | `changelog/2025-04-15-embed-multimodal-v4.mdx` | **Verified**: released 2025-04-15. The MiniLM release date was not re-checked. |
+| C17 | embed-v5 exists (H19 "v4 ↔ v5") | `changelog/2026-09-30-embed-v5.mdx` | **Verified**: `embed-v5.0-pro` and `-fast`, released 2026-09-30. |
+| C18 | embed-v4.0 at $0.12 per 1M text tokens and $0.47 per 1M image tokens | LiteLLM `model_prices_and_context_window.json` (entry `cohere/embed-v4.0`, which cites cohere.com/pricing) | **Partial**: matches, but the source is secondary; cohere.com was unreachable. |
+| C19 | About $2 per text pass and $60–$450 per image pass | Arithmetic | **Clarified**: $2.16 assumes about 60 tokens per unit. $60–$450 implies about 425–3,200 image tokens per page, and tokens per image are undocumented ([n04]). |
+| C20 | T3010 program descriptions are in Section C2 | CRA *Open Data Dictionary v2.0*, third-party mirror `GovAlta/agency-26-hackathon` | **Verified (secondary)**: `NEW_ONGOING_PROGRAMS_<year>.csv`, Section C, question C2, up to 2,500 characters. |
+| C21 | "Volunteers are not on T3010 [UNVERIFIED]" | same dictionary | **Verified (secondary)**: there is no volunteer-count field, only yes/no volunteer flags (programs outside Canada; political-activity resources) and a staff-and-volunteer training expense line. Staff counts are present. Tag replaced. |
+| C22 | About 84k registered charities | `GovAlta/agency-26-hackathon` CRA/README.md | **Verified (secondary)**: about 84,000 identification records per complete year. |
+| C23 | P11: "Response is driven by size, burden and history, not mission (Little & Vartivarian 2005)" | Reading of the claim | **Clarified**: L&V 2005 is about when NR weighting reduces bias or increases variance (the covariate must predict both response and y). The size-burden-history claim is the skeptic's prior, not a finding of that paper. L&V itself not re-checked. |
+
+**L. Literature that could not be re-checked (no reachable source).** These are now tagged [UNVERIFIED: not re-checked] through the group headers in §10, or inline. None was found to be wrong, and none was confirmed. Breidt & Opsomer 2017; Breidt & Opsomer 2008; Ta, Shao, Li & Wang 2020; Cardot, Goga & Shehzad 2017 (including the "positive weights" description); Chauvet & Goga 2022; Eustache, Dagdoug & Haziza 2025; Bouhadra & Dagdoug 2026 (arXiv:2607.05570); Dagdoug, Goga & Haziza 2023 (*JASA*); Dagdoug & Haziza 2026 (arXiv:2604.01160); An, Dagdoug, Haziza & Tillé 2026 (arXiv:2609.10904); Nascimento Silva & Skinner 1997; Montanari & Ranalli 2005; Haziza & Beaumont 2017; Mozer 2026 (arXiv:2603.19160); Little & Vartivarian 2005; Haziza & Lesage 2016; Kern, Klausch & Kreuter 2019; Hoberg & Phillips 2016; Daas & van der Doef 2020; Kinne & Axenbeck 2018; Cuffe et al. 2019/2022; UNECE 2024 Canada SBR slides; Census BFS methodology; Kaufman et al. 2012; Kapoor & Narayanan 2023; Lin 2019; Armstrong, Moffat, Webber & Zobel 2009; Gelman & Loken 2014 (28 items). The 2026 arXiv IDs carry the highest risk, because they cannot be cross-checked from memory.
+
+**D. Factual claims about data sources** (recomputed from `/tmp/claude-0/data/raw990/` where possible)
+
+| # | Claim | Check | Outcome |
+|---|---|---|---|
+| D1 | NTEE missing for about 30% of BMF rows | May-2026 BMF, 1,966,267 rows | **Verified**: 29.6% |
+| D2 | About 26.5% of BMF entities have a TY2022 990/990-EZ | BMF EINs against `idx_2022` FormType ∈ {990, 990EZ} | **Verified**: 26.51% |
+| D3 | About 1.0M 990-N filers with no text | FILING_REQ_CD counts | Count **verified** (02 = 1,011,989). Reading 02 as 990-N is **[UNVERIFIED]** (IRS dictionary unreachable). Clarified that 8.8% of them have a 990/990-EZ ([n02]). |
+| D4 | May-2026 BMF REVENUE_AMT equals TY2023 revenue for 18.3% (vs 0.6% Dec-2023) | TY2023 full-990 filers merged to each BMF | **Verified**: 18.33% (n = 340,522). The Aug-2023 BMF actually used as the frame gives 0.55%; the Dec-2023 snapshot is not local. |
+| D5 | "At a realistic design cutoff, 9–23% of current filers have no prior return, concentrated in small units" | TY2023 full-990 filers against TY2022 990/990-EZ by `SubmittedOn` | **Corrected**: 3.7% (none at all), 8.4% (cutoff 30 Jun 2024), 31% (cutoff 31 Dec 2023). 23% not reproduced. "Concentrated in small units" holds only without a cutoff (5.8% vs 0.8%); at 30 Jun 2024 it is flat (9.4% vs 9.6%). |
+| D6 | L1: "$" in 35–53% of Schedule O for >$5M filers ([n03]) | n03 text and verification log | **Corrected** to 17–25%. n03 had already retracted 35–53%, which counted every schedule's explanation text. |
+| D7 | Births are 3.7–9% of units ([n03]) | As D5 | **Verified** (3.7%; 8.4% at the n03 cutoff, against n03's 9%) |
+| D8 | "ISTAT found URLs for about 75–81% of enterprises" | n02 §5 table | **Corrected**: 75–81% of *existing websites* were found, and about 70–75% of enterprises have one. The source is [UNVERIFIED: not re-checked]. |
+| D9 | EU 78% overall, 76.7% small vs 95.7% large | n02 | **Clarified** (2023 overall; 2025 by size) and tagged [UNVERIFIED: not re-checked]; Eurostat unreachable. |
+| D10 | Canada 2013: 42% small vs 91% large | n02 | Tagged [UNVERIFIED: not re-checked]; StatCan unreachable. |
+| D11 | StatCan has used tax data in place of survey data since the mid-1960s | n02 | Tagged [UNVERIFIED: not re-checked]. |
+| D12 | G-Code assigns NAICS to BN text; Census auto-coder > 80% | n02 | Tagged [UNVERIFIED: not re-checked]. "(2020)" and "business name" added to match n02. |
+| D13 | Revenue lag correlation 0.991 ([n03]) | n03 (0.9913, national linked units); `ne_pop.parquet` | **Verified**; the NE population gives 0.993. |
+| D14 | Mission unchanged for 70–93% ([n03]) | n03; `describe2.out` | **Verified**: consistent; NE classes 78.8–88.1%. |
+| D15 | About 5% chapter-type names ([n03]) | n03 log (5.3%) | Sibling figure; not recomputed. |
+| D16 | Program text with ≥ 2-digit numbers in 20–68% ([n03]) | n03 | Sibling figure; not recomputed. |
+| D17 | Websites about 45% under $200k vs 88% over $25M ([n02]) | n02 log (CONFIRMED there) | Sibling figure; not recomputed. |
+| D18 | StatCan notes that BR NAICS may be outdated or wrong ([n02]) | n02 | Tagged [UNVERIFIED: not re-checked]. |
+
+**N. Numbers computed for this note** (re-derived from the saved outputs in the scratchpad `skeptic/` folder and from local data)
+
+| # | Item | Outcome |
+|---|---|---|
+| N1 | §4.1 table: 16 y × 13 RE columns | **Verified**: every cell reproduces from `falsify_pop.csv` to two decimals. The ratio columns were recomputed as (frame+LSA)/(frame). One cell is borderline: has volunteers over fine code + meta is 1.025, shown as 1.03. |
+| N2 | §4.2 table | **Verified** against `falsify_bin.out` |
+| N3 | §4.3(a): between-group shares, 67% vs 35% accuracy, NTEE missing 31% | **Verified** against `describe2.out` |
+| N4 | §4.3(b): R² table, Spearman 0.36 | **Verified** |
+| N5 | §4.3(c): "lag worth 3–6 times the text" | **Corrected** to 3.5–5.4 (about 11 for salaries). Partial R² 0.10–0.13 is 0.095–0.128 (acceptable rounding); 0.00–0.03 verified. |
+| N6 | §4.3(d) table and red-team findings | **Verified** from `describe2.out` and a recomputation on `ne_pop.parquet`: valid URL 72.5%; 50.7 / 69.0 / 75.4 / 85.2 / 91.2 / 91.8% by class; 4,154 placeholders out of 19,138 non-empty values = 21.7%; 8.4% of valid URLs shared (raw string match; 9.2% after stripping http and www); 4.8% duplicate missions with a largest cluster of 112 (empty); top 206 hold 68.1% of revenue. |
+| N7 | §4.4 numeracy | **Verified**: `numeracy2.out` matches. `numeracy_raw.py` was re-run: 18.7×, 2.8×, ratio 6.7, 15.4% within 10%, median absolute log error 0.345 (= ×1.41). |
+| N8 | §4.5 MC table and weights table (54 cells) | **Verified** against `pn_mc_R500_n500.csv`; the design (34 strata, 206 take-all) matches `pn_mc.out`. |
+| N9 | §4.5: "exactly the (1 − p/n)/(1 + p/(n − p − 2)) prediction" | **Corrected**: it is worse than the prediction (−86% and −98.5% predicted at p = 309 and 437; about −100% observed), consistent with §3.3. |
+| N10 | §4.5: 32 PCs cost "10–20 points of coverage" | **Corrected** to 6–15 points |
+| N11 | §4.5: cross-fitted ridge "16–84%" as efficient | **Corrected** to 15–84% (contributions 0.147) |
+| N12 | §3.3: E[v̂]/V ≈ 0.69 at p = 85 and 0.014 at p = 437; coverage about 90% | 0.69 and 89.6% **verified**; **corrected** 0.014 to 0.015 |
+| N13 | §2: RE/partial-R² table; 1.10 → 1.04 and 1.05 → 0.99 under the (1 + 30/500) penalty | **Verified** |
+| N14 | §6.0: SE(log RE) ≈ 0.014 at ρ = 0.9, R = 2000 | **Verified** (0.0141) |
+| N15 | C1: RE 1.15 means about 13% fewer units or about 7% lower CV | **Verified** (13.0%, 6.7%) |
+| N16 | §3.7: strong-frame GREG RE over HT of 6.0 (expenses) and 2.8 (revenue) in `diag_ne_n1000.csv` | **Corrected**: the file gives 15.95 and 7.43 for the strong frame (2.20 and 2.08 for the weak frame); 6.0 and 2.8 do not appear in it. The MC files give about 16–18× and 8–9×. |
+| N17 | §5 P4: NE ceiling 0.93–1.001 | **Corrected** to 0.93–1.005 |
+| N18 | H4 evidence "1.10–1.40 and 1.05–1.38" | **Corrected**: on the six headroom y, 1.02–1.15 over fine code + meta and 1.08–1.22 over the centroid (salaries 1.40 and 1.37). Program-service revenue does not clear 1.05. |
+| N19 | H7 and H8 smoke figures | **Corrected**: cross-fitted model calibration 85–98% (not 85–97%); non-cross-fitted 72–78% for five dollar y (72–97% across all 14 y), from `mc_ne_smoke3_metrics.csv` |
+| N20 | Lagged admin value RE 2.4–14.6 (decision rule, PC2, C2) | **Corrected**: true for every y except volunteers, whose own lag gives only 1.19 over the strong frame |
+| N21 | §1 bottom-line numbers (items 2–10) | **Verified**: consistent with §4 after the corrections above |
+| N22 | Tuning optimism up to +0.09 RE | **Verified** (government grants +0.086) |
+| N23 | Negative controls 0.82–1.00; placebo 0.98–1.00 | **Verified** |
+| N24 | Design and provenance claims about `src/` (`embed.py` hashes inputs; take-all 1%; Neyman on √size) | **Verified** in code |
+| N25 | Text-arm definitions (LSA-256 on mission + programs; MiniLM-384 on mission, mean-pooled, max_len 256) | **Verified** in the embedding metadata JSON |
+| N26 | The meta-features arm used the defective `has_website` flag | **Verified** in `falsify_pop.py` |
+
+**Totals.** 98 checks: 40 verified; 14 corrected; 5 partial; 2 clarified; 34 flagged [UNVERIFIED] (28 literature items and 6 data-source facts); 3 sibling figures not recomputed. Nothing was removed. The corrections do not change any verdict in §1, §4.6 or §8. The largest substantive changes are N16 (the strong comparator is stronger than stated), D5 (prior-return gaps at a realistic cutoff are not concentrated in small units), N18 (H4 is not uniformly met on NE) and N20 (the lag dominates text for every y, but by only 1.19 for volunteers).

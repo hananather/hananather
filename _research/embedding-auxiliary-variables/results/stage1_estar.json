@@ -1,0 +1,10 @@
+{
+ "E_star": {
+  "model": "lsa256",
+  "field": "full",
+  "K": 16,
+  "gm_ceiling": 1.0226856977774554
+ },
+ "best_gm": 1.0403581615924924,
+ "rule": "argmax GM ceiling over H on previous wave; ties within 0.02 to simpler rung (L2 LSA < L4 MiniLM), then smaller K"
+}

@@ -44,25 +44,69 @@ LAMS_C = (1.0, 5.0, 20.0, 100.0, 500.0)            # pseudo-counts, categorical 
 # ----------------------------------------------------------------------------------------------
 # weighted ridge with separate continuous / categorical penalties
 class RidgeGram:
-    """Centred, weighted Gram matrix of one training set; solves for any (lam, lam_c) cheaply."""
+    """Centred, weighted Gram matrix of one training set; solves for any (lam, lam_c) cheaply.
+
+    Columns split into a fixed-penalty block f (categorical: lam_c; `hard`: ~0) and a lam-dependent
+    continuous block v. For each lam_c the f block is factorised once and the Schur complement of the v
+    block eigendecomposed, so every lam on the continuous path costs only a small matrix product:
+      beta_v = V diag(1/(e + lam n)) V' r~,   beta_f = G (r_f - A_fv beta_v)."""
 
     def __init__(self, F, Y, w, cat=None, hard=0):
         w = w / w.mean()
         self.mu = np.average(F, axis=0, weights=w)
         self.ymu = np.average(Y, axis=0, weights=w)
         sd = np.sqrt(np.average((F - self.mu) ** 2, axis=0, weights=w))
-        cat = np.zeros(F.shape[1], bool) if cat is None else np.asarray(cat, bool)
+        p = F.shape[1]
+        cat = np.zeros(p, bool) if cat is None else np.asarray(cat, bool)
         sd = np.where(cat | (sd < 1e-12), 1.0, sd)        # categoricals stay on the 0/1 scale
         self.sd, self.cat, self.hard, self.n = sd, cat, hard, len(F)
         sw = np.sqrt(w)[:, None]
         Fc = (F - self.mu) / sd * sw
         self.A = Fc.T @ Fc
         self.rhs = Fc.T @ ((Y - self.ymu) * sw)
+        hard_mask = np.zeros(p, bool)
+        hard_mask[:hard] = True
+        self.fix = cat | hard_mask
+        self.var = ~self.fix
+        self._cache = {}
+
+    def _prep(self, lam_c):
+        if lam_c in self._cache:
+            return self._cache[lam_c]
+        f, v = self.fix, self.var
+        Afv = self.A[np.ix_(f, v)]
+        if f.any() and self.cat[f].all():
+            # all fixed columns categorical: one eigendecomposition serves every lam_c
+            if "_eig_f" not in self.__dict__:
+                a, Q = np.linalg.eigh(self.A[np.ix_(f, f)])
+                self._eig_f = (np.maximum(a, 0), Q, Q.T @ Afv, Q.T @ self.rhs[f])
+            a, Q, QA, Qr = self._eig_f
+            inv = 1.0 / (a + lam_c)
+            Gfv, Gr = Q @ (inv[:, None] * QA), Q @ (inv[:, None] * Qr)
+        elif f.any():
+            pen_f = np.where(self.cat[f], lam_c, 1e-6 * self.n)
+            Aff = self.A[np.ix_(f, f)] + np.diag(pen_f)
+            Gfv = np.linalg.solve(Aff, Afv)
+            Gr = np.linalg.solve(Aff, self.rhs[f])
+        if f.any():
+            S = self.A[np.ix_(v, v)] - Afv.T @ Gfv
+            rt = self.rhs[v] - Afv.T @ Gr
+        else:
+            Gfv = Gr = None
+            S, rt = self.A, self.rhs
+        e, V = np.linalg.eigh((S + S.T) / 2)
+        out = (Gfv, Gr, np.maximum(e, 0), V, V.T @ rt)
+        self._cache[lam_c] = out
+        return out
 
     def coef(self, lam, lam_c, cols):
-        pen = np.where(self.cat, lam_c, lam * self.n)
-        pen[: self.hard] = 1e-6 * self.n
-        B = np.linalg.solve(self.A + np.diag(pen), self.rhs[:, cols])
+        Gfv, Gr, e, V, Vrt = self._prep(lam_c)
+        p = self.A.shape[0]
+        B = np.zeros((p, len(cols)))
+        bv = V @ (Vrt[:, cols] / (e + lam * self.n)[:, None])
+        B[self.var] = bv
+        if Gr is not None:
+            B[self.fix] = Gr[:, cols] - Gfv @ bv
         Bx = B / self.sd[:, None]
         return self.ymu[cols] - self.mu @ Bx, Bx
 
@@ -220,13 +264,16 @@ def model_predict(cell, spec, F, i, Y_ts, d_ts, rng=None, groups=None, need_U=Fa
             b0, Bx = _ridge_fit(Fs, T, w, lam, hard, cat, lamc)
             M[:, cols] = np.clip(b0 + Fs @ Bx, lo, hi)
             fits.append((b0, Bx))
-        for b0, Bx in fits:
-            P = np.clip(b0 + F @ Bx, lo, hi)   # every take-some frame unit (clipping is nonlinear)
-            if ratio:
-                P = P * xU[:, None]
-            sumM[cols] += P.sum(0) / len(fits)
-            if need_U:
-                M_U[:, cols] += P / len(fits)
+        # population predictions from the fold-averaged model (exact average of the linear fold
+        # predictions; differs from averaging clipped predictions only through the clip) -- deviation D-6
+        b0m = np.mean([f_[0] for f_ in fits], 0)
+        Bxm = np.mean([f_[1] for f_ in fits], 0)
+        P = np.clip(b0m + F @ Bxm, lo, hi)
+        if ratio:
+            P = P * xU[:, None]
+        sumM[cols] = P.sum(0)
+        if need_U:
+            M_U[:, cols] = P
         if ratio:
             M[:, cols] = M[:, cols] * xs[:, None]
     return M, sumM, M_U
@@ -347,7 +394,7 @@ def _var_counts(E, design, r_ts):
     return v
 
 
-def run_cell(cell: Cell, specs: dict, R=500, seed=0, verbose=True, ta_values=None):
+def run_cell(cell: Cell, specs: dict, R=500, seed=0, verbose=True, ta_values=None, rep_range=None):
     """Streams: samples from default_rng(seed) (identical whatever estimators run); the shared fold
     vector of replicate r from default_rng([seed, r, 1]); estimator-internal randomness from
     default_rng([seed, r, hash(name)]).
@@ -357,8 +404,11 @@ def run_cell(cell: Cell, specs: dict, R=500, seed=0, verbose=True, ta_values=Non
     des = cell.design
     rows, timing, fails = [], {k: 0.0 for k in specs}, {k: 0 for k in specs}
     t0 = time.time()
-    for r in range(R):
-        s = des.draw(rng_draw)
+    a, b = (0, R) if rep_range is None else rep_range
+    for r in range(b):
+        s = des.draw(rng_draw)              # draws for skipped replicates are made and discarded, so a
+        if r < a:                           # replicate's sample never depends on how runs are split
+            continue
         cell.rep = r
         s_ts = s[cell.ts[s]]
         d_ts, Y_ts = cell.d[s_ts], cell.Y[s_ts]
@@ -385,8 +435,8 @@ def run_cell(cell: Cell, specs: dict, R=500, seed=0, verbose=True, ta_values=Non
             tot = T_ta + t
             for j, yn in enumerate(cell.ynames):
                 rows.append((r, name, yn, tot[j], v[j]))
-        if verbose and (r + 1) % max(1, R // 5) == 0:
-            print(f"  rep {r + 1}/{R}  {time.time() - t0:.0f}s", flush=True)
+        if verbose and (r + 1 - a) % max(1, (b - a) // 5) == 0:
+            print(f"  rep {r + 1}/{b}  {time.time() - t0:.0f}s", flush=True)
     df = pd.DataFrame(rows, columns=["rep", "estimator", "y", "est", "var"])
     df.attrs["timing_s"], df.attrs["failures"] = timing, fails
     return df
