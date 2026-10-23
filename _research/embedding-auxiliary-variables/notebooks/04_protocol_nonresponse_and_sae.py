@@ -28,9 +28,17 @@
 # - propensity-score variants: frame-only propensities, and text in the propensity.
 #
 # **Rule S6.** The text arm must satisfy all three, on the five variables {government grants, contributions, fundraising, volunteers, lobbying}:
-# - it removes ≥ 30% of the status quo's nonresponse bias on ≥ 3 of the 5 (bias-reduction fraction, BRF);
+# - it removes ≥ 30% of the reference method's nonresponse bias on ≥ 3 of the 5 (bias-reduction fraction, BRF);
 # - its RRMSE ratio is ≤ 1.00;
 # - its coverage gap is ≥ −2 pp.
+#
+# **Reference method (protocol §7.2).** For each y, the reference is the text-free method with the smallest limiting
+# absolute bias. The candidates run here are weighting class + HT, weighting class + GREG (the status quo), the
+# weighting-class BMF-max twin, and the frame-propensity twin. The limiting bias is estimated by the take-some Monte Carlo
+# RB at R = 1,000 (deviation D-29). The comparison against the status quo GREG is reported as a secondary.
+#
+# **Pilot claim tested here (§7.2).** Calibrating to lagged size *increases* nonresponse bias for survey-only y:
+# abs(B(weighting class + GREG)) > abs(B(weighting class)) for government grants, contributions and fundraising.
 #
 # ## Stage 4: small area estimation
 # **Domains.** 66 unplanned domains, state × NTEE10, with 0–50 sampled units each.
@@ -78,34 +86,68 @@ for scen in ["follow", "late"]:
     dts = d.merge(ta, on=["rep", "y"]); dts["est"] = dts.est - dts.ta_used
     truth_ts = {y: truth[y] - meta["truth_ta"][y] for y in truth}
     cts = cell_metrics(dts[["rep", "estimator", "y", "est", "var"]], truth_ts).rename(columns=lambda c: c + "_ts" if c not in ("estimator", "y") else c)
-    cm = cm.merge(cts[["estimator", "y", "rb_pct_ts", "rrmse_pct_ts"]], on=["estimator", "y"])
+    cm = cm.merge(cts[["estimator", "y", "rb_pct_ts", "rrmse_pct_ts", "coverage_pct_ts"]], on=["estimator", "y"])
     nr_rows.append(cm)
     for col, lab in [("rb_pct", "relative bias of the total (%)"), ("rb_pct_ts", "relative bias of the take-some part (%)")]:
         t = cm.pivot(index="y", columns="estimator", values=col); t.index = [Y_LABEL.get(i, i) for i in t.index]
         print(f"\n=== TA-{scen}: {lab} ==="); display(t.round(2))
-    c = cm.pivot(index="y", columns="estimator", values="coverage_pct"); c.index = [Y_LABEL.get(i, i) for i in c.index]
-    print(f"=== TA-{scen}: coverage (%) ==="); display(c.round(1))
+    for col, lab in [("coverage_pct", "coverage of the total (%); take-all imputation error is not in the variance"),
+                     ("coverage_pct_ts", "coverage of the take-some part (%)")]:
+        c = cm.pivot(index="y", columns="estimator", values=col); c.index = [Y_LABEL.get(i, i) for i in c.index]
+        print(f"=== TA-{scen}: {lab} ==="); display(c.round(1))
 nr = pd.concat(nr_rows) if nr_rows else pd.DataFrame()
 
 # %%
-def s6(nr, scen, text="NR_rhg_MCAL_bmfmax@F1p+Estar", sq="NR_SQ_rhg_GREG_size_cat@F1p", twin="NR_rhg_MCAL_bmfmax@F1p"):
+TEXT_FREE = ["NR_rhg_HT", "NR_SQ_rhg_GREG_size_cat@F1p", "NR_rhg_MCAL_bmfmax@F1p", "NR_ps_frame_MCAL_bmfmax@F1p"]
+def s6(nr, scen, text="NR_rhg_MCAL_bmfmax@F1p+Estar", ref="protocol"):
+    """ref='protocol': per-y text-free method with the smallest |RB| of the take-some part; ref=<name>: that method."""
     m = nr[nr.scenario == scen].set_index(["estimator", "y"])
     out = []
     for y in S6_Y:
-        b_t, b_s, b_w = m.loc[(text, y), "rb_pct_ts"], m.loc[(sq, y), "rb_pct_ts"], m.loc[(twin, y), "rb_pct_ts"]   # take-some part
-        out.append({"y": Y_LABEL.get(y, y), "bias text %": b_t, "bias SQ %": b_s, "bias twin %": b_w,
-                    "BRF vs SQ": 1 - abs(b_t) / abs(b_s) if b_s else np.nan, "BRF vs twin": 1 - abs(b_t) / abs(b_w) if b_w else np.nan,
-                    "RRMSE ratio vs SQ": m.loc[(text, y), "rrmse_pct"] / m.loc[(sq, y), "rrmse_pct"],
-                    "coverage gap vs SQ (pp)": m.loc[(text, y), "coverage_pct"] - m.loc[(sq, y), "coverage_pct"]})
+        r = min(TEXT_FREE, key=lambda e: abs(m.loc[(e, y), "rb_pct_ts"])) if ref == "protocol" else ref
+        b_t, b_r = m.loc[(text, y), "rb_pct_ts"], m.loc[(r, y), "rb_pct_ts"]
+        out.append({"y": Y_LABEL.get(y, y), "reference": r, "bias text % (take-some)": b_t, "bias ref %": b_r,
+                    "BRF": 1 - abs(b_t) / abs(b_r) if b_r else np.nan,
+                    "RRMSE ratio (take-some)": m.loc[(text, y), "rrmse_pct_ts"] / m.loc[(r, y), "rrmse_pct_ts"],
+                    "coverage gap (pp)": m.loc[(text, y), "coverage_pct_ts"] - m.loc[(r, y), "coverage_pct_ts"]})
     t = pd.DataFrame(out)
-    passed = ((t["BRF vs SQ"] >= 0.30).sum() >= 3) and (t["RRMSE ratio vs SQ"] <= 1.0).all() and (t["coverage gap vs SQ (pp)"] >= -2).all()
+    passed = ((t["BRF"] >= 0.30).sum() >= 3) and (t["RRMSE ratio (take-some)"] <= 1.0).all() and (t["coverage gap (pp)"] >= -2).all()
     return t, passed
+
 if len(nr):
     for scen in ["follow", "late"]:
-        if (nr.scenario == scen).any():
-            t, ok = s6(nr, scen)
-            print(f"S6 under TA-{scen}: PASS" if ok else f"S6 under TA-{scen}: FAIL"); display(t.round(3))
-            t.to_csv(f"{RES}/s6_{scen}.csv", index=False)
+        if not (nr.scenario == scen).any():
+            continue
+        for ref, lab in [("protocol", "S6 (protocol reference)"), ("NR_SQ_rhg_GREG_size_cat@F1p", "secondary: vs status quo GREG"),
+                         ("NR_rhg_MCAL_bmfmax@F1p", "secondary: vs the same learner without text")]:
+            t, ok = s6(nr, scen, ref=ref)
+            print(f"TA-{scen}, {lab}: {'PASS' if ok else 'FAIL'}"); display(t.round(3))
+            t.to_csv(f"{RES}/s6_{scen}_{ref.split('@')[0]}.csv", index=False)
+        m = nr[nr.scenario == scen].set_index(["estimator", "y"]).rb_pct_ts
+        claim = pd.DataFrame([{"y": Y_LABEL.get(y, y), "|bias| weighting class + HT %": abs(m[("NR_rhg_HT", y)]),
+                               "|bias| weighting class + GREG %": abs(m[("NR_SQ_rhg_GREG_size_cat@F1p", y)])}
+                              for y in ["y_gov_grants", "y_contrib", "y_fundraising_exp"]])
+        claim["calibration increases bias"] = claim.iloc[:, 2] > claim.iloc[:, 1]
+        print(f"TA-{scen}: pilot claim (calibrating to size increases nonresponse bias)"); display(claim.round(2))
+
+# %%
+if len(nr):
+    fig, axes = plt.subplots(1, 2, figsize=(9.6, 4.2), sharey=True)
+    arms = ["NR_rhg_HT", "NR_SQ_rhg_GREG_size_cat@F1p", "NR_rhg_MCAL_bmfmax@F1p", "NR_rhg_MCAL_bmfmax@F1p+Estar"]
+    names = ["weighting class + HT", "+ GREG on lagged size (status quo)", "+ ML twin (codes, no text)", "+ ML with text"]
+    for ax, scen in zip(axes, ["follow", "late"]):
+        if not (nr.scenario == scen).any():
+            continue
+        m = nr[nr.scenario == scen].set_index(["estimator", "y"]).rb_pct_ts
+        yy = np.arange(len(S6_Y))
+        for j, (a, nm) in enumerate(zip(arms, names)):
+            ax.barh(yy + (j - 1.5) * 0.2, [m[(a, y)] for y in S6_Y], height=0.18, color=plotstyle.SERIES[j], label=nm)
+        ax.axvline(0, color=plotstyle.NEUTRAL, lw=1)
+        ax.set_yticks(yy); ax.set_yticklabels([Y_LABEL.get(y, y) for y in S6_Y]); ax.invert_yaxis()
+        ax.set_title(f"TA-{scen}"); ax.set_xlabel("relative bias of the take-some part (%)")
+    axes[0].legend(fontsize=7.5, loc="lower right")
+    fig.suptitle("Late-filer nonresponse: calibration to lagged size adds bias; text removes part of it")
+    plt.tight_layout(); plt.savefig(f"{RES}/nr_bias.png", dpi=150); plt.show()
 
 # %% [markdown]
 # ## Stage 4 results: small area estimation
