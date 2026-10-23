@@ -39,13 +39,23 @@ def pca_basis(E, k):
     return mu, Vt[:k], Z.std(0)
 
 
+IRS_INCOME_BRACKETS = [1, 10_000, 25_000, 100_000, 500_000, 1_000_000, 5_000_000, 10_000_000, 50_000_000]
+
+
+def income_class(revenue):
+    """IRS BMF INCOME_CD brackets computed from a given revenue amount."""
+    return np.searchsorted(IRS_INCOME_BRACKETS, np.asarray(revenue, float), side="right")
+
+
 def train_frozen(prev_pop, curr_pop, ynames, prev_E=None, curr_E=None, n=1000, k_draws=10, K=32, seed=0,
                  ratio=True):
-    """Returns (N_curr, q) arrays stacked as (k_draws, N_curr, q) for a text-free and a text model."""
-    cats = {c: _cats(prev_pop[c], curr_pop[c]) for c in ["ntee_major10", "state"]}
-    cats["bmf_income_cd"] = _cats(prev_pop.bmf_income_cd.fillna(-1), curr_pop.bmf_income_cd.fillna(-1))
+    """Returns (N_curr, q) arrays stacked as (k_draws, N_curr, q) for a text-free and a text model.
+    The income class is recomputed from each wave's own lagged revenue: the 2023 BMF snapshot's
+    INCOME_CD would carry the previous wave's *target-year* revenue (a training-time leak)."""
     pp, cp = prev_pop.copy(), curr_pop.copy()
-    pp["bmf_income_cd"] = pp.bmf_income_cd.fillna(-1); cp["bmf_income_cd"] = cp.bmf_income_cd.fillna(-1)
+    pp["bmf_income_cd"] = income_class(pp.lag_revenue.clip(lower=0))
+    cp["bmf_income_cd"] = income_class(cp.lag_revenue.clip(lower=0))
+    cats = {c: _cats(pp[c], cp[c]) for c in ["ntee_major10", "state", "bmf_income_cd"]}
     Fp, Fc = frame_features(pp, cats), frame_features(cp, cats)
     feats = {"frame": (Fp, Fc)}
     if prev_E is not None:
