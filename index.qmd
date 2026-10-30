@@ -15,6 +15,7 @@ As a member of the Office of Responsible AI, I lead technical reviews of AI syst
 
 - First author of a [paper on governing LLM services that handle confidential data](https://doi.org/10.1177/0282423X261489965), published in *Journal of Official Statistics*.
 - Won first place in the [2025 IAOS Young Statisticians Prize](https://iaos-isi.org/ysp/) for [LLM-assisted record linkage](https://doi.org/10.1177/18747655261422068), published in *Statistical Journal of the IAOS*.
+- Received the [2026 Award of Excellence in Research (certificate, PDF)](website_docs/2026-statistics-canada-research-award-hanan-ather.pdf) from Statistics Canada's Modern Statistical Methods and Data Science Branch.
 - Contributed to the development of a **[United Nations](https://unece.org/statistics)** handbook, [*Uncertainty Quantification in ML-Enhanced Statistical Inference*](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf#page=3).
 
 - [Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa
