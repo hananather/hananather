@@ -13,9 +13,9 @@ I also develop technical guidance for governing and securely deploying these sys
 
 As a member of the Office of Responsible AI, I lead technical reviews of AI systems across government and contribute to frameworks and governance guidance for **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
 
-- First author of a [paper on governing LLM services that handle confidential data](https://doi.org/10.1177/0282423X261489965), published in *Journal of Official Statistics*.
-- Won first place in the [2025 IAOS Young Statisticians Prize](https://iaos-isi.org/ysp/) for [LLM-assisted record linkage](https://doi.org/10.1177/18747655261422068), published in *Statistical Journal of the IAOS*.
-- Contributed to the development of a **[United Nations](https://unece.org/statistics)** handbook, [*Uncertainty Quantification in ML-Enhanced Statistical Inference*](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf#page=3).
+- First author of a [paper on governing LLM services that handle confidential data](https://doi.org/10.1177/0282423X261489965), published in Journal of Official Statistics.
+- Won first place in the [2025 IAOS Young Statisticians Prize](https://iaos-isi.org/ysp/) for [LLM-assisted record linkage](https://doi.org/10.1177/18747655261422068), published in Statistical Journal of the IAOS.
+- Contributed to the development of a **[United Nations](https://unece.org/statistics)** handbook, [Uncertainty Quantification in ML-Enhanced Statistical Inference](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf#page=3).
 - Received the [2026 Award of Excellence in Research](website_docs/2026-statistics-canada-research-award-hanan-ather.pdf) from Statistics Canada's Modern Statistical Methods and Data Science Branch.
 
 - [Master of Science in Mathematics and Statistics](https://catalogue.uottawa.ca/en/graduate/master-science-mathematics-statistics-concentration-statistics/) at the University of Ottawa
@@ -41,9 +41,9 @@ As a member of the Office of Responsible AI, I lead technical reviews of AI syst
 
 ::: {.notes-list .publication-list}
 - [Governing Large Language Model Services for Confidential Microdata: A Decision Framework for National Statistical Offices](https://doi.org/10.1177/0282423X261489965)
-  [Hanan Ather, Mohammed Haddou, and Saeid Molladavoudi. *Journal of Official Statistics*, 2026.]{.publication-meta}
+  [Hanan Ather, Mohammed Haddou, and Saeid Molladavoudi. Journal of Official Statistics, 2026.]{.publication-meta}
 - [LLM-assisted record linkage: A framework for official statistics](https://doi.org/10.1177/18747655261422068)
-  [Hanan Ather. *Statistical Journal of the IAOS*, 2026.]{.publication-meta}
+  [Hanan Ather. Statistical Journal of the IAOS, 2026.]{.publication-meta}
 - [Uncertainty Quantification in ML-Enhanced Statistical Inference — A Practitioner Handbook with Applications in Official Statistics](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf)
   [UNECE · 2026 · Contributor]{.publication-meta}
 - [Master Thesis: Deep Reinforcement Learning](website_docs/master-thesis-deep-reinforcement-learning.pdf)

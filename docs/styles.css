@@ -129,6 +129,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Keep prose and syntax highlighting upright across both themes. */
+em,
+i:not(.bi),
+cite,
+dfn,
+.fst-italic,
+.fst-oblique,
+code span {
+  font-style: normal !important;
+}
+
 #title-block-header .title,
 .content h1,
 .content .h1 {
