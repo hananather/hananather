@@ -297,6 +297,43 @@ body.home #title-block-header {
   display: none;
 }
 
+/* Award citation: the committee's words lead, with the certificate nearby. */
+.home .award-citation {
+  margin-block: 2rem;
+}
+
+.home .award-citation h2 {
+  font-size: 1rem;
+  margin-block: 0 0.85rem;
+}
+
+.home .award-citation blockquote {
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.85rem;
+  color: var(--site-text);
+}
+
+.home .award-citation em {
+  font-style: italic !important;
+}
+
+.home .award-citation-lead {
+  display: block;
+  margin-bottom: 0.8rem;
+  font-size: clamp(1.15rem, 2.5vw, 1.4rem);
+  line-height: 1.5;
+}
+
+.home .award-attribution {
+  color: var(--site-muted);
+  line-height: 1.5;
+}
+
+.home .award-citation > p:last-child {
+  margin-bottom: 0;
+}
+
 /* Homepage: quiet editorial entry point to the Principles page */
 .home .principles-note {
   margin: 0 0 1.25rem;
