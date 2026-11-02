@@ -1,0 +1,37 @@
+/* Award citation: the committee's words lead, with the certificate nearby. */
+.award-citation {
+  margin-block: 2rem;
+}
+
+.award-citation h2 {
+  font-size: 1rem;
+  margin-block: 0 0.85rem;
+}
+
+.award-citation blockquote {
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.85rem;
+  color: var(--site-text);
+}
+
+.award-citation em {
+  font-style: italic !important;
+}
+
+.award-citation-lead {
+  display: block;
+  margin-bottom: 0.8rem;
+  font-size: clamp(1.15rem, 2.5vw, 1.4rem);
+  line-height: 1.5;
+}
+
+.award-attribution {
+  color: var(--site-muted);
+  line-height: 1.5;
+}
+
+.award-citation > p:last-child {
+  margin-bottom: 0;
+}
+

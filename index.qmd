@@ -4,6 +4,7 @@ toc: false
 format:
   html:
     body-classes: home
+    css: award-citation.css
 ---
 
 I am a Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at **[Statistics Canada](https://www.statcan.gc.ca/en/start)**.

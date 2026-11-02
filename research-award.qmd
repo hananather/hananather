@@ -3,6 +3,9 @@ title: "2026 Award of Excellence in Research"
 description-meta: "Hanan has established himself as an emerging expert in applying statistical methodology, machine learning and LLMs to official statistics."
 image: website_docs/2026-statistics-canada-research-award-hanan-ather.png
 toc: false
+format:
+  html:
+    css: award-citation.css
 ---
 
 <section id="research-award" class="award-citation" aria-label="Committee citation">
