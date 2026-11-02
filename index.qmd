@@ -14,16 +14,6 @@ I also develop technical guidance for governing and securely deploying these sys
 
 As a member of the Office of Responsible AI, I lead technical reviews of AI systems across government and contribute to frameworks and governance guidance for **[UNECE](https://unece.org/statistics)**, **[G7 GovAI](https://impact.canada.ca/en/challenges/g7-govAI)**, and the **[International Statistical Institute (ISI)](https://www.isi-web.org/)**.
 
-<section id="research-award" class="award-citation" aria-labelledby="research-award-heading">
-<h2 id="research-award-heading">2026 Award of Excellence in Research</h2>
-<blockquote>
-<p><em><span class="award-citation-lead">“Hanan has established himself as an emerging expert in applying statistical methodology, machine learning and LLMs to official statistics.</span> He received the 2025 IAOS Prize for Young Statisticians for his paper on LLM-assisted record linkage, presented at the 65th ISI World Statistics Congress. He also co-authored a decision framework for governing LLM services involving confidential microdata and contributed to international guidance on uncertainty quantification in ML-enhanced inference. His research advances the statistical foundations of ML-assisted official statistics, including prediction-powered inference, conformal prediction, and uncertainty quantification for LLM-assisted coding and record linkage. Hanan also advances research on responsible agentic AI adoption.”</em></p>
-</blockquote>
-<p class="award-attribution">Selection Committee<br>
-Modern Statistical Methods and Data Science Branch, Statistics Canada</p>
-<p><a href="website_docs/2026-statistics-canada-research-award-hanan-ather.pdf">View award certificate (PDF)</a></p>
-</section>
-
 - First author of a [paper on governing LLM services that handle confidential data](https://doi.org/10.1177/0282423X261489965), published in Journal of Official Statistics.
 - Won first place in the [2025 IAOS Young Statisticians Prize](https://iaos-isi.org/ysp/) for [LLM-assisted record linkage](https://doi.org/10.1177/18747655261422068), published in Statistical Journal of the IAOS.
 - Contributed to the development of a **[United Nations](https://unece.org/statistics)** handbook, [Uncertainty Quantification in ML-Enhanced Statistical Inference](https://unece.org/sites/default/files/2026-06/Uncertainty%20Quantification%20in%20ML-Enhanced%20Statistical%20Inference.pdf#page=3).
@@ -60,3 +50,13 @@ Modern Statistical Methods and Data Science Branch, Statistics Canada</p>
 - [Law of the Iterated Logarithm](website_docs/law-of-the-iterated-logarithm.pdf)
 - [MapReduce for Parallel Machine Learning](website_docs/mat4376x-research-project.pdf)
 :::
+
+<section id="research-award" class="award-citation" aria-labelledby="research-award-heading">
+<h2 id="research-award-heading">2026 Award of Excellence in Research</h2>
+<blockquote>
+<p><em><span class="award-citation-lead">“Hanan has established himself as an emerging expert in applying statistical methodology, machine learning and LLMs to official statistics.</span> He received the 2025 IAOS Prize for Young Statisticians for his paper on LLM-assisted record linkage, presented at the 65th ISI World Statistics Congress. He also co-authored a decision framework for governing LLM services involving confidential microdata and contributed to international guidance on uncertainty quantification in ML-enhanced inference. His research advances the statistical foundations of ML-assisted official statistics, including prediction-powered inference, conformal prediction, and uncertainty quantification for LLM-assisted coding and record linkage. Hanan also advances research on responsible agentic AI adoption.”</em></p>
+</blockquote>
+<p class="award-attribution">Selection Committee<br>
+Modern Statistical Methods and Data Science Branch, Statistics Canada</p>
+<p><a href="website_docs/2026-statistics-canada-research-award-hanan-ather.pdf">View award certificate (PDF)</a></p>
+</section>
