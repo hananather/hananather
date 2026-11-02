@@ -1,11 +1,12 @@
-/* Award citation: the committee's words lead, with the certificate nearby. */
+/* Award citation and its supporting documents. */
 .award-citation {
   margin-block: 2rem;
 }
 
 .award-citation h2 {
   font-size: 1rem;
-  margin-block: 0 0.85rem;
+  font-weight: 500;
+  margin-block: 0 0.5rem;
 }
 
 .award-citation blockquote {
@@ -13,17 +14,11 @@
   padding: 0;
   margin: 0 0 0.85rem;
   color: var(--site-text);
+  font-size: 1rem;
 }
 
 .award-citation em {
   font-style: italic !important;
-}
-
-.award-citation-lead {
-  display: block;
-  margin-bottom: 0.8rem;
-  font-size: clamp(1.15rem, 2.5vw, 1.4rem);
-  line-height: 1.5;
 }
 
 .award-attribution {
@@ -33,4 +28,17 @@
 
 .award-citation > p:last-child {
   margin-bottom: 0;
+}
+
+.award-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.25rem;
+}
+
+.award-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: underline;
 }
