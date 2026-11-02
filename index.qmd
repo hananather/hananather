@@ -4,7 +4,7 @@ toc: false
 format:
   html:
     body-classes: home
-    css: award-citation.css
+    css: award-details.css
 ---
 
 I am a Member of Technical Staff at the Centre for AI Research and Excellence (CAIRE) at **[Statistics Canada](https://www.statcan.gc.ca/en/start)**.
@@ -57,5 +57,5 @@ As a member of the Office of Responsible AI, I lead technical reviews of AI syst
 <blockquote>
 <p><em>“Hanan has established himself as an emerging expert in applying statistical methodology, machine learning and LLMs to official statistics.”</em></p>
 </blockquote>
-<p class="award-links"><a href="research-award.html">Full committee citation</a><a href="website_docs/2026-statistics-canada-research-award-hanan-ather.pdf">Certificate (PDF)</a></p>
+<p class="award-links"><a href="research-award.html">Full committee citation</a> <a href="website_docs/2026-statistics-canada-research-award-hanan-ather.pdf">Certificate (PDF)</a></p>
 </section>

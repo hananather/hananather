@@ -5,7 +5,7 @@ image: website_docs/2026-statistics-canada-research-award-hanan-ather.png
 toc: false
 format:
   html:
-    css: award-citation.css
+    css: award-details.css
 ---
 
 <section id="research-award" class="award-citation" aria-label="Committee citation">
